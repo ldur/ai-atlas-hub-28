@@ -99,6 +99,10 @@
     @apply border-border;
   }
 
+  html, body, #root {
+    @apply overflow-x-hidden;
+  }
+
   body {
     @apply bg-background text-foreground;
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
