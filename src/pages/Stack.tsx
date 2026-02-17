@@ -49,7 +49,7 @@ const StackSection = ({ evaluations, getName, getExtra, onClickItem }: StackSect
                     <CardContent className="p-4 space-y-2">
                       <div className="flex items-center justify-between">
                         <span className="font-medium">{getName(itemId)}</span>
-                        <Badge className={cfg.color}>{status}</Badge>
+                        <Badge className={cfg.color}>{cfg.label}</Badge>
                       </div>
                       {getExtra && getExtra(itemId) && (
                         <p className="text-xs text-muted-foreground">{getExtra(itemId)}</p>
