@@ -14,24 +14,6 @@ import { useToast } from "@/hooks/use-toast";
 
 const DRAFT_KEY = "ai-tool-atlas-survey-draft";
 
-const knownTools = [
-  "ChatGPT", "GitHub Copilot", "Claude", "Gemini", "Cursor", "Midjourney",
-  "DALL-E", "Perplexity", "Notion AI", "Jasper", "Grammarly AI", "Microsoft Copilot",
-];
-
-const knownModels = [
-  "GPT-5.2", "GPT-5.3 Codex-Spark", "o3-serien",
-  "Claude Opus 4.5/4.6", "Claude Sonnet 4.5",
-  "Gemini 3 Pro", "Gemini 3 Flash",
-  "Grok 4.1",
-  "Llama 4",
-  "Mistral Large 3", "Devstral 2",
-  "Qwen 3", "DeepSeek V3.x",
-  "GLM-5", "MiniMax M2.5", "Seedance 2.0",
-  "Sora", "Runway Gen-4", "Stable Diffusion 3.x", "Midjourney v7",
-  "Vet ikke",
-];
-
 const useCaseOptions = [
   { id: "koding", label: "Koding" },
   { id: "dokumentasjon", label: "Dokumentasjon" },
@@ -80,8 +62,21 @@ const Survey = () => {
   const [data, setData] = useState<SurveyData>(defaultData);
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [knownTools, setKnownTools] = useState<string[]>([]);
+  const [knownModels, setKnownModels] = useState<string[]>([]);
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    // Fetch tools and models from database
+    Promise.all([
+      supabase.from("tools").select("name").order("name"),
+      supabase.from("models").select("name").order("name"),
+    ]).then(([toolsRes, modelsRes]) => {
+      setKnownTools((toolsRes.data || []).map(t => t.name));
+      setKnownModels([...(modelsRes.data || []).map(m => m.name), "Vet ikke"]);
+    });
+  }, []);
 
   useEffect(() => {
     if (!getAliasId()) {
