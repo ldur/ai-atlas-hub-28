@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,6 +15,7 @@ const Stack = () => {
   const [evaluations, setEvaluations] = useState<any[]>([]);
   const [tools, setTools] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     Promise.all([
@@ -48,7 +50,7 @@ const Stack = () => {
             <h2 className="text-lg font-semibold">{cfg.label}</h2>
             <div className="grid gap-3 sm:grid-cols-2">
               {items.map((ev) => (
-                <Card key={ev.id}>
+                <Card key={ev.id} className="cursor-pointer hover:border-primary transition-colors" onClick={() => navigate(`/katalog/${ev.tool_id}`)}>
                   <CardContent className="p-4 space-y-2">
                     <div className="flex items-center justify-between">
                       <span className="font-medium">{getToolName(ev.tool_id)}</span>

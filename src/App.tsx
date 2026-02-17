@@ -11,6 +11,7 @@ import Stack from "./pages/Stack";
 import Catalog from "./pages/Catalog";
 import Learning from "./pages/Learning";
 import Admin from "./pages/Admin";
+import ToolDetail from "./pages/ToolDetail";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,6 +29,7 @@ const App = () => (
             <Route path="/innsikt" element={<Insights />} />
             <Route path="/stack" element={<Stack />} />
             <Route path="/katalog" element={<Catalog />} />
+            <Route path="/katalog/:toolId" element={<ToolDetail />} />
             <Route path="/laering" element={<Learning />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="*" element={<NotFound />} />
