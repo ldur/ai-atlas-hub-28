@@ -12,6 +12,7 @@ import Catalog from "./pages/Catalog";
 import Learning from "./pages/Learning";
 import Admin from "./pages/Admin";
 import ToolDetail from "./pages/ToolDetail";
+import ModelDetail from "./pages/ModelDetail";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -30,6 +31,7 @@ const App = () => (
             <Route path="/stack" element={<Stack />} />
             <Route path="/katalog" element={<Catalog />} />
             <Route path="/katalog/:toolId" element={<ToolDetail />} />
+            <Route path="/katalog/modell/:modelId" element={<ModelDetail />} />
             <Route path="/laering" element={<Learning />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="*" element={<NotFound />} />

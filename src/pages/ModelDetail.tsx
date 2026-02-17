@@ -14,29 +14,29 @@ const statusConfig: Record<string, { label: string; color: string }> = {
   TRIAL: { label: "🧪 Prøveperiode", color: "bg-accent text-accent-foreground" },
 };
 
-const ToolDetail = () => {
-  const { toolId } = useParams<{ toolId: string }>();
-  const [tool, setTool] = useState<any>(null);
+const ModelDetail = () => {
+  const { modelId } = useParams<{ modelId: string }>();
+  const [model, setModel] = useState<any>(null);
   const [catalogEntry, setCatalogEntry] = useState<any>(null);
   const [evaluation, setEvaluation] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!toolId) return;
+    if (!modelId) return;
     Promise.all([
-      supabase.from("tools").select("*").eq("id", toolId).single(),
-      supabase.from("catalog_entries").select("*").eq("tool_id", toolId).limit(1).maybeSingle(),
-      supabase.from("evaluations").select("*").eq("tool_id", toolId).order("decided_at", { ascending: false }).limit(1).maybeSingle(),
-    ]).then(([toolRes, catRes, evalRes]) => {
-      setTool(toolRes.data);
+      supabase.from("models").select("*").eq("id", modelId).single(),
+      supabase.from("catalog_entries").select("*").eq("model_id", modelId).limit(1).maybeSingle(),
+      supabase.from("evaluations").select("*").eq("model_id", modelId).order("decided_at", { ascending: false }).limit(1).maybeSingle(),
+    ]).then(([modelRes, catRes, evalRes]) => {
+      setModel(modelRes.data);
       setCatalogEntry(catRes.data);
       setEvaluation(evalRes.data);
       setLoading(false);
     });
-  }, [toolId]);
+  }, [modelId]);
 
   if (loading) return <p className="text-muted-foreground p-6">Laster...</p>;
-  if (!tool) return <p className="text-muted-foreground p-6">Verktøy ikke funnet.</p>;
+  if (!model) return <p className="text-muted-foreground p-6">Modell ikke funnet.</p>;
 
   const statusCfg = evaluation ? statusConfig[evaluation.decided_status] : null;
 
@@ -50,12 +50,21 @@ const ToolDetail = () => {
 
       <div className="space-y-2">
         <div className="flex items-center gap-3">
-          <h1 className="text-2xl font-bold tracking-tight">{tool.name}</h1>
-          {tool.category && <Badge variant="secondary">{tool.category}</Badge>}
+          <h1 className="text-2xl font-bold tracking-tight">{model.name}</h1>
           {statusCfg && <Badge className={statusCfg.color}>{statusCfg.label}</Badge>}
         </div>
-        {tool.vendor && <p className="text-muted-foreground">{tool.vendor}</p>}
+        <div className="flex items-center gap-2 text-muted-foreground">
+          {model.provider && <span>{model.provider}</span>}
+          {model.modality && <span>· {model.modality}</span>}
+        </div>
       </div>
+
+      {model.notes && (
+        <Card>
+          <CardHeader><CardTitle className="text-base">Notater</CardTitle></CardHeader>
+          <CardContent className="text-sm text-muted-foreground">{model.notes}</CardContent>
+        </Card>
+      )}
 
       {evaluation?.rationale && (
         <Card>
@@ -72,7 +81,6 @@ const ToolDetail = () => {
               <CardContent className="text-sm text-muted-foreground">{catalogEntry.best_for}</CardContent>
             </Card>
           )}
-
           {catalogEntry.example_prompts && (
             <Card>
               <CardHeader><CardTitle className="text-base">Eksempelprompter</CardTitle></CardHeader>
@@ -81,21 +89,18 @@ const ToolDetail = () => {
               </CardContent>
             </Card>
           )}
-
           {catalogEntry.do_this && (
             <Card>
               <CardHeader><CardTitle className="text-base text-success">✅ Gjør dette</CardTitle></CardHeader>
               <CardContent className="text-sm text-muted-foreground">{catalogEntry.do_this}</CardContent>
             </Card>
           )}
-
           {catalogEntry.avoid_this && (
             <Card>
               <CardHeader><CardTitle className="text-base text-destructive">❌ Unngå dette</CardTitle></CardHeader>
               <CardContent className="text-sm text-muted-foreground">{catalogEntry.avoid_this}</CardContent>
             </Card>
           )}
-
           {catalogEntry.security_guidance && (
             <Card>
               <CardHeader><CardTitle className="text-base">🔒 Sikkerhetsveiledning</CardTitle></CardHeader>
@@ -104,10 +109,10 @@ const ToolDetail = () => {
           )}
         </div>
       ) : (
-        <p className="text-muted-foreground text-center py-8">Ingen katalogoppføring ennå for dette verktøyet.</p>
+        <p className="text-muted-foreground text-center py-8">Ingen katalogoppføring ennå for denne modellen.</p>
       )}
     </div>
   );
 };
 
-export default ToolDetail;
+export default ModelDetail;
