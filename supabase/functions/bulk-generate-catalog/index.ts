@@ -12,6 +12,7 @@ serve(async (req) => {
   try {
     const body = await req.json().catch(() => ({}));
     const batchSize = body.batch_size || 3;
+    const itemType: "tool" | "model" = body.type || "model";
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
@@ -21,32 +22,35 @@ serve(async (req) => {
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    // Get all models
-    const { data: models, error: modelsErr } = await supabase.from("models").select("*");
-    if (modelsErr) throw modelsErr;
+    const tableName = itemType === "tool" ? "tools" : "models";
+    const fkColumn = itemType === "tool" ? "tool_id" : "model_id";
 
-    // Get existing catalog entries for models
+    const { data: items, error: itemsErr } = await supabase.from(tableName).select("*");
+    if (itemsErr) throw itemsErr;
+
     const { data: existing, error: catErr } = await supabase
       .from("catalog_entries")
-      .select("model_id")
-      .not("model_id", "is", null);
+      .select(fkColumn)
+      .not(fkColumn, "is", null);
     if (catErr) throw catErr;
 
-    const existingModelIds = new Set((existing || []).map((e: any) => e.model_id));
-    const allMissing = (models || []).filter((m: any) => !existingModelIds.has(m.id));
+    const existingIds = new Set((existing || []).map((e: any) => e[fkColumn]));
+    const allMissing = (items || []).filter((m: any) => !existingIds.has(m.id));
     const missing = allMissing.slice(0, batchSize);
 
-    console.log(`Found ${allMissing.length} models without catalog entries, processing ${missing.length}`);
+    console.log(`Found ${allMissing.length} ${itemType}s without catalog entries, processing ${missing.length}`);
 
     const results: { name: string; status: string }[] = [];
 
-    for (const model of missing) {
+    for (const item of missing) {
       try {
-        console.log(`Generating for: ${model.name}`);
+        console.log(`Generating for: ${item.name}`);
 
-        const contextParts = [`Navn: ${model.name}`, `Type: AI-modell`];
-        if (model.provider) contextParts.push(`Leverandør: ${model.provider}`);
-        if (model.modality) contextParts.push(`Modalitet: ${model.modality}`);
+        const typeLabel = itemType === "model" ? "AI-modell" : "AI-verktøy";
+        const contextParts = [`Navn: ${item.name}`, `Type: ${typeLabel}`];
+        if (item.provider || item.vendor) contextParts.push(`Leverandør: ${item.provider || item.vendor}`);
+        if (item.category) contextParts.push(`Kategori: ${item.category}`);
+        if (item.modality) contextParts.push(`Modalitet: ${item.modality}`);
 
         const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
           method: "POST",
@@ -102,9 +106,8 @@ Ingen annen tekst utenfor JSON-objektet.`,
 
         if (!aiResponse.ok) {
           const errText = await aiResponse.text();
-          console.error(`AI error for ${model.name}: ${aiResponse.status} ${errText}`);
-          results.push({ name: model.name, status: `AI error: ${aiResponse.status}` });
-          // Wait a bit to avoid rate limiting
+          console.error(`AI error for ${item.name}: ${aiResponse.status} ${errText}`);
+          results.push({ name: item.name, status: `AI error: ${aiResponse.status}` });
           await new Promise((r) => setTimeout(r, 2000));
           continue;
         }
@@ -121,14 +124,13 @@ Ingen annen tekst utenfor JSON-objektet.`,
           if (jsonMatch) {
             generated = JSON.parse(jsonMatch[0]);
           } else {
-            results.push({ name: model.name, status: "Could not parse AI response" });
+            results.push({ name: item.name, status: "Could not parse AI response" });
             continue;
           }
         }
 
-        // Save to database
         const { error: insertErr } = await supabase.from("catalog_entries").insert({
-          model_id: model.id,
+          [fkColumn]: item.id,
           best_for: generated.best_for || "",
           example_prompts: generated.example_prompts || "",
           do_this: generated.do_this || "",
@@ -138,16 +140,15 @@ Ingen annen tekst utenfor JSON-objektet.`,
         });
 
         if (insertErr) {
-          results.push({ name: model.name, status: `DB error: ${insertErr.message}` });
+          results.push({ name: item.name, status: `DB error: ${insertErr.message}` });
         } else {
-          results.push({ name: model.name, status: "success" });
+          results.push({ name: item.name, status: "success" });
         }
 
-        // Delay between requests to avoid rate limiting
         await new Promise((r) => setTimeout(r, 1500));
       } catch (e) {
-        console.error(`Error for ${model.name}:`, e);
-        results.push({ name: model.name, status: `Error: ${e instanceof Error ? e.message : "unknown"}` });
+        console.error(`Error for ${item.name}:`, e);
+        results.push({ name: item.name, status: `Error: ${e instanceof Error ? e.message : "unknown"}` });
       }
     }
 
