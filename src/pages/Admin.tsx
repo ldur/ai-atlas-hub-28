@@ -152,6 +152,8 @@ const Admin = () => {
 
 function SubmissionsTab() {
   const [submissions, setSubmissions] = useState<any[]>([]);
+  const [search, setSearch] = useState("");
+  const [selectedSubmission, setSelectedSubmission] = useState<any | null>(null);
   const { toast } = useToast();
 
   const fetchSubmissions = () => supabase.from("submissions").select("*").order("created_at", { ascending: false }).then(({ data }) => setSubmissions(data || []));
@@ -161,37 +163,94 @@ function SubmissionsTab() {
     try {
       await adminAction({ action: "delete", table: "submissions", id });
       toast({ title: "Innlevering slettet" });
+      setSelectedSubmission(null);
       fetchSubmissions();
     } catch (e: any) {
       toast({ title: "Feil", description: e.message, variant: "destructive" });
     }
   };
 
+  const exportCsv = () => {
+    const headers = ["Dato", "Team", "Rolle", "Verktøy", "Fritekst", "Modeller", "Bruksområder", "Tid spart", "Sensitiv data", "Utfordringer", "Må beholde"];
+    const rows = submissions.map(s => [
+      new Date(s.created_at).toLocaleString("nb-NO"),
+      s.team || "", s.role || "",
+      (s.tools_used || []).join("; "), s.tools_freetext || "",
+      (s.models_used || []).join("; "), (s.use_cases || []).join("; "),
+      s.time_saved_range || "", s.data_sensitivity || "",
+      s.pain_points || "", s.must_keep_tool || "",
+    ]);
+    const csv = [headers, ...rows].map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n");
+    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = `innleveringer-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click(); URL.revokeObjectURL(url);
+    toast({ title: "CSV eksportert" });
+  };
+
+  const filtered = submissions.filter(s => {
+    if (!search) return true;
+    const q = search.toLowerCase();
+    return [
+      ...(s.tools_used || []), ...(s.models_used || []), ...(s.use_cases || []),
+      s.tools_freetext, s.pain_points, s.must_keep_tool, s.team, s.role,
+    ].some(v => v && String(v).toLowerCase().includes(q));
+  });
+
   return (
     <div className="space-y-3 mt-4">
-      <p className="text-sm text-muted-foreground">Totalt: {submissions.length} innleveringer</p>
-      {submissions.length === 0 && <p className="text-muted-foreground">Ingen innleveringer ennå.</p>}
-      {submissions.map((s) => (
-        <Card key={s.id}>
-          <CardContent className="p-4 text-sm space-y-1">
+      <div className="flex gap-2 items-center flex-wrap">
+        <Input placeholder="Søk i innleveringer..." value={search} onChange={e => setSearch(e.target.value)} className="flex-1 min-w-[200px]" />
+        <Button variant="outline" size="sm" onClick={exportCsv} disabled={submissions.length === 0}>
+          📥 Eksporter CSV
+        </Button>
+        <span className="text-sm text-muted-foreground">{filtered.length} av {submissions.length}</span>
+      </div>
+      {filtered.length === 0 && <p className="text-muted-foreground">Ingen innleveringer funnet.</p>}
+      {filtered.map((s) => (
+        <Card key={s.id} className="cursor-pointer hover:border-primary/50 transition-colors" onClick={() => setSelectedSubmission(s)}>
+          <CardContent className="p-4 text-sm">
             <div className="flex justify-between items-start">
               <div className="space-y-1 flex-1">
-                {s.team && <p><strong>Team:</strong> {s.team}</p>}
-                {s.role && <p><strong>Rolle:</strong> {s.role}</p>}
-                <p><strong>Verktøy:</strong> {(s.tools_used || []).join(", ") || "–"} {s.tools_freetext && `+ ${s.tools_freetext}`}</p>
-                <p><strong>Modeller:</strong> {(s.models_used || []).join(", ") || "–"}</p>
-                <p><strong>Bruksområder:</strong> {(s.use_cases || []).join(", ") || "–"}</p>
-                <p><strong>Tid spart:</strong> {s.time_saved_range || "–"}</p>
-                <p><strong>Sensitiv data:</strong> {s.data_sensitivity || "–"}</p>
-                {s.pain_points && <p><strong>Utfordringer:</strong> {s.pain_points}</p>}
-                {s.must_keep_tool && <p><strong>Må beholde:</strong> {s.must_keep_tool}</p>}
-                <p className="text-xs text-muted-foreground">{new Date(s.created_at).toLocaleString("nb-NO")}</p>
+                <div className="flex gap-2 flex-wrap items-center">
+                  {(s.tools_used || []).slice(0, 3).map((t: string) => <Badge key={t} variant="secondary">{t}</Badge>)}
+                  {(s.tools_used || []).length > 3 && <Badge variant="outline">+{(s.tools_used || []).length - 3}</Badge>}
+                </div>
+                <p className="text-muted-foreground">
+                  {s.time_saved_range ? `${s.time_saved_range}t spart` : "–"} · {new Date(s.created_at).toLocaleDateString("nb-NO")}
+                </p>
               </div>
-              <Button variant="ghost" size="icon" onClick={() => handleDelete(s.id)}>🗑️</Button>
+              <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); handleDelete(s.id); }}>🗑️</Button>
             </div>
           </CardContent>
         </Card>
       ))}
+
+      <Dialog open={!!selectedSubmission} onOpenChange={(open) => !open && setSelectedSubmission(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Innlevering – {selectedSubmission && new Date(selectedSubmission.created_at).toLocaleString("nb-NO")}</DialogTitle>
+          </DialogHeader>
+          {selectedSubmission && (
+            <div className="space-y-3 text-sm">
+              {selectedSubmission.team && <p><strong>Team:</strong> {selectedSubmission.team}</p>}
+              {selectedSubmission.role && <p><strong>Rolle:</strong> {selectedSubmission.role}</p>}
+              <p><strong>Verktøy:</strong> {(selectedSubmission.tools_used || []).join(", ") || "–"}</p>
+              {selectedSubmission.tools_freetext && <p><strong>Fritekst:</strong> {selectedSubmission.tools_freetext}</p>}
+              <p><strong>Modeller:</strong> {(selectedSubmission.models_used || []).join(", ") || "–"}</p>
+              <p><strong>Bruksområder:</strong> {(selectedSubmission.use_cases || []).join(", ") || "–"}</p>
+              <p><strong>Tid spart:</strong> {selectedSubmission.time_saved_range || "–"}</p>
+              <p><strong>Sensitiv data:</strong> {selectedSubmission.data_sensitivity || "–"}</p>
+              {selectedSubmission.pain_points && <p><strong>Utfordringer:</strong> {selectedSubmission.pain_points}</p>}
+              {selectedSubmission.must_keep_tool && <p><strong>Må beholde:</strong> {selectedSubmission.must_keep_tool}</p>}
+              <div className="flex justify-end pt-2">
+                <Button variant="destructive" size="sm" onClick={() => handleDelete(selectedSubmission.id)}>🗑️ Slett innlevering</Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
