@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
+import { adminAction } from "@/lib/adminAction";
 import { getAdminToken, setAdminToken } from "@/lib/nickname";
 import { useToast } from "@/hooks/use-toast";
 
@@ -151,24 +152,43 @@ const Admin = () => {
 
 function SubmissionsTab() {
   const [submissions, setSubmissions] = useState<any[]>([]);
-  useEffect(() => {
-    supabase.from("submissions").select("*").order("created_at", { ascending: false }).then(({ data }) => setSubmissions(data || []));
-  }, []);
+  const { toast } = useToast();
+
+  const fetchSubmissions = () => supabase.from("submissions").select("*").order("created_at", { ascending: false }).then(({ data }) => setSubmissions(data || []));
+  useEffect(() => { fetchSubmissions(); }, []);
+
+  const handleDelete = async (id: string) => {
+    try {
+      await adminAction({ action: "delete", table: "submissions", id });
+      toast({ title: "Innlevering slettet" });
+      fetchSubmissions();
+    } catch (e: any) {
+      toast({ title: "Feil", description: e.message, variant: "destructive" });
+    }
+  };
 
   return (
     <div className="space-y-3 mt-4">
+      <p className="text-sm text-muted-foreground">Totalt: {submissions.length} innleveringer</p>
       {submissions.length === 0 && <p className="text-muted-foreground">Ingen innleveringer ennå.</p>}
       {submissions.map((s) => (
         <Card key={s.id}>
           <CardContent className="p-4 text-sm space-y-1">
-            <p><strong>Verktøy:</strong> {(s.tools_used || []).join(", ") || "–"} {s.tools_freetext && `+ ${s.tools_freetext}`}</p>
-            <p><strong>Modeller:</strong> {(s.models_used || []).join(", ") || "–"}</p>
-            <p><strong>Bruksområder:</strong> {(s.use_cases || []).join(", ") || "–"}</p>
-            <p><strong>Tid spart:</strong> {s.time_saved_range || "–"}</p>
-            <p><strong>Sensitiv data:</strong> {s.data_sensitivity || "–"}</p>
-            {s.pain_points && <p><strong>Utfordringer:</strong> {s.pain_points}</p>}
-            {s.must_keep_tool && <p><strong>Må beholde:</strong> {s.must_keep_tool}</p>}
-            <p className="text-xs text-muted-foreground">{new Date(s.created_at).toLocaleString("nb-NO")}</p>
+            <div className="flex justify-between items-start">
+              <div className="space-y-1 flex-1">
+                {s.team && <p><strong>Team:</strong> {s.team}</p>}
+                {s.role && <p><strong>Rolle:</strong> {s.role}</p>}
+                <p><strong>Verktøy:</strong> {(s.tools_used || []).join(", ") || "–"} {s.tools_freetext && `+ ${s.tools_freetext}`}</p>
+                <p><strong>Modeller:</strong> {(s.models_used || []).join(", ") || "–"}</p>
+                <p><strong>Bruksområder:</strong> {(s.use_cases || []).join(", ") || "–"}</p>
+                <p><strong>Tid spart:</strong> {s.time_saved_range || "–"}</p>
+                <p><strong>Sensitiv data:</strong> {s.data_sensitivity || "–"}</p>
+                {s.pain_points && <p><strong>Utfordringer:</strong> {s.pain_points}</p>}
+                {s.must_keep_tool && <p><strong>Må beholde:</strong> {s.must_keep_tool}</p>}
+                <p className="text-xs text-muted-foreground">{new Date(s.created_at).toLocaleString("nb-NO")}</p>
+              </div>
+              <Button variant="ghost" size="icon" onClick={() => handleDelete(s.id)}>🗑️</Button>
+            </div>
           </CardContent>
         </Card>
       ))}
