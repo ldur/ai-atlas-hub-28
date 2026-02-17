@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
+import { adminAction, isAdmin } from "@/lib/adminAction";
 import { toast } from "sonner";
 
 const statusConfig: Record<string, { label: string; color: string }> = {
@@ -24,6 +25,7 @@ const Catalog = () => {
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const admin = isAdmin();
 
   useEffect(() => {
     Promise.all([
@@ -59,25 +61,19 @@ const Catalog = () => {
     itemType: "tool" | "model",
     itemId: string
   ) => {
+    if (!admin) { toast.error("Kun admin kan endre status"); return; }
     const existing = itemType === "tool" ? getToolEval(itemId) : getModelEval(itemId);
     try {
+      const payload = {
+        decided_status: newStatus,
+        decided_at: new Date().toISOString(),
+        ...(itemType === "tool" ? { tool_id: itemId } : { model_id: itemId }),
+      };
       if (existing?.id) {
-        const { data, error } = await supabase
-          .from("evaluations")
-          .update({ decided_status: newStatus, decided_at: new Date().toISOString() })
-          .eq("id", existing.id)
-          .select()
-          .single();
-        if (error) throw error;
+        const data = await adminAction({ action: "update", table: "evaluations", id: existing.id, payload });
         setEvaluations((prev) => prev.map((e) => (e.id === existing.id ? data : e)));
       } else {
-        const payload = {
-          decided_status: newStatus,
-          decided_at: new Date().toISOString(),
-          ...(itemType === "tool" ? { tool_id: itemId } : { model_id: itemId }),
-        };
-        const { data, error } = await supabase.from("evaluations").insert(payload).select().single();
-        if (error) throw error;
+        const data = await adminAction({ action: "insert", table: "evaluations", payload });
         setEvaluations((prev) => [...prev, data]);
       }
       toast.success("Status oppdatert");
@@ -161,21 +157,25 @@ const Catalog = () => {
                         <span className="font-medium cursor-pointer hover:underline" onClick={() => navigate(`/katalog/${tool.id}`)}>
                           {tool.name}
                         </span>
-                        <Select
-                          value={cfg ? ev.decided_status : ""}
-                          onValueChange={(val) => handleStatusChange(val, "tool", tool.id)}
-                        >
-                          <SelectTrigger className="w-auto h-7 text-xs px-2 gap-1" onClick={(e) => e.stopPropagation()}>
-                            <SelectValue placeholder="Sett status">
-                              {cfg ? cfg.label : "Sett status"}
-                            </SelectValue>
-                          </SelectTrigger>
-                          <SelectContent>
-                            {statuses.map((s) => (
-                              <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        {admin ? (
+                          <Select
+                            value={cfg ? ev.decided_status : ""}
+                            onValueChange={(val) => handleStatusChange(val, "tool", tool.id)}
+                          >
+                            <SelectTrigger className="w-auto h-7 text-xs px-2 gap-1" onClick={(e) => e.stopPropagation()}>
+                              <SelectValue placeholder="Sett status">
+                                {cfg ? cfg.label : "Sett status"}
+                              </SelectValue>
+                            </SelectTrigger>
+                            <SelectContent>
+                              {statuses.map((s) => (
+                                <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        ) : cfg ? (
+                          <Badge className={cfg.color}>{cfg.label}</Badge>
+                        ) : null}
                       </div>
                       <div className="flex items-center gap-2 text-xs text-muted-foreground">
                         {tool.category && <span>{tool.category}</span>}
@@ -207,21 +207,25 @@ const Catalog = () => {
                         <span className="font-medium cursor-pointer hover:underline" onClick={() => navigate(`/katalog/modell/${model.id}`)}>
                           {model.name}
                         </span>
-                        <Select
-                          value={cfg ? ev.decided_status : ""}
-                          onValueChange={(val) => handleStatusChange(val, "model", model.id)}
-                        >
-                          <SelectTrigger className="w-auto h-7 text-xs px-2 gap-1" onClick={(e) => e.stopPropagation()}>
-                            <SelectValue placeholder="Sett status">
-                              {cfg ? cfg.label : "Sett status"}
-                            </SelectValue>
-                          </SelectTrigger>
-                          <SelectContent>
-                            {statuses.map((s) => (
-                              <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        {admin ? (
+                          <Select
+                            value={cfg ? ev.decided_status : ""}
+                            onValueChange={(val) => handleStatusChange(val, "model", model.id)}
+                          >
+                            <SelectTrigger className="w-auto h-7 text-xs px-2 gap-1" onClick={(e) => e.stopPropagation()}>
+                              <SelectValue placeholder="Sett status">
+                                {cfg ? cfg.label : "Sett status"}
+                              </SelectValue>
+                            </SelectTrigger>
+                            <SelectContent>
+                              {statuses.map((s) => (
+                                <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        ) : cfg ? (
+                          <Badge className={cfg.color}>{cfg.label}</Badge>
+                        ) : null}
                       </div>
                       <div className="flex items-center gap-2 text-xs text-muted-foreground">
                         {model.provider && <span>{model.provider}</span>}

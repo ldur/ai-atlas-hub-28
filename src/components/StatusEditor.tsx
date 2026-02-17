@@ -3,7 +3,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { supabase } from "@/integrations/supabase/client";
+import { adminAction, isAdmin } from "@/lib/adminAction";
 import { toast } from "sonner";
 
 const statuses = [
@@ -25,6 +25,8 @@ export const StatusEditor = ({ evaluation, itemType, itemId, onSaved }: StatusEd
   const [rationale, setRationale] = useState(evaluation?.rationale || "");
   const [saving, setSaving] = useState(false);
 
+  if (!isAdmin()) return null;
+
   const handleSave = async () => {
     if (!status) {
       toast.error("Velg en status");
@@ -40,21 +42,10 @@ export const StatusEditor = ({ evaluation, itemType, itemId, onSaved }: StatusEd
       };
 
       if (evaluation?.id) {
-        const { data, error } = await supabase
-          .from("evaluations")
-          .update(payload)
-          .eq("id", evaluation.id)
-          .select()
-          .single();
-        if (error) throw error;
+        const data = await adminAction({ action: "update", table: "evaluations", id: evaluation.id, payload });
         onSaved(data);
       } else {
-        const { data, error } = await supabase
-          .from("evaluations")
-          .insert(payload)
-          .select()
-          .single();
-        if (error) throw error;
+        const data = await adminAction({ action: "insert", table: "evaluations", payload });
         onSaved(data);
       }
       toast.success("Klassifisering lagret!");

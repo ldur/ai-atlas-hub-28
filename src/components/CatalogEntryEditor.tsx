@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
+import { adminAction, isAdmin } from "@/lib/adminAction";
 import { toast } from "sonner";
 
 interface CatalogEntryEditorProps {
@@ -44,7 +45,10 @@ export const CatalogEntryEditor = ({
     security_guidance: entry?.security_guidance || "",
   });
 
+  const admin = isAdmin();
+
   const handleGenerate = async () => {
+    if (!admin) { toast.error("Kun admin kan gjøre endringer"); return; }
     setGenerating(true);
     try {
       const { data, error } = await supabase.functions.invoke("generate-catalog-info", {
@@ -75,6 +79,7 @@ export const CatalogEntryEditor = ({
   };
 
   const handleSave = async () => {
+    if (!admin) { toast.error("Kun admin kan gjøre endringer"); return; }
     setSaving(true);
     try {
       const payload = {
@@ -84,21 +89,10 @@ export const CatalogEntryEditor = ({
       };
 
       if (entry?.id) {
-        const { data, error } = await supabase
-          .from("catalog_entries")
-          .update(payload)
-          .eq("id", entry.id)
-          .select()
-          .single();
-        if (error) throw error;
+        const data = await adminAction({ action: "update", table: "catalog_entries", id: entry.id, payload });
         onSaved(data);
       } else {
-        const { data, error } = await supabase
-          .from("catalog_entries")
-          .insert(payload)
-          .select()
-          .single();
-        if (error) throw error;
+        const data = await adminAction({ action: "insert", table: "catalog_entries", payload });
         onSaved(data);
       }
       setEditing(false);
@@ -111,17 +105,19 @@ export const CatalogEntryEditor = ({
   };
 
   const handleDelete = async () => {
+    if (!admin) { toast.error("Kun admin kan gjøre endringer"); return; }
     if (!entry?.id) return;
     if (!confirm("Er du sikker på at du vil slette denne katalogoppføringen?")) return;
     try {
-      const { error } = await supabase.from("catalog_entries").delete().eq("id", entry.id);
-      if (error) throw error;
+      await adminAction({ action: "delete", table: "catalog_entries", id: entry.id });
       onDeleted();
       toast.success("Katalogoppføring slettet");
     } catch (e: any) {
       toast.error(e.message || "Kunne ikke slette");
     }
   };
+
+  if (!admin) return null;
 
   if (!editing && !entry) {
     return (
