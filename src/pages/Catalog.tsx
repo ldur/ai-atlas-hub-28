@@ -78,7 +78,7 @@ const Catalog = () => {
               {entry.example_prompts && (
                 <div>
                   <p className="font-medium text-foreground">Eksempelprompter</p>
-                  <div className="prose prose-sm max-w-none text-muted-foreground">
+                  <div className="prose-catalog text-muted-foreground">
                     <ReactMarkdown>{entry.example_prompts}</ReactMarkdown>
                   </div>
                 </div>
