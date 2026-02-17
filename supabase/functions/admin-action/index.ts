@@ -31,7 +31,7 @@ serve(async (req) => {
     const { action, table, payload, id } = body;
 
     // Only allow specific tables
-    const allowedTables = ["catalog_entries", "evaluations", "tools", "models", "learning_items"];
+    const allowedTables = ["catalog_entries", "evaluations", "tools", "models", "learning_items", "submissions"];
     if (!allowedTables.includes(table)) {
       return new Response(JSON.stringify({ error: `Tabell '${table}' er ikke tillatt.` }), {
         status: 400,
