@@ -13,6 +13,81 @@ import { useToast } from "@/hooks/use-toast";
 
 const ADMIN_CODE = "atlas-admin-2024";
 
+function BulkGenerateSection() {
+  const [running, setRunning] = useState(false);
+  const [results, setResults] = useState<{ type: string; name: string; status: string }[]>([]);
+  const { toast } = useToast();
+
+  const runBulk = async (type: "tool" | "model") => {
+    setRunning(true);
+    let remaining = 999;
+    const allResults: { type: string; name: string; status: string }[] = [];
+
+    try {
+      while (remaining > 0) {
+        const { data, error } = await supabase.functions.invoke("bulk-generate-catalog", {
+          body: { type, batch_size: 3 },
+        });
+        if (error) throw error;
+        if (data?.error) throw new Error(data.error);
+
+        remaining = data.remaining || 0;
+        for (const r of data.results || []) {
+          allResults.push({ type, ...r });
+        }
+        setResults([...allResults]);
+
+        if (data.processed === 0) break;
+      }
+      toast({ title: `✅ Ferdig! ${allResults.length} ${type === "tool" ? "verktøy" : "modeller"} generert.` });
+    } catch (e: any) {
+      toast({ title: "Feil", description: e.message, variant: "destructive" });
+    } finally {
+      setRunning(false);
+    }
+  };
+
+  const runAll = async () => {
+    await runBulk("tool");
+    await runBulk("model");
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base">✨ Bulk AI-generering av katalogoppføringer</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <p className="text-sm text-muted-foreground">
+          Generer kataloginnhold automatisk for alle verktøy og modeller som mangler oppføring.
+        </p>
+        <div className="flex gap-2 flex-wrap">
+          <Button size="sm" onClick={() => runBulk("tool")} disabled={running}>
+            {running ? "⏳ Kjører..." : "🛠️ Generer for verktøy"}
+          </Button>
+          <Button size="sm" onClick={() => runBulk("model")} disabled={running}>
+            {running ? "⏳ Kjører..." : "🧠 Generer for modeller"}
+          </Button>
+          <Button size="sm" variant="outline" onClick={runAll} disabled={running}>
+            {running ? "⏳ Kjører..." : "✨ Generer for alle"}
+          </Button>
+        </div>
+        {results.length > 0 && (
+          <div className="text-xs space-y-1 max-h-40 overflow-y-auto border rounded p-2">
+            {results.map((r, i) => (
+              <div key={i} className="flex gap-2">
+                <span>{r.type === "tool" ? "🛠️" : "🧠"}</span>
+                <span className="font-medium">{r.name}</span>
+                <span className={r.status === "success" ? "text-success" : "text-destructive"}>{r.status}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 const Admin = () => {
   const [authenticated, setAuthenticated] = useState(false);
   const [code, setCode] = useState("");
@@ -55,6 +130,7 @@ const Admin = () => {
   return (
     <div className="max-w-5xl mx-auto space-y-6">
       <h1 className="text-2xl font-bold tracking-tight">Admin Panel</h1>
+      <BulkGenerateSection />
       <Tabs defaultValue="submissions">
         <TabsList className="grid grid-cols-5 w-full">
           <TabsTrigger value="submissions">Innleveringer</TabsTrigger>
