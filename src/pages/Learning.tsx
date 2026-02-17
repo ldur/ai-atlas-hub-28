@@ -27,7 +27,15 @@ const Learning = () => {
   const [newTitle, setNewTitle] = useState("");
   const [newContent, setNewContent] = useState("");
   const [newType, setNewType] = useState("tip");
+  const [newTags, setNewTags] = useState<string[]>([]);
+  const [tagInput, setTagInput] = useState("");
   const { toast } = useToast();
+
+  const addTag = () => {
+    const tag = tagInput.trim().toLowerCase();
+    if (tag && !newTags.includes(tag)) setNewTags([...newTags, tag]);
+    setTagInput("");
+  };
 
   const fetchItems = async () => {
     const { data } = await supabase
@@ -48,6 +56,7 @@ const Learning = () => {
       title: newTitle.trim(),
       content: newContent.trim(),
       type: newType,
+      tags: newTags.length > 0 ? newTags : null,
       published: false,
       submitted_by: aliasId || null,
     });
@@ -55,7 +64,7 @@ const Learning = () => {
       toast({ title: "Feil", description: error.message, variant: "destructive" });
     } else {
       toast({ title: "Innsendt!", description: "Ditt bidrag vil bli gjennomgått av admin." });
-      setNewTitle(""); setNewContent(""); setOpen(false);
+      setNewTitle(""); setNewContent(""); setNewTags([]); setOpen(false);
     }
   };
 
@@ -99,6 +108,27 @@ const Learning = () => {
                 rows={6}
                 maxLength={5000}
               />
+              <div className="space-y-2">
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="Legg til tag og trykk Enter"
+                    value={tagInput}
+                    onChange={(e) => setTagInput(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addTag(); } }}
+                    maxLength={30}
+                  />
+                  <Button type="button" variant="outline" size="sm" onClick={addTag} disabled={!tagInput.trim()}>+</Button>
+                </div>
+                {newTags.length > 0 && (
+                  <div className="flex gap-1 flex-wrap">
+                    {newTags.map(tag => (
+                      <Badge key={tag} variant="secondary" className="cursor-pointer" onClick={() => setNewTags(newTags.filter(t => t !== tag))}>
+                        {tag} ✕
+                      </Badge>
+                    ))}
+                  </div>
+                )}
+              </div>
               <Button className="w-full" onClick={handleSubmitTip} disabled={!newTitle.trim() || !newContent.trim()}>
                 Send inn
               </Button>
