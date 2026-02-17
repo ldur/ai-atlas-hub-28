@@ -123,6 +123,7 @@ const Stack = () => {
             evaluations={modelEvals}
             getName={getModelName}
             getExtra={getModelProvider}
+            onClickItem={(id) => navigate(`/katalog/modell/${id}`)}
           />
         </TabsContent>
       </Tabs>

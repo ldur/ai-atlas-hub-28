@@ -1,44 +1,64 @@
 import { useEffect, useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useNavigate } from "react-router-dom";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { Search } from "lucide-react";
-import ReactMarkdown from "react-markdown";
+
+const statusConfig: Record<string, { label: string; color: string }> = {
+  STANDARD: { label: "🟢 Standard", color: "bg-success text-success-foreground" },
+  ALLOWED: { label: "🟡 Tillatt", color: "bg-warning text-warning-foreground" },
+  NOT_ALLOWED: { label: "🔴 Ikke tillatt", color: "bg-destructive text-destructive-foreground" },
+  TRIAL: { label: "🧪 Prøveperiode", color: "bg-accent text-accent-foreground" },
+};
 
 const Catalog = () => {
-  const [entries, setEntries] = useState<any[]>([]);
   const [tools, setTools] = useState<any[]>([]);
+  const [models, setModels] = useState<any[]>([]);
+  const [evaluations, setEvaluations] = useState<any[]>([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     Promise.all([
-      supabase.from("catalog_entries").select("*"),
       supabase.from("tools").select("*"),
-    ]).then(([catRes, toolRes]) => {
-      setEntries(catRes.data || []);
+      supabase.from("models").select("*"),
+      supabase.from("evaluations").select("*"),
+    ]).then(([toolRes, modelRes, evalRes]) => {
       setTools(toolRes.data || []);
+      setModels(modelRes.data || []);
+      setEvaluations(evalRes.data || []);
       setLoading(false);
     });
   }, []);
 
   if (loading) return <p className="text-muted-foreground">Laster katalog...</p>;
 
-  const getToolName = (toolId: string) => tools.find((t) => t.id === toolId)?.name || "Ukjent";
-  const getToolCategory = (toolId: string) => tools.find((t) => t.id === toolId)?.category;
+  const getToolEval = (id: string) => evaluations.find((e) => e.tool_id === id);
+  const getModelEval = (id: string) => evaluations.find((e) => e.model_id === id && !e.tool_id);
 
-  const filtered = entries.filter((e) => {
-    const toolName = e.tool_id ? getToolName(e.tool_id) : "";
-    return toolName.toLowerCase().includes(search.toLowerCase()) ||
-      (e.best_for || "").toLowerCase().includes(search.toLowerCase());
-  });
+  const filteredTools = tools.filter(
+    (t) =>
+      t.name.toLowerCase().includes(search.toLowerCase()) ||
+      (t.category || "").toLowerCase().includes(search.toLowerCase()) ||
+      (t.vendor || "").toLowerCase().includes(search.toLowerCase())
+  );
+
+  const filteredModels = models.filter(
+    (m) =>
+      m.name.toLowerCase().includes(search.toLowerCase()) ||
+      (m.provider || "").toLowerCase().includes(search.toLowerCase()) ||
+      (m.modality || "").toLowerCase().includes(search.toLowerCase())
+  );
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Verktøykatalog</h1>
-        <p className="text-muted-foreground">Søkbar oversikt over AI-verktøy og bruksveiledninger</p>
+        <p className="text-muted-foreground">Komplett oversikt over alle AI-verktøy og modeller</p>
       </div>
 
       <div className="relative">
@@ -51,60 +71,74 @@ const Catalog = () => {
         />
       </div>
 
-      {filtered.length === 0 && (
-        <p className="text-muted-foreground text-center py-12">
-          {entries.length === 0 ? "Katalogen er tom. Admin kan legge til oppføringer." : "Ingen treff."}
-        </p>
-      )}
+      <Tabs defaultValue="tools" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="tools">🛠️ Verktøy ({filteredTools.length})</TabsTrigger>
+          <TabsTrigger value="models">🧠 Modeller ({filteredModels.length})</TabsTrigger>
+        </TabsList>
 
-      <div className="space-y-4">
-        {filtered.map((entry) => (
-          <Card key={entry.id}>
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <CardTitle className="text-lg">{entry.tool_id ? getToolName(entry.tool_id) : "Generelt"}</CardTitle>
-                {entry.tool_id && getToolCategory(entry.tool_id) && (
-                  <Badge variant="secondary">{getToolCategory(entry.tool_id)}</Badge>
-                )}
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-3 text-sm">
-              {entry.best_for && (
-                <div>
-                  <p className="font-medium text-foreground">Best for</p>
-                  <p className="text-muted-foreground">{entry.best_for}</p>
-                </div>
-              )}
-              {entry.example_prompts && (
-                <div>
-                  <p className="font-medium text-foreground">Eksempelprompter</p>
-                  <div className="prose-catalog text-muted-foreground">
-                    <ReactMarkdown>{entry.example_prompts}</ReactMarkdown>
-                  </div>
-                </div>
-              )}
-              {entry.do_this && (
-                <div>
-                  <p className="font-medium text-success">✅ Gjør dette</p>
-                  <p className="text-muted-foreground">{entry.do_this}</p>
-                </div>
-              )}
-              {entry.avoid_this && (
-                <div>
-                  <p className="font-medium text-destructive">❌ Unngå dette</p>
-                  <p className="text-muted-foreground">{entry.avoid_this}</p>
-                </div>
-              )}
-              {entry.security_guidance && (
-                <div>
-                  <p className="font-medium text-foreground">🔒 Sikkerhetsveiledning</p>
-                  <p className="text-muted-foreground">{entry.security_guidance}</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+        <TabsContent value="tools" className="mt-6">
+          {filteredTools.length === 0 ? (
+            <p className="text-muted-foreground text-center py-12">Ingen verktøy funnet.</p>
+          ) : (
+            <div className="grid gap-3 sm:grid-cols-2">
+              {filteredTools.map((tool) => {
+                const ev = getToolEval(tool.id);
+                const cfg = ev ? statusConfig[ev.decided_status] : null;
+                return (
+                  <Card
+                    key={tool.id}
+                    className="cursor-pointer hover:border-primary transition-colors"
+                    onClick={() => navigate(`/katalog/${tool.id}`)}
+                  >
+                    <CardContent className="p-4 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium">{tool.name}</span>
+                        {cfg && <Badge className={cfg.color}>{cfg.label}</Badge>}
+                      </div>
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        {tool.category && <span>{tool.category}</span>}
+                        {tool.vendor && <span>· {tool.vendor}</span>}
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="models" className="mt-6">
+          {filteredModels.length === 0 ? (
+            <p className="text-muted-foreground text-center py-12">Ingen modeller funnet.</p>
+          ) : (
+            <div className="grid gap-3 sm:grid-cols-2">
+              {filteredModels.map((model) => {
+                const ev = getModelEval(model.id);
+                const cfg = ev ? statusConfig[ev.decided_status] : null;
+                return (
+                  <Card
+                    key={model.id}
+                    className="cursor-pointer hover:border-primary transition-colors"
+                    onClick={() => navigate(`/katalog/modell/${model.id}`)}
+                  >
+                    <CardContent className="p-4 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium">{model.name}</span>
+                        {cfg && <Badge className={cfg.color}>{cfg.label}</Badge>}
+                      </div>
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        {model.provider && <span>{model.provider}</span>}
+                        {model.modality && <span>· {model.modality}</span>}
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
