@@ -5,7 +5,6 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getNickname, setNickname, setAliasId, getAliasId, generateNickname } from "@/lib/nickname";
 import { supabase } from "@/integrations/supabase/client";
-import { ClipboardList, BarChart3, BookOpen, ShieldCheck, GraduationCap, RefreshCw } from "lucide-react";
 
 const Index = () => {
   const [nickname, setNicknameState] = useState("");
@@ -59,11 +58,11 @@ const Index = () => {
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
-          <QuickLink icon={ClipboardList} title="Kartlegging" desc="Del hvilke AI-verktøy du bruker" to="/kartlegging" />
-          <QuickLink icon={BarChart3} title="Innsikt" desc="Se hva organisasjonen bruker" to="/innsikt" />
-          <QuickLink icon={ShieldCheck} title="Anbefalt Stack" desc="Se anbefalte verktøy" to="/stack" />
-          <QuickLink icon={BookOpen} title="Katalog" desc="Utforsk verktøykatalogen" to="/katalog" />
-          <QuickLink icon={GraduationCap} title="Læring" desc="Tips, prompter og case studies" to="/laering" />
+          <QuickLink icon="📋" title="Kartlegging" desc="Del hvilke AI-verktøy du bruker" to="/kartlegging" />
+          <QuickLink icon="📊" title="Innsikt" desc="Se hva organisasjonen bruker" to="/innsikt" />
+          <QuickLink icon="✅" title="Anbefalt Stack" desc="Se anbefalte verktøy" to="/stack" />
+          <QuickLink icon="📖" title="Katalog" desc="Utforsk verktøykatalogen" to="/katalog" />
+          <QuickLink icon="🎓" title="Læring" desc="Tips, prompter og case studies" to="/laering" />
         </div>
 
         <p className="text-sm text-muted-foreground">
@@ -99,7 +98,7 @@ const Index = () => {
               maxLength={30}
             />
             <Button variant="outline" size="icon" onClick={handleGenerateNew} title="Generer nytt">
-              <RefreshCw className="h-4 w-4" />
+              🔄
             </Button>
           </div>
           <Button className="w-full" onClick={handleStart} disabled={!nickname.trim() || loading}>
@@ -115,13 +114,13 @@ const Index = () => {
   );
 };
 
-function QuickLink({ icon: Icon, title, desc, to }: { icon: any; title: string; desc: string; to: string }) {
+function QuickLink({ icon, title, desc, to }: { icon: string; title: string; desc: string; to: string }) {
   const navigate = useNavigate();
   return (
     <Card className="cursor-pointer hover:border-primary/40 transition-colors" onClick={() => navigate(to)}>
       <CardContent className="flex items-start gap-3 p-4">
         <div className="rounded-lg bg-primary/10 p-2">
-          <Icon className="h-5 w-5 text-primary" />
+          <span className="text-lg leading-none">{icon}</span>
         </div>
         <div>
           <p className="font-medium">{title}</p>

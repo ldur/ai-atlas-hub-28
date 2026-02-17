@@ -11,7 +11,6 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { getAliasId, getNickname } from "@/lib/nickname";
 import { useToast } from "@/hooks/use-toast";
-import { CheckCircle2, ArrowRight } from "lucide-react";
 
 const DRAFT_KEY = "ai-tool-atlas-survey-draft";
 
@@ -21,25 +20,15 @@ const knownTools = [
 ];
 
 const knownModels = [
-  // OpenAI
   "GPT-5.2", "GPT-5.3 Codex-Spark", "o3-serien",
-  // Anthropic
   "Claude Opus 4.5/4.6", "Claude Sonnet 4.5",
-  // Google DeepMind
   "Gemini 3 Pro", "Gemini 3 Flash",
-  // xAI
   "Grok 4.1",
-  // Meta
   "Llama 4",
-  // Mistral
   "Mistral Large 3", "Devstral 2",
-  // Alibaba / DeepSeek
   "Qwen 3", "DeepSeek V3.x",
-  // Kinesiske frontier
   "GLM-5", "MiniMax M2.5", "Seedance 2.0",
-  // Multimodale / generative
   "Sora", "Runway Gen-4", "Stable Diffusion 3.x", "Midjourney v7",
-  // Annet
   "Vet ikke",
 ];
 
@@ -148,11 +137,11 @@ const Survey = () => {
   if (submitted) {
     return (
       <div className="max-w-lg mx-auto mt-12 text-center space-y-6">
-        <CheckCircle2 className="h-16 w-16 text-success mx-auto" />
+        <span className="text-6xl block">✅</span>
         <h1 className="text-3xl font-bold">Takk for ditt bidrag! 🎉</h1>
         <p className="text-muted-foreground">Svarene dine er registrert anonymt.</p>
         <div className="flex gap-3 justify-center">
-          <Button onClick={() => navigate("/innsikt")}>Se innsikt <ArrowRight className="ml-1 h-4 w-4" /></Button>
+          <Button onClick={() => navigate("/innsikt")}>Se innsikt →</Button>
           <Button variant="outline" onClick={() => navigate("/katalog")}>Utforsk katalogen</Button>
         </div>
       </div>

@@ -1,4 +1,3 @@
-import { Home, ClipboardList, BarChart3, ShieldCheck, BookOpen, GraduationCap, Lock, PanelLeft } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import {
@@ -9,18 +8,17 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar";
 
 const navItems = [
-  { title: "Hjem", url: "/", icon: Home },
-  { title: "Kartlegging", url: "/kartlegging", icon: ClipboardList },
-  { title: "Innsikt", url: "/innsikt", icon: BarChart3 },
-  { title: "Anbefalt Stack", url: "/stack", icon: ShieldCheck },
-  { title: "Katalog", url: "/katalog", icon: BookOpen },
-  { title: "Læring", url: "/laering", icon: GraduationCap },
-  { title: "Admin", url: "/admin", icon: Lock },
+  { title: "Hjem", url: "/", icon: "🏠" },
+  { title: "Kartlegging", url: "/kartlegging", icon: "📋" },
+  { title: "Innsikt", url: "/innsikt", icon: "📊" },
+  { title: "Anbefalt Stack", url: "/stack", icon: "✅" },
+  { title: "Katalog", url: "/katalog", icon: "📖" },
+  { title: "Læring", url: "/laering", icon: "🎓" },
+  { title: "Admin", url: "/admin", icon: "🔒" },
 ];
 
 export function AppSidebar() {
@@ -50,7 +48,7 @@ export function AppSidebar() {
                       className="hover:bg-sidebar-accent/60"
                       activeClassName="bg-sidebar-accent text-sidebar-primary font-semibold"
                     >
-                      <item.icon className="h-4 w-4" />
+                      <span className="text-base leading-none">{item.icon}</span>
                       <span>{item.title}</span>
                     </NavLink>
                   </SidebarMenuButton>

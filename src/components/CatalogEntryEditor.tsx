@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
-import { Sparkles, Save, Trash2, Pencil, X, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 interface CatalogEntryEditorProps {
@@ -131,11 +130,10 @@ export const CatalogEntryEditor = ({
           <p className="text-muted-foreground text-sm">Ingen katalogoppføring ennå</p>
           <div className="flex gap-2">
             <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
-              <Pencil className="h-4 w-4 mr-1" /> Opprett manuelt
+              ✏️ Opprett manuelt
             </Button>
             <Button size="sm" onClick={handleGenerate} disabled={generating}>
-              {generating ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Sparkles className="h-4 w-4 mr-1" />}
-              {generating ? "Genererer..." : "Generer med AI"}
+              {generating ? "⏳ Genererer..." : "✨ Generer med AI"}
             </Button>
           </div>
         </CardContent>
@@ -150,14 +148,13 @@ export const CatalogEntryEditor = ({
           <h2 className="text-lg font-semibold">Katalogoppføring</h2>
           <div className="flex gap-2">
             <Button variant="outline" size="sm" onClick={handleGenerate} disabled={generating}>
-              {generating ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Sparkles className="h-4 w-4 mr-1" />}
-              Regenerer med AI
+              {generating ? "⏳" : "✨"} Regenerer med AI
             </Button>
             <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
-              <Pencil className="h-4 w-4 mr-1" /> Rediger
+              ✏️ Rediger
             </Button>
             <Button variant="destructive" size="sm" onClick={handleDelete}>
-              <Trash2 className="h-4 w-4 mr-1" /> Slett
+              🗑️ Slett
             </Button>
           </div>
         </div>
@@ -174,11 +171,10 @@ export const CatalogEntryEditor = ({
           </CardTitle>
           <div className="flex gap-2">
             <Button variant="outline" size="sm" onClick={handleGenerate} disabled={generating}>
-              {generating ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Sparkles className="h-4 w-4 mr-1" />}
-              {generating ? "Genererer..." : "Fyll med AI"}
+              {generating ? "⏳ Genererer..." : "✨ Fyll med AI"}
             </Button>
             <Button variant="ghost" size="sm" onClick={() => setEditing(false)}>
-              <X className="h-4 w-4" />
+              ✕
             </Button>
           </div>
         </div>
@@ -199,8 +195,7 @@ export const CatalogEntryEditor = ({
         ))}
         <div className="flex gap-2 pt-2">
           <Button onClick={handleSave} disabled={saving} size="sm">
-            {saving ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Save className="h-4 w-4 mr-1" />}
-            {saving ? "Lagrer..." : "Lagre"}
+            {saving ? "⏳ Lagrer..." : "💾 Lagre"}
           </Button>
           <Button variant="ghost" size="sm" onClick={() => setEditing(false)}>
             Avbryt

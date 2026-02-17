@@ -9,7 +9,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { getAliasId } from "@/lib/nickname";
 import { useToast } from "@/hooks/use-toast";
 import ReactMarkdown from "react-markdown";
-import { Plus, Search } from "lucide-react";
 
 const typeLabels: Record<string, string> = {
   tip: "Tips",
@@ -78,7 +77,7 @@ const Learning = () => {
         </div>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
-            <Button><Plus className="h-4 w-4 mr-1" /> Del et tips</Button>
+            <Button>➕ Del et tips</Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
@@ -110,7 +109,7 @@ const Learning = () => {
 
       <div className="flex gap-3 flex-wrap">
         <div className="relative flex-1 min-w-[200px]">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">🔍</span>
           <Input placeholder="Søk..." className="pl-9" value={search} onChange={(e) => setSearch(e.target.value)} />
         </div>
         <div className="flex gap-1 flex-wrap">

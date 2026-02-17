@@ -10,9 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { getAdminToken, setAdminToken } from "@/lib/nickname";
 import { useToast } from "@/hooks/use-toast";
-import { Lock, Plus, Trash2 } from "lucide-react";
 
-const ADMIN_CODE = "atlas-admin-2024"; // In production, validate server-side
+const ADMIN_CODE = "atlas-admin-2024";
 
 const Admin = () => {
   const [authenticated, setAuthenticated] = useState(false);
@@ -37,7 +36,7 @@ const Admin = () => {
     return (
       <div className="max-w-sm mx-auto mt-12 space-y-4">
         <div className="text-center space-y-2">
-          <Lock className="h-12 w-12 mx-auto text-muted-foreground" />
+          <span className="text-5xl block">🔒</span>
           <h1 className="text-2xl font-bold">Admin</h1>
           <p className="text-muted-foreground">Skriv inn admin-koden for tilgang</p>
         </div>
@@ -129,7 +128,7 @@ function ToolsTab() {
         <Input placeholder="Navn" value={name} onChange={(e) => setName(e.target.value)} />
         <Input placeholder="Kategori" value={category} onChange={(e) => setCategory(e.target.value)} />
         <Input placeholder="Leverandør" value={vendor} onChange={(e) => setVendor(e.target.value)} />
-        <Button onClick={handleAdd}><Plus className="h-4 w-4" /></Button>
+        <Button onClick={handleAdd}>➕</Button>
       </div>
       {tools.map((t) => (
         <div key={t.id} className="flex items-center justify-between border rounded-md p-3">
@@ -138,7 +137,7 @@ function ToolsTab() {
             {t.category && <Badge variant="secondary" className="ml-2">{t.category}</Badge>}
             {t.vendor && <span className="ml-2 text-sm text-muted-foreground">{t.vendor}</span>}
           </div>
-          <Button variant="ghost" size="icon" onClick={() => handleDelete(t.id)}><Trash2 className="h-4 w-4" /></Button>
+          <Button variant="ghost" size="icon" onClick={() => handleDelete(t.id)}>🗑️</Button>
         </div>
       ))}
     </div>
@@ -190,7 +189,7 @@ function EvaluationsTab() {
             <SelectItem value="TRIAL">Prøveperiode</SelectItem>
           </SelectContent>
         </Select>
-        <Button onClick={handleAdd}><Plus className="h-4 w-4" /></Button>
+        <Button onClick={handleAdd}>➕</Button>
       </div>
       <Textarea placeholder="Begrunnelse" value={rationale} onChange={(e) => setRationale(e.target.value)} />
       {evals.map((ev) => (
@@ -253,7 +252,7 @@ function CatalogTab() {
       <Textarea placeholder="Unngå dette" value={avoidThis} onChange={(e) => setAvoidThis(e.target.value)} />
       <Textarea placeholder="Eksempelprompter (markdown)" value={examplePrompts} onChange={(e) => setExamplePrompts(e.target.value)} />
       <Textarea placeholder="Sikkerhetsveiledning" value={securityGuidance} onChange={(e) => setSecurityGuidance(e.target.value)} />
-      <Button onClick={handleAdd}><Plus className="h-4 w-4 mr-1" /> Legg til</Button>
+      <Button onClick={handleAdd}>➕ Legg til</Button>
 
       {entries.map((e) => (
         <Card key={e.id}>
@@ -304,7 +303,7 @@ function LearningTab() {
                 {item.published ? "Avpubliser" : "Publiser"}
               </Button>
               <Button variant="ghost" size="icon" onClick={() => handleDelete(item.id)}>
-                <Trash2 className="h-4 w-4" />
+                🗑️
               </Button>
             </div>
           </CardContent>
