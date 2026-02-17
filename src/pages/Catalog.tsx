@@ -20,6 +20,7 @@ const Catalog = () => {
   const [tools, setTools] = useState<any[]>([]);
   const [models, setModels] = useState<any[]>([]);
   const [evaluations, setEvaluations] = useState<any[]>([]);
+  const [catalogEntries, setCatalogEntries] = useState<any[]>([]);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [loading, setLoading] = useState(true);
@@ -30,10 +31,12 @@ const Catalog = () => {
       supabase.from("tools").select("*"),
       supabase.from("models").select("*"),
       supabase.from("evaluations").select("*"),
-    ]).then(([toolRes, modelRes, evalRes]) => {
+      supabase.from("catalog_entries").select("*"),
+    ]).then(([toolRes, modelRes, evalRes, catRes]) => {
       setTools(toolRes.data || []);
       setModels(modelRes.data || []);
       setEvaluations(evalRes.data || []);
+      setCatalogEntries(catRes.data || []);
       setLoading(false);
     });
   }, []);
@@ -42,6 +45,8 @@ const Catalog = () => {
 
   const getToolEval = (id: string) => evaluations.find((e) => e.tool_id === id);
   const getModelEval = (id: string) => evaluations.find((e) => e.model_id === id && !e.tool_id);
+  const getCatalogEntry = (itemId: string, type: "tool" | "model") =>
+    catalogEntries.find((c) => (type === "tool" ? c.tool_id === itemId : c.model_id === itemId));
 
   const statuses = [
     { value: "STANDARD", label: "🟢 Standard" },
@@ -180,6 +185,9 @@ const Catalog = () => {
                         {tool.category && <span>{tool.category}</span>}
                         {tool.vendor && <span>· {tool.vendor}</span>}
                       </div>
+                      {getCatalogEntry(tool.id, "tool")?.best_for && (
+                        <p className="text-xs text-muted-foreground line-clamp-2">{getCatalogEntry(tool.id, "tool").best_for}</p>
+                      )}
                     </CardContent>
                   </Card>
                 );
@@ -226,6 +234,9 @@ const Catalog = () => {
                         {model.provider && <span>{model.provider}</span>}
                         {model.modality && <span>· {model.modality}</span>}
                       </div>
+                      {getCatalogEntry(model.id, "model")?.best_for && (
+                        <p className="text-xs text-muted-foreground line-clamp-2">{getCatalogEntry(model.id, "model").best_for}</p>
+                      )}
                     </CardContent>
                   </Card>
                 );
