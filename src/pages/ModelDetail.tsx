@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { ArrowLeft } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { CatalogEntryEditor } from "@/components/CatalogEntryEditor";
+import { StatusEditor } from "@/components/StatusEditor";
 
 const statusConfig: Record<string, { label: string; color: string }> = {
   STANDARD: { label: "🟢 Standard", color: "bg-success text-success-foreground" },
@@ -67,12 +68,12 @@ const ModelDetail = () => {
         </Card>
       )}
 
-      {evaluation?.rationale && (
-        <Card>
-          <CardHeader><CardTitle className="text-base">Vurdering</CardTitle></CardHeader>
-          <CardContent className="text-sm text-muted-foreground">{evaluation.rationale}</CardContent>
-        </Card>
-      )}
+      <StatusEditor
+        evaluation={evaluation}
+        itemType="model"
+        itemId={modelId!}
+        onSaved={(ev) => setEvaluation(ev)}
+      />
 
       <CatalogEntryEditor
         entry={catalogEntry}
