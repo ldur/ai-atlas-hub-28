@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
-import { Save, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 const statuses = [
@@ -92,8 +91,7 @@ export const StatusEditor = ({ evaluation, itemType, itemId, onSaved }: StatusEd
         />
       </div>
       <Button size="sm" onClick={handleSave} disabled={saving || !status}>
-        {saving ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Save className="h-4 w-4 mr-1" />}
-        {saving ? "Lagrer..." : "Lagre klassifisering"}
+        {saving ? "⏳ Lagrer..." : "💾 Lagre klassifisering"}
       </Button>
     </div>
   );

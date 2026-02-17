@@ -6,7 +6,6 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
-import { Search } from "lucide-react";
 import { toast } from "sonner";
 
 const statusConfig: Record<string, { label: string; color: string }> = {
@@ -119,7 +118,7 @@ const Catalog = () => {
 
       <div className="flex gap-3">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">🔍</span>
           <Input
             placeholder="Søk i katalogen..."
             className="pl-9"
@@ -156,10 +155,7 @@ const Catalog = () => {
                 const ev = getToolEval(tool.id);
                 const cfg = ev ? statusConfig[ev.decided_status] : null;
                 return (
-                  <Card
-                    key={tool.id}
-                    className="hover:border-primary transition-colors"
-                  >
+                  <Card key={tool.id} className="hover:border-primary transition-colors">
                     <CardContent className="p-4 space-y-2">
                       <div className="flex items-center justify-between gap-2">
                         <span className="font-medium cursor-pointer hover:underline" onClick={() => navigate(`/katalog/${tool.id}`)}>
@@ -205,10 +201,7 @@ const Catalog = () => {
                 const ev = getModelEval(model.id);
                 const cfg = ev ? statusConfig[ev.decided_status] : null;
                 return (
-                  <Card
-                    key={model.id}
-                    className="hover:border-primary transition-colors"
-                  >
+                  <Card key={model.id} className="hover:border-primary transition-colors">
                     <CardContent className="p-4 space-y-2">
                       <div className="flex items-center justify-between gap-2">
                         <span className="font-medium cursor-pointer hover:underline" onClick={() => navigate(`/katalog/modell/${model.id}`)}>

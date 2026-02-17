@@ -4,7 +4,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { CatalogEntryEditor } from "@/components/CatalogEntryEditor";
 import { StatusEditor } from "@/components/StatusEditor";
@@ -46,7 +45,7 @@ const ModelDetail = () => {
     <div className="max-w-3xl mx-auto space-y-6">
       <Link to="/katalog">
         <Button variant="ghost" size="sm" className="gap-1">
-          <ArrowLeft className="h-4 w-4" /> Tilbake til Katalog
+          ← Tilbake til Katalog
         </Button>
       </Link>
 
