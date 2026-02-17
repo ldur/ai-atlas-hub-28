@@ -104,3 +104,24 @@
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
   }
 }
+
+@layer components {
+  .prose-catalog blockquote {
+    @apply border-l-4 border-primary/40 bg-muted/50 rounded-r-md px-4 py-2 my-2 text-foreground italic;
+  }
+  .prose-catalog p {
+    @apply my-1.5 leading-relaxed;
+  }
+  .prose-catalog strong {
+    @apply text-foreground font-semibold;
+  }
+  .prose-catalog code {
+    @apply bg-muted px-1.5 py-0.5 rounded text-sm font-mono;
+  }
+  .prose-catalog ul, .prose-catalog ol {
+    @apply pl-5 my-2 space-y-1;
+  }
+  .prose-catalog li {
+    @apply list-disc;
+  }
+}

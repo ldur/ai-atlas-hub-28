@@ -76,7 +76,7 @@ const ToolDetail = () => {
           {catalogEntry.example_prompts && (
             <Card>
               <CardHeader><CardTitle className="text-base">Eksempelprompter</CardTitle></CardHeader>
-              <CardContent className="prose prose-sm max-w-none text-muted-foreground">
+              <CardContent className="prose-catalog text-sm text-muted-foreground">
                 <ReactMarkdown>{catalogEntry.example_prompts}</ReactMarkdown>
               </CardContent>
             </Card>
