@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { ArrowLeft } from "lucide-react";
 import ReactMarkdown from "react-markdown";
+import { CatalogEntryEditor } from "@/components/CatalogEntryEditor";
 
 const statusConfig: Record<string, { label: string; color: string }> = {
   STANDARD: { label: "🟢 Standard", color: "bg-success text-success-foreground" },
@@ -64,38 +65,44 @@ const ToolDetail = () => {
         </Card>
       )}
 
-      {catalogEntry ? (
+      <CatalogEntryEditor
+        entry={catalogEntry}
+        itemType="tool"
+        itemId={toolId!}
+        itemName={tool.name}
+        itemMeta={{ category: tool.category, provider: tool.vendor }}
+        onSaved={(entry) => setCatalogEntry(entry)}
+        onDeleted={() => setCatalogEntry(null)}
+      />
+
+      {catalogEntry && (
         <div className="space-y-4">
           {catalogEntry.best_for && (
             <Card>
-              <CardHeader><CardTitle className="text-base">Best for</CardTitle></CardHeader>
+              <CardHeader><CardTitle className="text-base">🎯 Best for</CardTitle></CardHeader>
               <CardContent className="text-sm text-muted-foreground">{catalogEntry.best_for}</CardContent>
             </Card>
           )}
-
           {catalogEntry.example_prompts && (
             <Card>
-              <CardHeader><CardTitle className="text-base">Eksempelprompter</CardTitle></CardHeader>
+              <CardHeader><CardTitle className="text-base">💬 Eksempelprompter</CardTitle></CardHeader>
               <CardContent className="prose-catalog text-sm text-muted-foreground">
                 <ReactMarkdown>{catalogEntry.example_prompts}</ReactMarkdown>
               </CardContent>
             </Card>
           )}
-
           {catalogEntry.do_this && (
             <Card>
               <CardHeader><CardTitle className="text-base text-success">✅ Gjør dette</CardTitle></CardHeader>
               <CardContent className="text-sm text-muted-foreground">{catalogEntry.do_this}</CardContent>
             </Card>
           )}
-
           {catalogEntry.avoid_this && (
             <Card>
               <CardHeader><CardTitle className="text-base text-destructive">❌ Unngå dette</CardTitle></CardHeader>
               <CardContent className="text-sm text-muted-foreground">{catalogEntry.avoid_this}</CardContent>
             </Card>
           )}
-
           {catalogEntry.security_guidance && (
             <Card>
               <CardHeader><CardTitle className="text-base">🔒 Sikkerhetsveiledning</CardTitle></CardHeader>
@@ -103,8 +110,6 @@ const ToolDetail = () => {
             </Card>
           )}
         </div>
-      ) : (
-        <p className="text-muted-foreground text-center py-8">Ingen katalogoppføring ennå for dette verktøyet.</p>
       )}
     </div>
   );

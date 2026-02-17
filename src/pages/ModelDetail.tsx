@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { ArrowLeft } from "lucide-react";
 import ReactMarkdown from "react-markdown";
+import { CatalogEntryEditor } from "@/components/CatalogEntryEditor";
 
 const statusConfig: Record<string, { label: string; color: string }> = {
   STANDARD: { label: "🟢 Standard", color: "bg-success text-success-foreground" },
@@ -73,17 +74,27 @@ const ModelDetail = () => {
         </Card>
       )}
 
-      {catalogEntry ? (
+      <CatalogEntryEditor
+        entry={catalogEntry}
+        itemType="model"
+        itemId={modelId!}
+        itemName={model.name}
+        itemMeta={{ provider: model.provider, modality: model.modality }}
+        onSaved={(entry) => setCatalogEntry(entry)}
+        onDeleted={() => setCatalogEntry(null)}
+      />
+
+      {catalogEntry && (
         <div className="space-y-4">
           {catalogEntry.best_for && (
             <Card>
-              <CardHeader><CardTitle className="text-base">Best for</CardTitle></CardHeader>
+              <CardHeader><CardTitle className="text-base">🎯 Best for</CardTitle></CardHeader>
               <CardContent className="text-sm text-muted-foreground">{catalogEntry.best_for}</CardContent>
             </Card>
           )}
           {catalogEntry.example_prompts && (
             <Card>
-              <CardHeader><CardTitle className="text-base">Eksempelprompter</CardTitle></CardHeader>
+              <CardHeader><CardTitle className="text-base">💬 Eksempelprompter</CardTitle></CardHeader>
               <CardContent className="prose-catalog text-sm text-muted-foreground">
                 <ReactMarkdown>{catalogEntry.example_prompts}</ReactMarkdown>
               </CardContent>
@@ -108,8 +119,6 @@ const ModelDetail = () => {
             </Card>
           )}
         </div>
-      ) : (
-        <p className="text-muted-foreground text-center py-8">Ingen katalogoppføring ennå for denne modellen.</p>
       )}
     </div>
   );
