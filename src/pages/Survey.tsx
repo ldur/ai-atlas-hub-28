@@ -77,6 +77,11 @@ const Survey = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    if (!getAliasId()) {
+      toast({ title: "Du må velge et kallenavn først", variant: "destructive" });
+      navigate("/");
+      return;
+    }
     const draft = localStorage.getItem(DRAFT_KEY);
     if (draft) {
       try { setData(JSON.parse(draft)); } catch { }
