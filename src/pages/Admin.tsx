@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -302,62 +303,307 @@ function ToolsTab() {
 function EvaluationsTab() {
   const [evals, setEvals] = useState<any[]>([]);
   const [tools, setTools] = useState<any[]>([]);
-  const [toolId, setToolId] = useState("");
+  const [models, setModels] = useState<any[]>([]);
+  const [filterStatus, setFilterStatus] = useState("ALL");
+  const [filterType, setFilterType] = useState<"all" | "tool" | "model">("all");
+  const [selectedItem, setSelectedItem] = useState<any | null>(null);
+
+  // Form state
+  const [entityType, setEntityType] = useState<"tool" | "model">("tool");
+  const [entityId, setEntityId] = useState("");
   const [status, setStatus] = useState("ALLOWED");
   const [rationale, setRationale] = useState("");
+  const [version, setVersion] = useState("v1");
+  const [valueScore, setValueScore] = useState("");
+  const [riskScore, setRiskScore] = useState("");
+  const [costScore, setCostScore] = useState("");
+  const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+
   const { toast } = useToast();
 
-  const fetch = () => {
+  const fetchAll = () => {
     Promise.all([
       supabase.from("evaluations").select("*").order("decided_at", { ascending: false }),
-      supabase.from("tools").select("*"),
-    ]).then(([e, t]) => { setEvals(e.data || []); setTools(t.data || []); });
+      supabase.from("tools").select("*").order("name"),
+      supabase.from("models").select("*").order("name"),
+    ]).then(([e, t, m]) => {
+      setEvals(e.data || []);
+      setTools(t.data || []);
+      setModels(m.data || []);
+    });
   };
-  useEffect(() => { fetch(); }, []);
+  useEffect(() => { fetchAll(); }, []);
 
-  const handleAdd = async () => {
-    if (!toolId) return;
-    const { error } = await supabase.from("evaluations").insert({
-      tool_id: toolId,
+  const getName = (ev: any) => {
+    if (ev.tool_id) return tools.find(t => t.id === ev.tool_id)?.name || "Ukjent verktøy";
+    if (ev.model_id) return models.find(m => m.id === ev.model_id)?.name || "Ukjent modell";
+    return "–";
+  };
+
+  const getType = (ev: any) => ev.tool_id ? "tool" : ev.model_id ? "model" : "unknown";
+
+  const statusColors: Record<string, string> = {
+    STANDARD: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200",
+    ALLOWED: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
+    NOT_ALLOWED: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
+    TRIAL: "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200",
+  };
+
+  const resetForm = () => {
+    setEntityType("tool"); setEntityId(""); setStatus("ALLOWED"); setRationale("");
+    setVersion("v1"); setValueScore(""); setRiskScore(""); setCostScore("");
+    setEditingId(null); setShowForm(false);
+  };
+
+  const startEdit = (ev: any) => {
+    setEntityType(ev.tool_id ? "tool" : "model");
+    setEntityId(ev.tool_id || ev.model_id || "");
+    setStatus(ev.decided_status);
+    setRationale(ev.rationale || "");
+    setVersion(ev.version || "v1");
+    setValueScore(ev.value_score?.toString() || "");
+    setRiskScore(ev.risk_score?.toString() || "");
+    setCostScore(ev.cost_score?.toString() || "");
+    setEditingId(ev.id);
+    setShowForm(true);
+  };
+
+  const handleSave = async () => {
+    if (!entityId) { toast({ title: "Velg verktøy eller modell", variant: "destructive" }); return; }
+    const payload: any = {
+      tool_id: entityType === "tool" ? entityId : null,
+      model_id: entityType === "model" ? entityId : null,
       decided_status: status,
       rationale: rationale || null,
-    });
-    if (error) toast({ title: "Feil", description: error.message, variant: "destructive" });
-    else { setToolId(""); setRationale(""); fetch(); }
+      version: version || "v1",
+      value_score: valueScore ? parseInt(valueScore) : null,
+      risk_score: riskScore ? parseInt(riskScore) : null,
+      cost_score: costScore ? parseInt(costScore) : null,
+    };
+
+    try {
+      if (editingId) {
+        await adminAction({ action: "update", table: "evaluations", id: editingId, payload });
+        toast({ title: "Evaluering oppdatert" });
+      } else {
+        await adminAction({ action: "insert", table: "evaluations", payload });
+        toast({ title: "Evaluering opprettet" });
+      }
+      resetForm();
+      fetchAll();
+    } catch (e: any) {
+      toast({ title: "Feil", description: e.message, variant: "destructive" });
+    }
   };
 
-  const getToolName = (id: string) => tools.find((t) => t.id === id)?.name || "Ukjent";
+  const handleDelete = async (id: string) => {
+    try {
+      await adminAction({ action: "delete", table: "evaluations", id });
+      toast({ title: "Evaluering slettet" });
+      fetchAll();
+    } catch (e: any) {
+      toast({ title: "Feil", description: e.message, variant: "destructive" });
+    }
+  };
+
+  const entities = entityType === "tool" ? tools : models;
+
+  const filtered = evals.filter(ev => {
+    if (filterStatus !== "ALL" && ev.decided_status !== filterStatus) return false;
+    if (filterType === "tool" && !ev.tool_id) return false;
+    if (filterType === "model" && !ev.model_id) return false;
+    return true;
+  });
+
+  // Group evals by entity for history view
+  const getHistoryForEntity = (ev: any) => {
+    const key = ev.tool_id || ev.model_id;
+    return evals.filter(e => (e.tool_id || e.model_id) === key).sort((a, b) =>
+      new Date(b.decided_at).getTime() - new Date(a.decided_at).getTime()
+    );
+  };
 
   return (
     <div className="space-y-4 mt-4">
-      <div className="flex flex-col gap-2 sm:flex-row">
-        <Select value={toolId} onValueChange={setToolId}>
-          <SelectTrigger className="flex-1"><SelectValue placeholder="Velg verktøy" /></SelectTrigger>
-          <SelectContent>{tools.map((t) => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}</SelectContent>
-        </Select>
-        <Select value={status} onValueChange={setStatus}>
-          <SelectTrigger className="w-[180px]"><SelectValue /></SelectTrigger>
+      {/* Filters */}
+      <div className="flex gap-2 flex-wrap items-center">
+        <Select value={filterType} onValueChange={(v: any) => setFilterType(v)}>
+          <SelectTrigger className="w-[140px]"><SelectValue /></SelectTrigger>
           <SelectContent>
+            <SelectItem value="all">Alle typer</SelectItem>
+            <SelectItem value="tool">🛠️ Verktøy</SelectItem>
+            <SelectItem value="model">🧠 Modeller</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={filterStatus} onValueChange={setFilterStatus}>
+          <SelectTrigger className="w-[160px]"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="ALL">Alle statuser</SelectItem>
             <SelectItem value="STANDARD">Standard</SelectItem>
             <SelectItem value="ALLOWED">Tillatt</SelectItem>
             <SelectItem value="NOT_ALLOWED">Ikke tillatt</SelectItem>
             <SelectItem value="TRIAL">Prøveperiode</SelectItem>
           </SelectContent>
         </Select>
-        <Button onClick={handleAdd}>➕</Button>
+        <span className="text-sm text-muted-foreground ml-auto">{filtered.length} evalueringer</span>
+        <Button size="sm" onClick={() => { resetForm(); setShowForm(true); }}>➕ Ny evaluering</Button>
       </div>
-      <Textarea placeholder="Begrunnelse" value={rationale} onChange={(e) => setRationale(e.target.value)} />
-      {evals.map((ev) => (
-        <Card key={ev.id}>
-          <CardContent className="p-4 flex items-center justify-between">
-            <div>
-              <span className="font-medium">{ev.tool_id ? getToolName(ev.tool_id) : "–"}</span>
-              <Badge className="ml-2" variant="outline">{ev.decided_status}</Badge>
-              {ev.rationale && <p className="text-sm text-muted-foreground mt-1">{ev.rationale}</p>}
+
+      {/* Create/Edit form */}
+      {showForm && (
+        <Card className="border-primary/30">
+          <CardHeader>
+            <CardTitle className="text-base">{editingId ? "✏️ Rediger evaluering" : "➕ Ny evaluering"}</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="flex gap-2">
+              <Select value={entityType} onValueChange={(v: any) => { setEntityType(v); setEntityId(""); }}>
+                <SelectTrigger className="w-[140px]"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="tool">🛠️ Verktøy</SelectItem>
+                  <SelectItem value="model">🧠 Modell</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={entityId} onValueChange={setEntityId}>
+                <SelectTrigger className="flex-1"><SelectValue placeholder={`Velg ${entityType === "tool" ? "verktøy" : "modell"}`} /></SelectTrigger>
+                <SelectContent>
+                  {entities.map(e => <SelectItem key={e.id} value={e.id}>{e.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex gap-2 flex-wrap">
+              <Select value={status} onValueChange={setStatus}>
+                <SelectTrigger className="w-[160px]"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="STANDARD">✅ Standard</SelectItem>
+                  <SelectItem value="ALLOWED">🔵 Tillatt</SelectItem>
+                  <SelectItem value="NOT_ALLOWED">🔴 Ikke tillatt</SelectItem>
+                  <SelectItem value="TRIAL">🟡 Prøveperiode</SelectItem>
+                </SelectContent>
+              </Select>
+              <Input placeholder="Versjon (f.eks. v1)" value={version} onChange={e => setVersion(e.target.value)} className="w-[120px]" />
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              <div>
+                <Label className="text-xs text-muted-foreground">Verdi (1-5)</Label>
+                <Input type="number" min="1" max="5" placeholder="–" value={valueScore} onChange={e => setValueScore(e.target.value)} />
+              </div>
+              <div>
+                <Label className="text-xs text-muted-foreground">Risiko (1-5)</Label>
+                <Input type="number" min="1" max="5" placeholder="–" value={riskScore} onChange={e => setRiskScore(e.target.value)} />
+              </div>
+              <div>
+                <Label className="text-xs text-muted-foreground">Kostnad (1-5)</Label>
+                <Input type="number" min="1" max="5" placeholder="–" value={costScore} onChange={e => setCostScore(e.target.value)} />
+              </div>
+            </div>
+            <Textarea placeholder="Begrunnelse / notater for beslutningen..." value={rationale} onChange={e => setRationale(e.target.value)} />
+            <div className="flex gap-2 justify-end">
+              <Button variant="outline" size="sm" onClick={resetForm}>Avbryt</Button>
+              <Button size="sm" onClick={handleSave}>{editingId ? "Oppdater" : "Opprett"}</Button>
             </div>
           </CardContent>
         </Card>
+      )}
+
+      {/* Evaluation list */}
+      {filtered.length === 0 && <p className="text-muted-foreground">Ingen evalueringer funnet.</p>}
+      {filtered.map((ev) => (
+        <Card key={ev.id} className="cursor-pointer hover:border-primary/50 transition-colors" onClick={() => setSelectedItem(ev)}>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-sm">{getType(ev) === "tool" ? "🛠️" : "🧠"}</span>
+                <span className="font-medium">{getName(ev)}</span>
+                <span className={`text-xs px-2 py-0.5 rounded-full ${statusColors[ev.decided_status] || ""}`}>
+                  {ev.decided_status}
+                </span>
+                {ev.version && <Badge variant="outline" className="text-xs">{ev.version}</Badge>}
+                {(ev.value_score || ev.risk_score || ev.cost_score) && (
+                  <span className="text-xs text-muted-foreground">
+                    V:{ev.value_score || "–"} R:{ev.risk_score || "–"} K:{ev.cost_score || "–"}
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center gap-1">
+                <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); startEdit(ev); }}>✏️</Button>
+                <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); handleDelete(ev.id); }}>🗑️</Button>
+              </div>
+            </div>
+            {ev.rationale && <p className="text-sm text-muted-foreground mt-1 line-clamp-1">{ev.rationale}</p>}
+            <p className="text-xs text-muted-foreground mt-1">{new Date(ev.decided_at).toLocaleString("nb-NO")}</p>
+          </CardContent>
+        </Card>
       ))}
+
+      {/* Detail/History dialog */}
+      <Dialog open={!!selectedItem} onOpenChange={(open) => !open && setSelectedItem(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              {selectedItem && (
+                <>
+                  <span>{getType(selectedItem) === "tool" ? "🛠️" : "🧠"}</span>
+                  {getName(selectedItem)}
+                </>
+              )}
+            </DialogTitle>
+          </DialogHeader>
+          {selectedItem && (
+            <div className="space-y-4">
+              <div className="space-y-2 text-sm">
+                <div className="flex items-center gap-2">
+                  <span className={`px-2 py-0.5 rounded-full text-xs ${statusColors[selectedItem.decided_status] || ""}`}>
+                    {selectedItem.decided_status}
+                  </span>
+                  {selectedItem.version && <Badge variant="outline">{selectedItem.version}</Badge>}
+                </div>
+                {(selectedItem.value_score || selectedItem.risk_score || selectedItem.cost_score) && (
+                  <div className="grid grid-cols-3 gap-2 text-center">
+                    <div className="border rounded p-2">
+                      <p className="text-xs text-muted-foreground">Verdi</p>
+                      <p className="font-bold">{selectedItem.value_score || "–"}</p>
+                    </div>
+                    <div className="border rounded p-2">
+                      <p className="text-xs text-muted-foreground">Risiko</p>
+                      <p className="font-bold">{selectedItem.risk_score || "–"}</p>
+                    </div>
+                    <div className="border rounded p-2">
+                      <p className="text-xs text-muted-foreground">Kostnad</p>
+                      <p className="font-bold">{selectedItem.cost_score || "–"}</p>
+                    </div>
+                  </div>
+                )}
+                {selectedItem.rationale && <p><strong>Begrunnelse:</strong> {selectedItem.rationale}</p>}
+                <p className="text-xs text-muted-foreground">Besluttet: {new Date(selectedItem.decided_at).toLocaleString("nb-NO")}</p>
+              </div>
+
+              {/* History for this entity */}
+              <div>
+                <h4 className="text-sm font-medium mb-2">📋 Evalueringshistorikk</h4>
+                <div className="space-y-2 max-h-48 overflow-y-auto">
+                  {getHistoryForEntity(selectedItem).map((h, i) => (
+                    <div key={h.id} className={`text-xs border rounded p-2 ${h.id === selectedItem.id ? "border-primary bg-primary/5" : ""}`}>
+                      <div className="flex items-center gap-2">
+                        <span className={`px-1.5 py-0.5 rounded ${statusColors[h.decided_status] || ""}`}>{h.decided_status}</span>
+                        {h.version && <span className="text-muted-foreground">{h.version}</span>}
+                        <span className="text-muted-foreground ml-auto">{new Date(h.decided_at).toLocaleDateString("nb-NO")}</span>
+                      </div>
+                      {h.rationale && <p className="text-muted-foreground mt-1">{h.rationale}</p>}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2">
+                <Button variant="outline" size="sm" onClick={() => { startEdit(selectedItem); setSelectedItem(null); }}>✏️ Rediger</Button>
+                <Button variant="destructive" size="sm" onClick={() => { handleDelete(selectedItem.id); }}>🗑️ Slett</Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
