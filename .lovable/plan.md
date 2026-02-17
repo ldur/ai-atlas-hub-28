@@ -1,105 +1,61 @@
 
 
-# AI Tool Atlas – Implementation Plan
+# Katalog som hovedkilde, Stack som kuratert utvalg
 
-## Overview
-An internal webapp where employees can anonymously share which AI tools and models they use, with survey collection, aggregated insights, a managed tool catalog, recommended stack, and a learning feed. No login required – users identify via a self-chosen nickname stored in localStorage. Admin access is protected by a secret code.
+## Nåsituasjon
 
-## Backend: Lovable Cloud (Supabase)
+- **Katalogen** viser kun elementer som har en `catalog_entries`-rad -- bare 7 av 14 verktøy, og 0 av 20 modeller har dette
+- **Stack** viser elementer fra `evaluations`-tabellen, uavhengig av katalogen
+- **ToolDetail** er bare for verktøy, ikke modeller
 
-The app needs a PostgreSQL database to store surveys, tools, evaluations, catalog entries, and learning content. We'll use Lovable Cloud for this.
+Disse lever som separate siloer i dag.
 
-### Database Tables
-- **user_aliases** – nickname + uuid (linked to submissions)
-- **submissions** – survey responses (tools, models, use cases, time saved, risk, pain points)
-- **tools** – AI tool registry (name, category, vendor, link)
-- **models** – AI model registry (name, provider, modality)
-- **evaluations** – admin decisions per tool/model (status: Standard/Allowed/Not Allowed/Trial, scores, rationale, version)
-- **catalog_entries** – rich entries with best-for, example prompts, security guidance, do/don't
-- **learning_items** – markdown content (tips, case studies, prompt packs, guidelines)
-- **votes** – anonymous likes on tools or learning items (nice-to-have)
+## Ny logikk
 
-RLS policies will ensure no PII is exposed and admin operations require a verified admin token.
+```text
+Katalog (hovedkilde)          Anbefalt Stack (kuratert utvalg)
++---------------------------+  +---------------------------+
+| Alle verktøy (14 stk)    |  | Kun verktøy/modeller     |
+| Alle modeller (20 stk)   |  | som har en evaluering    |
+| Søkbar, med faner         |  | Gruppert etter status    |
+| Klikkbar -> detaljside   |  | (Standard/Tillatt/etc.)  |
++---------------------------+  +---------------------------+
+```
 
-## Pages & Features
+Stack-siden forblir som den er -- den viser bare det som har evalueringer. Katalogen utvides til a bli den komplette oversikten.
 
-### 1. Onboarding (Landing Page)
-- First-time visitors pick or auto-generate a nickname
-- Nickname saved to localStorage; alias record created in DB
-- Returning visitors are greeted by name
-- Clear messaging: no tracking, no login
+## Endringer
 
-### 2. Survey (Kartlegging)
-- Short, guided form (~5 min):
-  - Tools used (multi-select from known list + freetext)
-  - Models used (multi-select + "don't know")
-  - Use cases (multi-select: coding, docs, analysis, customer dialog, design/media, automation)
-  - Time saved per week (0 / 1–2 / 3–5 / 5+)
-  - Sensitive data risk (never / unsure / yes)
-  - Pain points (freetext)
-  - Must-keep tool (freetext)
-- Auto-saves draft to localStorage before submission
-- Thank-you page with links to Insights and Catalog
+### 1. Utvide Katalog-siden med faner (Verktøy + Modeller)
+- Legge til Tabs-komponent med "Verktøy" og "Modeller"
+- **Verktøy-fanen**: Vise ALLE verktøy fra `tools`-tabellen (ikke bare de med catalog_entries), med søk. Hvert verktøy vises med navn, kategori, og evalueringsstatus (badge) om det finnes
+- **Modeller-fanen**: Vise ALLE modeller fra `models`-tabellen med provider, modalitet og evalueringsstatus
 
-### 3. Insights Dashboard (Innsikt)
-- Aggregated charts (using Recharts):
-  - Most used tools (bar chart)
-  - Most used models (bar chart)
-  - Top use cases (horizontal bar)
-  - Time saved distribution (pie/donut)
-  - Data sensitivity distribution (pie/donut)
-- Filter by category/use case
-- No individual-level data shown
+### 2. Gjøre katalogkort klikkbare
+- Verktøy klikker til eksisterende `/katalog/:toolId`
+- Legge til ny rute `/katalog/modell/:modelId` med en ny `ModelDetail.tsx`-side
 
-### 4. Recommended Stack (Anbefalt Verktøystack)
-- Public page with three status lanes:
-  - 🟢 Standard (supported)
-  - 🟡 Allowed when needed
-  - 🔴 Not allowed
-- Each tool card shows: rationale, best use, risk level, alternatives
-- Version label (v1, v2…)
-- Admin can move tools between statuses and write rationale
+### 3. Ny ModelDetail-side
+- Tilsvarende ToolDetail, men henter fra `models` og `catalog_entries` (via `model_id`) og `evaluations` (via `model_id`)
+- Viser provider, modalitet, notater, evalueringsstatus, og eventuelle katalogoppføringer
 
-### 5. Tool & Model Catalog (Verktøykatalog)
-- Searchable, filterable catalog
-- Each entry: best-for, recommended models, example prompts, security guidance, do's and don'ts
-- Filter by category and status
-- Markdown rendering for rich content
+### 4. Oppdatere ToolDetail tilbake-lenke
+- Endre "Tilbake til Stack" til "Tilbake til Katalog" med lenke til `/katalog`
 
-### 6. Learning Feed (Læring)
-- Feed of markdown content: show & tell, prompt packs, guidelines, case studies
-- Users can anonymously submit tips/workflows
-- Admin can publish, edit, and tag content
-- Filterable by type/tags
+### 5. Stack-siden kobler til katalogen
+- Gjore modellkort i Stack klikkbare -- navigerer til `/katalog/modell/:modelId`
+- Verktøy linker allerede til `/katalog/:toolId`
 
-### 7. Admin Panel
-- Protected by a secret admin code (entered once, stored in localStorage, validated server-side via edge function)
-- **Review submissions**: view all survey responses (anonymous), map freetext to known tools/models, tag use cases, flag risk
-- **Manage tools & models**: CRUD operations
-- **Manage evaluations**: set status, scores, rationale, version stack
-- **Manage catalog entries**: create/edit rich entries
-- **Manage learning content**: publish/edit markdown items
+## Tekniske detaljer
 
-## Design & UX
-- Clean, modern UI with sidebar navigation
-- Mobile-responsive
-- Norwegian language throughout (matching the prompt language)
-- Color-coded status badges (green/yellow/red)
-- Fast, lightweight – optimized for quick survey completion
+**Filer som endres:**
+- `src/pages/Catalog.tsx` -- ny struktur med Tabs, henter tools + models + evaluations + catalog_entries, viser alt
+- `src/pages/ToolDetail.tsx` -- endre tilbake-lenke fra `/stack` til `/katalog`
+- `src/pages/Stack.tsx` -- gjore modellkort klikkbare med navigasjon til `/katalog/modell/:modelId`
+- `src/App.tsx` -- legge til rute `/katalog/modell/:modelId`
 
-## Navigation Structure
-- 🏠 Hjem (onboarding/landing)
-- 📋 Kartlegging (survey)
-- 📊 Innsikt (insights dashboard)
-- 🟢 Anbefalt Stack (recommended tools)
-- 📚 Katalog (tool catalog)
-- 🎓 Læring (learning feed)
-- 🔒 Admin (protected)
+**Ny fil:**
+- `src/pages/ModelDetail.tsx` -- detaljside for modeller (provider, modalitet, evaluering, katalogoppforing)
 
-## Security
-- All user input sanitized (XSS protection via zod validation)
-- No PII collected or stored
-- Admin access validated server-side
-- RLS policies on all tables
-- Only aggregated data in insights
+**Ingen databaseendringer** -- `catalog_entries` har allerede `model_id`-kolonne, og alle tabeller er på plass.
 
