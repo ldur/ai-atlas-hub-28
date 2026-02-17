@@ -21,8 +21,26 @@ const knownTools = [
 ];
 
 const knownModels = [
-  "GPT-4o", "GPT-4", "GPT-3.5", "Claude 3.5 Sonnet", "Claude 3 Opus",
-  "Gemini Pro", "Gemini Flash", "Llama 3", "Mistral", "Vet ikke",
+  // OpenAI
+  "GPT-5.2", "GPT-5.3 Codex-Spark", "o3-serien",
+  // Anthropic
+  "Claude Opus 4.5/4.6", "Claude Sonnet 4.5",
+  // Google DeepMind
+  "Gemini 3 Pro", "Gemini 3 Flash",
+  // xAI
+  "Grok 4.1",
+  // Meta
+  "Llama 4",
+  // Mistral
+  "Mistral Large 3", "Devstral 2",
+  // Alibaba / DeepSeek
+  "Qwen 3", "DeepSeek V3.x",
+  // Kinesiske frontier
+  "GLM-5", "MiniMax M2.5", "Seedance 2.0",
+  // Multimodale / generative
+  "Sora", "Runway Gen-4", "Stable Diffusion 3.x", "Midjourney v7",
+  // Annet
+  "Vet ikke",
 ];
 
 const useCaseOptions = [
