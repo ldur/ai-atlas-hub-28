@@ -21,6 +21,7 @@ const Catalog = () => {
   const [models, setModels] = useState<any[]>([]);
   const [evaluations, setEvaluations] = useState<any[]>([]);
   const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("ALL");
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
@@ -81,18 +82,27 @@ const Catalog = () => {
     }
   };
 
+  const matchesStatusFilter = (itemId: string, type: "tool" | "model") => {
+    if (statusFilter === "ALL") return true;
+    const ev = type === "tool" ? getToolEval(itemId) : getModelEval(itemId);
+    if (statusFilter === "NONE") return !ev;
+    return ev?.decided_status === statusFilter;
+  };
+
   const filteredTools = tools.filter(
     (t) =>
-      t.name.toLowerCase().includes(search.toLowerCase()) ||
+      (t.name.toLowerCase().includes(search.toLowerCase()) ||
       (t.category || "").toLowerCase().includes(search.toLowerCase()) ||
-      (t.vendor || "").toLowerCase().includes(search.toLowerCase())
+      (t.vendor || "").toLowerCase().includes(search.toLowerCase())) &&
+      matchesStatusFilter(t.id, "tool")
   );
 
   const filteredModels = models.filter(
     (m) =>
-      m.name.toLowerCase().includes(search.toLowerCase()) ||
+      (m.name.toLowerCase().includes(search.toLowerCase()) ||
       (m.provider || "").toLowerCase().includes(search.toLowerCase()) ||
-      (m.modality || "").toLowerCase().includes(search.toLowerCase())
+      (m.modality || "").toLowerCase().includes(search.toLowerCase())) &&
+      matchesStatusFilter(m.id, "model")
   );
 
   return (
@@ -102,14 +112,28 @@ const Catalog = () => {
         <p className="text-muted-foreground">Komplett oversikt over alle AI-verktøy og modeller</p>
       </div>
 
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder="Søk i katalogen..."
-          className="pl-9"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
+      <div className="flex gap-3">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Søk i katalogen..."
+            className="pl-9"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Filtrer status" />
+          </SelectTrigger>
+          <SelectContent className="bg-popover z-50">
+            <SelectItem value="ALL">Alle statuser</SelectItem>
+            {statuses.map((s) => (
+              <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
+            ))}
+            <SelectItem value="NONE">Ikke klassifisert</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       <Tabs defaultValue="tools" className="w-full">
