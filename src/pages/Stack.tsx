@@ -4,12 +4,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
+import { CircleCheck, CircleMinus, CircleX, FlaskConical, Wrench, Brain } from "lucide-react";
 
 const statusConfig = {
-  STANDARD: { label: "🟢 Standard", color: "bg-success text-success-foreground" },
-  ALLOWED: { label: "🟡 Tillatt ved behov", color: "bg-warning text-warning-foreground" },
-  NOT_ALLOWED: { label: "🔴 Ikke tillatt", color: "bg-destructive text-destructive-foreground" },
-  TRIAL: { label: "🧪 Prøveperiode", color: "bg-accent text-accent-foreground" },
+  STANDARD: { label: "Standard", icon: CircleCheck, color: "bg-success text-success-foreground" },
+  ALLOWED: { label: "Tillatt ved behov", icon: CircleMinus, color: "bg-warning text-warning-foreground" },
+  NOT_ALLOWED: { label: "Ikke tillatt", icon: CircleX, color: "bg-destructive text-destructive-foreground" },
+  TRIAL: { label: "Prøveperiode", icon: FlaskConical, color: "bg-accent text-accent-foreground" },
 };
 
 const groups = ["STANDARD", "ALLOWED", "NOT_ALLOWED", "TRIAL"] as const;
@@ -33,10 +34,13 @@ const StackSection = ({ evaluations, getName, getExtra, onClickItem }: StackSect
       {groups.map((status) => {
         const items = evaluations.filter((e) => e.decided_status === status);
         const cfg = statusConfig[status];
+        const StatusIcon = cfg.icon;
         if (items.length === 0) return null;
         return (
           <div key={status} className="space-y-3">
-            <h2 className="text-lg font-semibold">{cfg.label}</h2>
+            <h2 className="text-lg font-semibold flex items-center gap-2">
+              <StatusIcon className="h-5 w-5" /> {cfg.label}
+            </h2>
             <div className="grid gap-3 sm:grid-cols-2">
               {items.map((ev) => {
                 const itemId = ev.tool_id || ev.model_id;
@@ -106,8 +110,12 @@ const Stack = () => {
 
       <Tabs defaultValue="tools" className="w-full">
         <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="tools">🛠️ Verktøy ({toolEvals.length})</TabsTrigger>
-          <TabsTrigger value="models">🧠 Modeller ({modelEvals.length})</TabsTrigger>
+          <TabsTrigger value="tools" className="flex items-center gap-1.5">
+            <Wrench className="h-4 w-4" /> Verktøy ({toolEvals.length})
+          </TabsTrigger>
+          <TabsTrigger value="models" className="flex items-center gap-1.5">
+            <Brain className="h-4 w-4" /> Modeller ({modelEvals.length})
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="tools" className="mt-6">

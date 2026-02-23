@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { getAliasId } from "@/lib/nickname";
 import { useToast } from "@/hooks/use-toast";
 import ReactMarkdown from "react-markdown";
+import { Plus, Search, X } from "lucide-react";
 
 const typeLabels: Record<string, string> = {
   tip: "Tips",
@@ -86,7 +87,7 @@ const Learning = () => {
         </div>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
-            <Button>➕ Del et tips</Button>
+            <Button className="gap-1.5"><Plus className="h-4 w-4" /> Del et tips</Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
@@ -117,13 +118,15 @@ const Learning = () => {
                     onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addTag(); } }}
                     maxLength={30}
                   />
-                  <Button type="button" variant="outline" size="sm" onClick={addTag} disabled={!tagInput.trim()}>+</Button>
+                  <Button type="button" variant="outline" size="sm" onClick={addTag} disabled={!tagInput.trim()}>
+                    <Plus className="h-4 w-4" />
+                  </Button>
                 </div>
                 {newTags.length > 0 && (
                   <div className="flex gap-1 flex-wrap">
                     {newTags.map(tag => (
-                      <Badge key={tag} variant="secondary" className="cursor-pointer" onClick={() => setNewTags(newTags.filter(t => t !== tag))}>
-                        {tag} ✕
+                      <Badge key={tag} variant="secondary" className="cursor-pointer gap-1" onClick={() => setNewTags(newTags.filter(t => t !== tag))}>
+                        {tag} <X className="h-3 w-3" />
                       </Badge>
                     ))}
                   </div>
@@ -139,7 +142,7 @@ const Learning = () => {
 
       <div className="flex gap-3 flex-wrap">
         <div className="relative flex-1 min-w-[200px]">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">🔍</span>
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input placeholder="Søk..." className="pl-9" value={search} onChange={(e) => setSearch(e.target.value)} />
         </div>
         <div className="flex gap-1 flex-wrap">

@@ -8,12 +8,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { adminAction, isAdmin } from "@/lib/adminAction";
 import { toast } from "sonner";
+import { CircleCheck, CircleMinus, CircleX, FlaskConical, Search, Wrench, Brain } from "lucide-react";
 
-const statusConfig: Record<string, { label: string; color: string }> = {
-  STANDARD: { label: "🟢 Standard", color: "bg-success text-success-foreground" },
-  ALLOWED: { label: "🟡 Tillatt", color: "bg-warning text-warning-foreground" },
-  NOT_ALLOWED: { label: "🔴 Ikke tillatt", color: "bg-destructive text-destructive-foreground" },
-  TRIAL: { label: "🧪 Prøveperiode", color: "bg-accent text-accent-foreground" },
+const statusConfig: Record<string, { label: string; icon: React.ComponentType<{ className?: string }>; color: string }> = {
+  STANDARD: { label: "Standard", icon: CircleCheck, color: "bg-success text-success-foreground" },
+  ALLOWED: { label: "Tillatt", icon: CircleMinus, color: "bg-warning text-warning-foreground" },
+  NOT_ALLOWED: { label: "Ikke tillatt", icon: CircleX, color: "bg-destructive text-destructive-foreground" },
+  TRIAL: { label: "Prøveperiode", icon: FlaskConical, color: "bg-accent text-accent-foreground" },
 };
 
 const Catalog = () => {
@@ -50,10 +51,10 @@ const Catalog = () => {
     catalogEntries.find((c) => (type === "tool" ? c.tool_id === itemId : c.model_id === itemId));
 
   const statuses = [
-    { value: "STANDARD", label: "🟢 Standard" },
-    { value: "ALLOWED", label: "🟡 Tillatt" },
-    { value: "NOT_ALLOWED", label: "🔴 Ikke tillatt" },
-    { value: "TRIAL", label: "🧪 Prøveperiode" },
+    { value: "STANDARD", label: "Standard", icon: CircleCheck },
+    { value: "ALLOWED", label: "Tillatt", icon: CircleMinus },
+    { value: "NOT_ALLOWED", label: "Ikke tillatt", icon: CircleX },
+    { value: "TRIAL", label: "Prøveperiode", icon: FlaskConical },
   ];
 
   const handleStatusChange = async (
@@ -105,6 +106,11 @@ const Catalog = () => {
       matchesStatusFilter(m.id, "model")
   );
 
+  const renderStatusLabel = (cfg: typeof statusConfig[string]) => {
+    const Icon = cfg.icon;
+    return <span className="flex items-center gap-1"><Icon className="h-3.5 w-3.5" /> {cfg.label}</span>;
+  };
+
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <div>
@@ -114,7 +120,7 @@ const Catalog = () => {
 
       <div className="flex gap-3">
         <div className="relative flex-1">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">🔍</span>
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Søk i katalogen..."
             className="pl-9"
@@ -128,9 +134,14 @@ const Catalog = () => {
           </SelectTrigger>
           <SelectContent className="bg-popover z-50">
             <SelectItem value="ALL">Alle statuser</SelectItem>
-            {statuses.map((s) => (
-              <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
-            ))}
+            {statuses.map((s) => {
+              const Icon = s.icon;
+              return (
+                <SelectItem key={s.value} value={s.value}>
+                  <span className="flex items-center gap-1.5"><Icon className="h-3.5 w-3.5" /> {s.label}</span>
+                </SelectItem>
+              );
+            })}
             <SelectItem value="NONE">Ikke klassifisert</SelectItem>
           </SelectContent>
         </Select>
@@ -138,8 +149,12 @@ const Catalog = () => {
 
       <Tabs defaultValue="tools" className="w-full">
         <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="tools">🛠️ Verktøy ({filteredTools.length})</TabsTrigger>
-          <TabsTrigger value="models">🧠 Modeller ({filteredModels.length})</TabsTrigger>
+          <TabsTrigger value="tools" className="flex items-center gap-1.5">
+            <Wrench className="h-4 w-4" /> Verktøy ({filteredTools.length})
+          </TabsTrigger>
+          <TabsTrigger value="models" className="flex items-center gap-1.5">
+            <Brain className="h-4 w-4" /> Modeller ({filteredModels.length})
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="tools" className="mt-6">
@@ -164,17 +179,22 @@ const Catalog = () => {
                           >
                             <SelectTrigger className="w-auto h-7 text-xs px-2 gap-1" onClick={(e) => e.stopPropagation()}>
                               <SelectValue placeholder="Sett status">
-                                {cfg ? cfg.label : "Sett status"}
+                                {cfg ? renderStatusLabel(cfg) : "Sett status"}
                               </SelectValue>
                             </SelectTrigger>
                             <SelectContent>
-                              {statuses.map((s) => (
-                                <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
-                              ))}
+                              {statuses.map((s) => {
+                                const Icon = s.icon;
+                                return (
+                                  <SelectItem key={s.value} value={s.value}>
+                                    <span className="flex items-center gap-1.5"><Icon className="h-3.5 w-3.5" /> {s.label}</span>
+                                  </SelectItem>
+                                );
+                              })}
                             </SelectContent>
                           </Select>
                         ) : cfg ? (
-                          <Badge className={cfg.color}>{cfg.label}</Badge>
+                          <Badge className={cfg.color}>{renderStatusLabel(cfg)}</Badge>
                         ) : null}
                       </div>
                       <div className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -214,17 +234,22 @@ const Catalog = () => {
                           >
                             <SelectTrigger className="w-auto h-7 text-xs px-2 gap-1" onClick={(e) => e.stopPropagation()}>
                               <SelectValue placeholder="Sett status">
-                                {cfg ? cfg.label : "Sett status"}
+                                {cfg ? renderStatusLabel(cfg) : "Sett status"}
                               </SelectValue>
                             </SelectTrigger>
                             <SelectContent>
-                              {statuses.map((s) => (
-                                <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
-                              ))}
+                              {statuses.map((s) => {
+                                const Icon = s.icon;
+                                return (
+                                  <SelectItem key={s.value} value={s.value}>
+                                    <span className="flex items-center gap-1.5"><Icon className="h-3.5 w-3.5" /> {s.label}</span>
+                                  </SelectItem>
+                                );
+                              })}
                             </SelectContent>
                           </Select>
                         ) : cfg ? (
-                          <Badge className={cfg.color}>{cfg.label}</Badge>
+                          <Badge className={cfg.color}>{renderStatusLabel(cfg)}</Badge>
                         ) : null}
                       </div>
                       <div className="flex items-center gap-2 text-xs text-muted-foreground">

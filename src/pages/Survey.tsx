@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { getAliasId, getNickname } from "@/lib/nickname";
 import { useToast } from "@/hooks/use-toast";
+import { CheckCircle2, ArrowRight } from "lucide-react";
 
 const DRAFT_KEY = "ai-tool-atlas-survey-draft";
 
@@ -132,11 +133,13 @@ const Survey = () => {
   if (submitted) {
     return (
       <div className="max-w-lg mx-auto mt-12 text-center space-y-6">
-        <span className="text-6xl block">✅</span>
-        <h1 className="text-3xl font-bold">Takk for ditt bidrag! 🎉</h1>
+        <CheckCircle2 className="h-16 w-16 text-success mx-auto" />
+        <h1 className="text-3xl font-bold">Takk for ditt bidrag!</h1>
         <p className="text-muted-foreground">Svarene dine er registrert anonymt.</p>
         <div className="flex gap-3 justify-center">
-          <Button onClick={() => navigate("/innsikt")}>Se innsikt →</Button>
+          <Button onClick={() => navigate("/innsikt")} className="gap-1">
+            Se innsikt <ArrowRight className="h-4 w-4" />
+          </Button>
           <Button variant="outline" onClick={() => navigate("/katalog")}>Utforsk katalogen</Button>
         </div>
       </div>

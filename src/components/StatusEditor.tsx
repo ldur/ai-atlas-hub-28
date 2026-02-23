@@ -5,12 +5,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { adminAction, isAdmin } from "@/lib/adminAction";
 import { toast } from "sonner";
+import { CircleCheck, CircleMinus, CircleX, FlaskConical, Save, Loader2 } from "lucide-react";
 
 const statuses = [
-  { value: "STANDARD", label: "🟢 Standard" },
-  { value: "ALLOWED", label: "🟡 Tillatt ved behov" },
-  { value: "NOT_ALLOWED", label: "🔴 Ikke tillatt" },
-  { value: "TRIAL", label: "🧪 Prøveperiode" },
+  { value: "STANDARD", label: "Standard", icon: CircleCheck },
+  { value: "ALLOWED", label: "Tillatt ved behov", icon: CircleMinus },
+  { value: "NOT_ALLOWED", label: "Ikke tillatt", icon: CircleX },
+  { value: "TRIAL", label: "Prøveperiode", icon: FlaskConical },
 ];
 
 interface StatusEditorProps {
@@ -66,9 +67,14 @@ export const StatusEditor = ({ evaluation, itemType, itemId, onSaved }: StatusEd
             <SelectValue placeholder="Velg status..." />
           </SelectTrigger>
           <SelectContent>
-            {statuses.map((s) => (
-              <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
-            ))}
+            {statuses.map((s) => {
+              const Icon = s.icon;
+              return (
+                <SelectItem key={s.value} value={s.value}>
+                  <span className="flex items-center gap-1.5"><Icon className="h-3.5 w-3.5" /> {s.label}</span>
+                </SelectItem>
+              );
+            })}
           </SelectContent>
         </Select>
       </div>
@@ -81,8 +87,9 @@ export const StatusEditor = ({ evaluation, itemType, itemId, onSaved }: StatusEd
           placeholder="Kort begrunnelse for valgt status..."
         />
       </div>
-      <Button size="sm" onClick={handleSave} disabled={saving || !status}>
-        {saving ? "⏳ Lagrer..." : "💾 Lagre klassifisering"}
+      <Button size="sm" onClick={handleSave} disabled={saving || !status} className="gap-1.5">
+        {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+        {saving ? "Lagrer..." : "Lagre klassifisering"}
       </Button>
     </div>
   );
