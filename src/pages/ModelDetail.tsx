@@ -7,12 +7,13 @@ import { supabase } from "@/integrations/supabase/client";
 import ReactMarkdown from "react-markdown";
 import { CatalogEntryEditor } from "@/components/CatalogEntryEditor";
 import { StatusEditor } from "@/components/StatusEditor";
+import { ArrowLeft, Target, MessageSquare, CheckCircle2, XCircle, Shield, CircleCheck, CircleMinus, CircleX, FlaskConical } from "lucide-react";
 
-const statusConfig: Record<string, { label: string; color: string }> = {
-  STANDARD: { label: "🟢 Standard", color: "bg-success text-success-foreground" },
-  ALLOWED: { label: "🟡 Tillatt ved behov", color: "bg-warning text-warning-foreground" },
-  NOT_ALLOWED: { label: "🔴 Ikke tillatt", color: "bg-destructive text-destructive-foreground" },
-  TRIAL: { label: "🧪 Prøveperiode", color: "bg-accent text-accent-foreground" },
+const statusConfig: Record<string, { label: string; icon: React.ComponentType<{ className?: string }>; color: string }> = {
+  STANDARD: { label: "Standard", icon: CircleCheck, color: "bg-success text-success-foreground" },
+  ALLOWED: { label: "Tillatt ved behov", icon: CircleMinus, color: "bg-warning text-warning-foreground" },
+  NOT_ALLOWED: { label: "Ikke tillatt", icon: CircleX, color: "bg-destructive text-destructive-foreground" },
+  TRIAL: { label: "Prøveperiode", icon: FlaskConical, color: "bg-accent text-accent-foreground" },
 };
 
 const ModelDetail = () => {
@@ -45,14 +46,17 @@ const ModelDetail = () => {
     <div className="max-w-3xl mx-auto space-y-6">
       <Link to="/katalog">
         <Button variant="ghost" size="sm" className="gap-1">
-          ← Tilbake til Katalog
+          <ArrowLeft className="h-4 w-4" /> Tilbake til Katalog
         </Button>
       </Link>
 
       <div className="space-y-2">
         <div className="flex items-center gap-3">
           <h1 className="text-2xl font-bold tracking-tight">{model.name}</h1>
-          {statusCfg && <Badge className={statusCfg.color}>{statusCfg.label}</Badge>}
+          {statusCfg && (() => {
+            const Icon = statusCfg.icon;
+            return <Badge className={statusCfg.color}><Icon className="h-3.5 w-3.5 mr-1" />{statusCfg.label}</Badge>;
+          })()}
         </div>
         <div className="flex items-center gap-2 text-muted-foreground">
           {model.provider && <span>{model.provider}</span>}
@@ -67,34 +71,20 @@ const ModelDetail = () => {
         </Card>
       )}
 
-      <StatusEditor
-        evaluation={evaluation}
-        itemType="model"
-        itemId={modelId!}
-        onSaved={(ev) => setEvaluation(ev)}
-      />
-
-      <CatalogEntryEditor
-        entry={catalogEntry}
-        itemType="model"
-        itemId={modelId!}
-        itemName={model.name}
-        itemMeta={{ provider: model.provider, modality: model.modality }}
-        onSaved={(entry) => setCatalogEntry(entry)}
-        onDeleted={() => setCatalogEntry(null)}
-      />
+      <StatusEditor evaluation={evaluation} itemType="model" itemId={modelId!} onSaved={(ev) => setEvaluation(ev)} />
+      <CatalogEntryEditor entry={catalogEntry} itemType="model" itemId={modelId!} itemName={model.name} itemMeta={{ provider: model.provider, modality: model.modality }} onSaved={(entry) => setCatalogEntry(entry)} onDeleted={() => setCatalogEntry(null)} />
 
       {catalogEntry && (
         <div className="space-y-4">
           {catalogEntry.best_for && (
             <Card>
-              <CardHeader><CardTitle className="text-base">🎯 Best for</CardTitle></CardHeader>
+              <CardHeader><CardTitle className="text-base flex items-center gap-1.5"><Target className="h-4 w-4" /> Best for</CardTitle></CardHeader>
               <CardContent className="text-sm text-muted-foreground">{catalogEntry.best_for}</CardContent>
             </Card>
           )}
           {catalogEntry.example_prompts && (
             <Card>
-              <CardHeader><CardTitle className="text-base">💬 Eksempelprompter</CardTitle></CardHeader>
+              <CardHeader><CardTitle className="text-base flex items-center gap-1.5"><MessageSquare className="h-4 w-4" /> Eksempelprompter</CardTitle></CardHeader>
               <CardContent className="prose-catalog text-sm text-muted-foreground">
                 <ReactMarkdown>{catalogEntry.example_prompts}</ReactMarkdown>
               </CardContent>
@@ -102,19 +92,19 @@ const ModelDetail = () => {
           )}
           {catalogEntry.do_this && (
             <Card>
-              <CardHeader><CardTitle className="text-base text-success">✅ Gjør dette</CardTitle></CardHeader>
+              <CardHeader><CardTitle className="text-base text-success flex items-center gap-1.5"><CheckCircle2 className="h-4 w-4" /> Gjør dette</CardTitle></CardHeader>
               <CardContent className="text-sm text-muted-foreground">{catalogEntry.do_this}</CardContent>
             </Card>
           )}
           {catalogEntry.avoid_this && (
             <Card>
-              <CardHeader><CardTitle className="text-base text-destructive">❌ Unngå dette</CardTitle></CardHeader>
+              <CardHeader><CardTitle className="text-base text-destructive flex items-center gap-1.5"><XCircle className="h-4 w-4" /> Unngå dette</CardTitle></CardHeader>
               <CardContent className="text-sm text-muted-foreground">{catalogEntry.avoid_this}</CardContent>
             </Card>
           )}
           {catalogEntry.security_guidance && (
             <Card>
-              <CardHeader><CardTitle className="text-base">🔒 Sikkerhetsveiledning</CardTitle></CardHeader>
+              <CardHeader><CardTitle className="text-base flex items-center gap-1.5"><Shield className="h-4 w-4" /> Sikkerhetsveiledning</CardTitle></CardHeader>
               <CardContent className="text-sm text-muted-foreground">{catalogEntry.security_guidance}</CardContent>
             </Card>
           )}

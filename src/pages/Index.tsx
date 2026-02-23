@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getNickname, setNickname, setAliasId, getAliasId, generateNickname } from "@/lib/nickname";
 import { supabase } from "@/integrations/supabase/client";
+import { Brain, ClipboardList, BarChart3, CheckSquare, BookOpen, GraduationCap, Lock, RefreshCw } from "lucide-react";
 
 const Index = () => {
   const [nickname, setNicknameState] = useState("");
@@ -50,7 +51,7 @@ const Index = () => {
       <div className="max-w-3xl mx-auto space-y-8">
         <div className="space-y-2">
           <h1 className="text-3xl font-bold tracking-tight">
-            Velkommen tilbake, <span className="text-primary">{existingNickname}</span> 👋
+            Velkommen tilbake, <span className="text-primary">{existingNickname}</span>
           </h1>
           <p className="text-muted-foreground text-lg">
             Hva vil du gjøre i dag?
@@ -58,15 +59,15 @@ const Index = () => {
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
-          <QuickLink icon="📋" title="Kartlegging" desc="Del hvilke AI-verktøy du bruker" to="/kartlegging" />
-          <QuickLink icon="📊" title="Innsikt" desc="Se hva organisasjonen bruker" to="/innsikt" />
-          <QuickLink icon="✅" title="Anbefalt Stack" desc="Se anbefalte verktøy" to="/stack" />
-          <QuickLink icon="📖" title="Katalog" desc="Utforsk verktøykatalogen" to="/katalog" />
-          <QuickLink icon="🎓" title="Læring" desc="Tips, prompter og case studies" to="/laering" />
+          <QuickLink icon={ClipboardList} title="Kartlegging" desc="Del hvilke AI-verktøy du bruker" to="/kartlegging" />
+          <QuickLink icon={BarChart3} title="Innsikt" desc="Se hva organisasjonen bruker" to="/innsikt" />
+          <QuickLink icon={CheckSquare} title="Anbefalt Stack" desc="Se anbefalte verktøy" to="/stack" />
+          <QuickLink icon={BookOpen} title="Katalog" desc="Utforsk verktøykatalogen" to="/katalog" />
+          <QuickLink icon={GraduationCap} title="Læring" desc="Tips, prompter og case studies" to="/laering" />
         </div>
 
-        <p className="text-sm text-muted-foreground">
-          🔒 Ingen sporing. Ingen innlogging. Helt anonymt.
+        <p className="text-sm text-muted-foreground flex items-center gap-1.5">
+          <Lock className="h-3.5 w-3.5" /> Ingen sporing. Ingen innlogging. Helt anonymt.
         </p>
       </div>
     );
@@ -75,7 +76,9 @@ const Index = () => {
   return (
     <div className="max-w-lg mx-auto mt-12 space-y-6">
       <div className="text-center space-y-2">
-        <h1 className="text-4xl font-bold tracking-tight">🧠 AI Tool Atlas</h1>
+        <h1 className="text-4xl font-bold tracking-tight flex items-center justify-center gap-2">
+          <Brain className="h-9 w-9" /> AI Tool Atlas
+        </h1>
         <p className="text-muted-foreground text-lg">
           Del hvilke AI-verktøy du bruker – helt anonymt
         </p>
@@ -98,7 +101,7 @@ const Index = () => {
               maxLength={30}
             />
             <Button variant="outline" size="icon" onClick={handleGenerateNew} title="Generer nytt">
-              🔄
+              <RefreshCw className="h-4 w-4" />
             </Button>
           </div>
           <Button className="w-full" onClick={handleStart} disabled={!nickname.trim() || loading}>
@@ -107,20 +110,20 @@ const Index = () => {
         </CardContent>
       </Card>
 
-      <p className="text-center text-sm text-muted-foreground">
-        🔒 Ingen sporing · Ingen innlogging · Helt anonymt
+      <p className="text-center text-sm text-muted-foreground flex items-center justify-center gap-1.5">
+        <Lock className="h-3.5 w-3.5" /> Ingen sporing · Ingen innlogging · Helt anonymt
       </p>
     </div>
   );
 };
 
-function QuickLink({ icon, title, desc, to }: { icon: string; title: string; desc: string; to: string }) {
+function QuickLink({ icon: Icon, title, desc, to }: { icon: React.ComponentType<{ className?: string }>; title: string; desc: string; to: string }) {
   const navigate = useNavigate();
   return (
     <Card className="cursor-pointer hover:border-primary/40 transition-colors" onClick={() => navigate(to)}>
       <CardContent className="flex items-start gap-3 p-4">
         <div className="rounded-lg bg-primary/10 p-2">
-          <span className="text-lg leading-none">{icon}</span>
+          <Icon className="h-5 w-5 text-primary" />
         </div>
         <div>
           <p className="font-medium">{title}</p>

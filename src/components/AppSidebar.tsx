@@ -1,5 +1,6 @@
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
+import { Home, ClipboardList, BarChart3, CheckSquare, BookOpen, GraduationCap, Lock, Brain } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -12,13 +13,13 @@ import {
 } from "@/components/ui/sidebar";
 
 const navItems = [
-  { title: "Hjem", url: "/", icon: "🏠" },
-  { title: "Kartlegging", url: "/kartlegging", icon: "📋" },
-  { title: "Innsikt", url: "/innsikt", icon: "📊" },
-  { title: "Anbefalt Stack", url: "/stack", icon: "✅" },
-  { title: "Katalog", url: "/katalog", icon: "📖" },
-  { title: "Læring", url: "/laering", icon: "🎓" },
-  { title: "Admin", url: "/admin", icon: "🔒" },
+  { title: "Hjem", url: "/", icon: Home },
+  { title: "Kartlegging", url: "/kartlegging", icon: ClipboardList },
+  { title: "Innsikt", url: "/innsikt", icon: BarChart3 },
+  { title: "Anbefalt Stack", url: "/stack", icon: CheckSquare },
+  { title: "Katalog", url: "/katalog", icon: BookOpen },
+  { title: "Læring", url: "/laering", icon: GraduationCap },
+  { title: "Admin", url: "/admin", icon: Lock },
 ];
 
 export function AppSidebar() {
@@ -30,8 +31,8 @@ export function AppSidebar() {
     <Sidebar collapsible="icon" className="border-r border-sidebar-border">
       <div className="flex items-center gap-2 px-4 py-5">
         {!collapsed && (
-          <h1 className="text-lg font-bold text-sidebar-primary-foreground tracking-tight">
-            🧠 AI Tool Atlas
+          <h1 className="text-lg font-bold text-sidebar-primary-foreground tracking-tight flex items-center gap-2">
+            <Brain className="h-5 w-5" /> AI Tool Atlas
           </h1>
         )}
       </div>
@@ -48,7 +49,7 @@ export function AppSidebar() {
                       className="hover:bg-sidebar-accent/60"
                       activeClassName="bg-sidebar-accent text-sidebar-primary font-semibold"
                     >
-                      <span className="text-base leading-none">{item.icon}</span>
+                      <item.icon className="h-4 w-4" />
                       <span>{item.title}</span>
                     </NavLink>
                   </SidebarMenuButton>

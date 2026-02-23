@@ -12,6 +12,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { adminAction } from "@/lib/adminAction";
 import { getAdminToken, setAdminToken } from "@/lib/nickname";
 import { useToast } from "@/hooks/use-toast";
+import {
+  Lock, Sparkles, Loader2, Wrench, Brain, Download, Trash2, Pencil, Plus,
+  CircleCheck, CircleMinus, CircleX, FlaskConical, ClipboardList, History
+} from "lucide-react";
 
 const ADMIN_CODE = "atlas-admin-2024";
 
@@ -41,7 +45,7 @@ function BulkGenerateSection() {
 
         if (data.processed === 0) break;
       }
-      toast({ title: `✅ Ferdig! ${allResults.length} ${type === "tool" ? "verktøy" : "modeller"} generert.` });
+      toast({ title: `Ferdig! ${allResults.length} ${type === "tool" ? "verktøy" : "modeller"} generert.` });
     } catch (e: any) {
       toast({ title: "Feil", description: e.message, variant: "destructive" });
     } finally {
@@ -57,28 +61,31 @@ function BulkGenerateSection() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base">✨ Bulk AI-generering av katalogoppføringer</CardTitle>
+        <CardTitle className="text-base flex items-center gap-1.5"><Sparkles className="h-4 w-4" /> Bulk AI-generering av katalogoppføringer</CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
         <p className="text-sm text-muted-foreground">
           Generer kataloginnhold automatisk for alle verktøy og modeller som mangler oppføring.
         </p>
         <div className="flex gap-2 flex-wrap">
-          <Button size="sm" onClick={() => runBulk("tool")} disabled={running}>
-            {running ? "⏳ Kjører..." : "🛠️ Generer for verktøy"}
+          <Button size="sm" onClick={() => runBulk("tool")} disabled={running} className="gap-1.5">
+            {running ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Wrench className="h-3.5 w-3.5" />}
+            {running ? "Kjører..." : "Generer for verktøy"}
           </Button>
-          <Button size="sm" onClick={() => runBulk("model")} disabled={running}>
-            {running ? "⏳ Kjører..." : "🧠 Generer for modeller"}
+          <Button size="sm" onClick={() => runBulk("model")} disabled={running} className="gap-1.5">
+            {running ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Brain className="h-3.5 w-3.5" />}
+            {running ? "Kjører..." : "Generer for modeller"}
           </Button>
-          <Button size="sm" variant="outline" onClick={runAll} disabled={running}>
-            {running ? "⏳ Kjører..." : "✨ Generer for alle"}
+          <Button size="sm" variant="outline" onClick={runAll} disabled={running} className="gap-1.5">
+            {running ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
+            {running ? "Kjører..." : "Generer for alle"}
           </Button>
         </div>
         {results.length > 0 && (
           <div className="text-xs space-y-1 max-h-40 overflow-y-auto border rounded p-2">
             {results.map((r, i) => (
-              <div key={i} className="flex gap-2">
-                <span>{r.type === "tool" ? "🛠️" : "🧠"}</span>
+              <div key={i} className="flex gap-2 items-center">
+                {r.type === "tool" ? <Wrench className="h-3 w-3" /> : <Brain className="h-3 w-3" />}
                 <span className="font-medium">{r.name}</span>
                 <span className={r.status === "success" ? "text-success" : "text-destructive"}>{r.status}</span>
               </div>
@@ -113,7 +120,7 @@ const Admin = () => {
     return (
       <div className="max-w-sm mx-auto mt-12 space-y-4">
         <div className="text-center space-y-2">
-          <span className="text-5xl block">🔒</span>
+          <Lock className="h-12 w-12 mx-auto text-muted-foreground" />
           <h1 className="text-2xl font-bold">Admin</h1>
           <p className="text-muted-foreground">Skriv inn admin-koden for tilgang</p>
         </div>
@@ -203,8 +210,8 @@ function SubmissionsTab() {
     <div className="space-y-3 mt-4">
       <div className="flex gap-2 items-center flex-wrap">
         <Input placeholder="Søk i innleveringer..." value={search} onChange={e => setSearch(e.target.value)} className="flex-1 min-w-[200px]" />
-        <Button variant="outline" size="sm" onClick={exportCsv} disabled={submissions.length === 0}>
-          📥 Eksporter CSV
+        <Button variant="outline" size="sm" onClick={exportCsv} disabled={submissions.length === 0} className="gap-1.5">
+          <Download className="h-3.5 w-3.5" /> Eksporter CSV
         </Button>
         <span className="text-sm text-muted-foreground">{filtered.length} av {submissions.length}</span>
       </div>
@@ -222,7 +229,9 @@ function SubmissionsTab() {
                   {s.time_saved_range ? `${s.time_saved_range}t spart` : "–"} · {new Date(s.created_at).toLocaleDateString("nb-NO")}
                 </p>
               </div>
-              <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); handleDelete(s.id); }}>🗑️</Button>
+              <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); handleDelete(s.id); }}>
+                <Trash2 className="h-4 w-4" />
+              </Button>
             </div>
           </CardContent>
         </Card>
@@ -246,7 +255,9 @@ function SubmissionsTab() {
               {selectedSubmission.pain_points && <p><strong>Utfordringer:</strong> {selectedSubmission.pain_points}</p>}
               {selectedSubmission.must_keep_tool && <p><strong>Må beholde:</strong> {selectedSubmission.must_keep_tool}</p>}
               <div className="flex justify-end pt-2">
-                <Button variant="destructive" size="sm" onClick={() => handleDelete(selectedSubmission.id)}>🗑️ Slett innlevering</Button>
+                <Button variant="destructive" size="sm" onClick={() => handleDelete(selectedSubmission.id)} className="gap-1.5">
+                  <Trash2 className="h-3.5 w-3.5" /> Slett innlevering
+                </Button>
               </div>
             </div>
           )}
@@ -284,7 +295,7 @@ function ToolsTab() {
         <Input placeholder="Navn" value={name} onChange={(e) => setName(e.target.value)} />
         <Input placeholder="Kategori" value={category} onChange={(e) => setCategory(e.target.value)} />
         <Input placeholder="Leverandør" value={vendor} onChange={(e) => setVendor(e.target.value)} />
-        <Button onClick={handleAdd}>➕</Button>
+        <Button onClick={handleAdd} size="icon"><Plus className="h-4 w-4" /></Button>
       </div>
       {tools.map((t) => (
         <div key={t.id} className="flex items-center justify-between border rounded-md p-3">
@@ -293,7 +304,9 @@ function ToolsTab() {
             {t.category && <Badge variant="secondary" className="ml-2">{t.category}</Badge>}
             {t.vendor && <span className="ml-2 text-sm text-muted-foreground">{t.vendor}</span>}
           </div>
-          <Button variant="ghost" size="icon" onClick={() => handleDelete(t.id)}>🗑️</Button>
+          <Button variant="ghost" size="icon" onClick={() => handleDelete(t.id)}>
+            <Trash2 className="h-4 w-4" />
+          </Button>
         </div>
       ))}
     </div>
@@ -308,7 +321,6 @@ function EvaluationsTab() {
   const [filterType, setFilterType] = useState<"all" | "tool" | "model">("all");
   const [selectedItem, setSelectedItem] = useState<any | null>(null);
 
-  // Form state
   const [entityType, setEntityType] = useState<"tool" | "model">("tool");
   const [entityId, setEntityId] = useState("");
   const [status, setStatus] = useState("ALLOWED");
@@ -416,7 +428,6 @@ function EvaluationsTab() {
     return true;
   });
 
-  // Group evals by entity for history view
   const getHistoryForEntity = (ev: any) => {
     const key = ev.tool_id || ev.model_id;
     return evals.filter(e => (e.tool_id || e.model_id) === key).sort((a, b) =>
@@ -426,14 +437,13 @@ function EvaluationsTab() {
 
   return (
     <div className="space-y-4 mt-4">
-      {/* Filters */}
       <div className="flex gap-2 flex-wrap items-center">
         <Select value={filterType} onValueChange={(v: any) => setFilterType(v)}>
           <SelectTrigger className="w-[140px]"><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Alle typer</SelectItem>
-            <SelectItem value="tool">🛠️ Verktøy</SelectItem>
-            <SelectItem value="model">🧠 Modeller</SelectItem>
+            <SelectItem value="tool"><span className="flex items-center gap-1.5"><Wrench className="h-3.5 w-3.5" /> Verktøy</span></SelectItem>
+            <SelectItem value="model"><span className="flex items-center gap-1.5"><Brain className="h-3.5 w-3.5" /> Modeller</span></SelectItem>
           </SelectContent>
         </Select>
         <Select value={filterStatus} onValueChange={setFilterStatus}>
@@ -447,22 +457,25 @@ function EvaluationsTab() {
           </SelectContent>
         </Select>
         <span className="text-sm text-muted-foreground ml-auto">{filtered.length} evalueringer</span>
-        <Button size="sm" onClick={() => { resetForm(); setShowForm(true); }}>➕ Ny evaluering</Button>
+        <Button size="sm" onClick={() => { resetForm(); setShowForm(true); }} className="gap-1.5">
+          <Plus className="h-3.5 w-3.5" /> Ny evaluering
+        </Button>
       </div>
 
-      {/* Create/Edit form */}
       {showForm && (
         <Card className="border-primary/30">
           <CardHeader>
-            <CardTitle className="text-base">{editingId ? "✏️ Rediger evaluering" : "➕ Ny evaluering"}</CardTitle>
+            <CardTitle className="text-base flex items-center gap-1.5">
+              {editingId ? <><Pencil className="h-4 w-4" /> Rediger evaluering</> : <><Plus className="h-4 w-4" /> Ny evaluering</>}
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex gap-2">
               <Select value={entityType} onValueChange={(v: any) => { setEntityType(v); setEntityId(""); }}>
                 <SelectTrigger className="w-[140px]"><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="tool">🛠️ Verktøy</SelectItem>
-                  <SelectItem value="model">🧠 Modell</SelectItem>
+                  <SelectItem value="tool"><span className="flex items-center gap-1.5"><Wrench className="h-3.5 w-3.5" /> Verktøy</span></SelectItem>
+                  <SelectItem value="model"><span className="flex items-center gap-1.5"><Brain className="h-3.5 w-3.5" /> Modell</span></SelectItem>
                 </SelectContent>
               </Select>
               <Select value={entityId} onValueChange={setEntityId}>
@@ -476,10 +489,10 @@ function EvaluationsTab() {
               <Select value={status} onValueChange={setStatus}>
                 <SelectTrigger className="w-[160px]"><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="STANDARD">✅ Standard</SelectItem>
-                  <SelectItem value="ALLOWED">🔵 Tillatt</SelectItem>
-                  <SelectItem value="NOT_ALLOWED">🔴 Ikke tillatt</SelectItem>
-                  <SelectItem value="TRIAL">🟡 Prøveperiode</SelectItem>
+                  <SelectItem value="STANDARD"><span className="flex items-center gap-1.5"><CircleCheck className="h-3.5 w-3.5" /> Standard</span></SelectItem>
+                  <SelectItem value="ALLOWED"><span className="flex items-center gap-1.5"><CircleMinus className="h-3.5 w-3.5" /> Tillatt</span></SelectItem>
+                  <SelectItem value="NOT_ALLOWED"><span className="flex items-center gap-1.5"><CircleX className="h-3.5 w-3.5" /> Ikke tillatt</span></SelectItem>
+                  <SelectItem value="TRIAL"><span className="flex items-center gap-1.5"><FlaskConical className="h-3.5 w-3.5" /> Prøveperiode</span></SelectItem>
                 </SelectContent>
               </Select>
               <Input placeholder="Versjon (f.eks. v1)" value={version} onChange={e => setVersion(e.target.value)} className="w-[120px]" />
@@ -507,14 +520,13 @@ function EvaluationsTab() {
         </Card>
       )}
 
-      {/* Evaluation list */}
       {filtered.length === 0 && <p className="text-muted-foreground">Ingen evalueringer funnet.</p>}
       {filtered.map((ev) => (
         <Card key={ev.id} className="cursor-pointer hover:border-primary/50 transition-colors" onClick={() => setSelectedItem(ev)}>
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-sm">{getType(ev) === "tool" ? "🛠️" : "🧠"}</span>
+                {getType(ev) === "tool" ? <Wrench className="h-4 w-4" /> : <Brain className="h-4 w-4" />}
                 <span className="font-medium">{getName(ev)}</span>
                 <span className={`text-xs px-2 py-0.5 rounded-full ${statusColors[ev.decided_status] || ""}`}>
                   {ev.decided_status}
@@ -527,8 +539,12 @@ function EvaluationsTab() {
                 )}
               </div>
               <div className="flex items-center gap-1">
-                <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); startEdit(ev); }}>✏️</Button>
-                <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); handleDelete(ev.id); }}>🗑️</Button>
+                <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); startEdit(ev); }}>
+                  <Pencil className="h-4 w-4" />
+                </Button>
+                <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); handleDelete(ev.id); }}>
+                  <Trash2 className="h-4 w-4" />
+                </Button>
               </div>
             </div>
             {ev.rationale && <p className="text-sm text-muted-foreground mt-1 line-clamp-1">{ev.rationale}</p>}
@@ -537,14 +553,13 @@ function EvaluationsTab() {
         </Card>
       ))}
 
-      {/* Detail/History dialog */}
       <Dialog open={!!selectedItem} onOpenChange={(open) => !open && setSelectedItem(null)}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               {selectedItem && (
                 <>
-                  <span>{getType(selectedItem) === "tool" ? "🛠️" : "🧠"}</span>
+                  {getType(selectedItem) === "tool" ? <Wrench className="h-4 w-4" /> : <Brain className="h-4 w-4" />}
                   {getName(selectedItem)}
                 </>
               )}
@@ -579,11 +594,10 @@ function EvaluationsTab() {
                 <p className="text-xs text-muted-foreground">Besluttet: {new Date(selectedItem.decided_at).toLocaleString("nb-NO")}</p>
               </div>
 
-              {/* History for this entity */}
               <div>
-                <h4 className="text-sm font-medium mb-2">📋 Evalueringshistorikk</h4>
+                <h4 className="text-sm font-medium mb-2 flex items-center gap-1.5"><History className="h-4 w-4" /> Evalueringshistorikk</h4>
                 <div className="space-y-2 max-h-48 overflow-y-auto">
-                  {getHistoryForEntity(selectedItem).map((h, i) => (
+                  {getHistoryForEntity(selectedItem).map((h) => (
                     <div key={h.id} className={`text-xs border rounded p-2 ${h.id === selectedItem.id ? "border-primary bg-primary/5" : ""}`}>
                       <div className="flex items-center gap-2">
                         <span className={`px-1.5 py-0.5 rounded ${statusColors[h.decided_status] || ""}`}>{h.decided_status}</span>
@@ -597,8 +611,12 @@ function EvaluationsTab() {
               </div>
 
               <div className="flex justify-end gap-2 pt-2">
-                <Button variant="outline" size="sm" onClick={() => { startEdit(selectedItem); setSelectedItem(null); }}>✏️ Rediger</Button>
-                <Button variant="destructive" size="sm" onClick={() => { handleDelete(selectedItem.id); }}>🗑️ Slett</Button>
+                <Button variant="outline" size="sm" onClick={() => { startEdit(selectedItem); setSelectedItem(null); }} className="gap-1.5">
+                  <Pencil className="h-3.5 w-3.5" /> Rediger
+                </Button>
+                <Button variant="destructive" size="sm" onClick={() => { handleDelete(selectedItem.id); }} className="gap-1.5">
+                  <Trash2 className="h-3.5 w-3.5" /> Slett
+                </Button>
               </div>
             </div>
           )}
@@ -653,7 +671,7 @@ function CatalogTab() {
       <Textarea placeholder="Unngå dette" value={avoidThis} onChange={(e) => setAvoidThis(e.target.value)} />
       <Textarea placeholder="Eksempelprompter (markdown)" value={examplePrompts} onChange={(e) => setExamplePrompts(e.target.value)} />
       <Textarea placeholder="Sikkerhetsveiledning" value={securityGuidance} onChange={(e) => setSecurityGuidance(e.target.value)} />
-      <Button onClick={handleAdd}>➕ Legg til</Button>
+      <Button onClick={handleAdd} className="gap-1.5"><Plus className="h-4 w-4" /> Legg til</Button>
 
       {entries.map((e) => (
         <Card key={e.id}>
@@ -704,7 +722,7 @@ function LearningTab() {
                 {item.published ? "Avpubliser" : "Publiser"}
               </Button>
               <Button variant="ghost" size="icon" onClick={() => handleDelete(item.id)}>
-                🗑️
+                <Trash2 className="h-4 w-4" />
               </Button>
             </div>
           </CardContent>
