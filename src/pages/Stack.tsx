@@ -81,6 +81,7 @@ const Stack = () => {
   const [evaluations, setEvaluations] = useState<any[]>([]);
   const [tools, setTools] = useState<any[]>([]);
   const [models, setModels] = useState<any[]>([]);
+  const [catalogEntries, setCatalogEntries] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
@@ -89,10 +90,12 @@ const Stack = () => {
       supabase.from("evaluations").select("*"),
       supabase.from("tools").select("*"),
       supabase.from("models").select("*"),
-    ]).then(([evalRes, toolRes, modelRes]) => {
+      supabase.from("catalog_entries").select("*"),
+    ]).then(([evalRes, toolRes, modelRes, catRes]) => {
       setEvaluations(evalRes.data || []);
       setTools(toolRes.data || []);
       setModels(modelRes.data || []);
+      setCatalogEntries(catRes.data || []);
       setLoading(false);
     });
   }, []);
@@ -105,6 +108,24 @@ const Stack = () => {
   const getToolName = (id: string) => tools.find((t) => t.id === id)?.name || "Ukjent";
   const getModelName = (id: string) => models.find((m) => m.id === id)?.name || "Ukjent";
   const getModelProvider = (id: string) => models.find((m) => m.id === id)?.provider || null;
+  const getToolExtra = (id: string) => {
+    const tool = tools.find((t) => t.id === id);
+    const cat = catalogEntries.find((c) => c.tool_id === id);
+    const parts: string[] = [];
+    if (tool?.vendor) parts.push(tool.vendor);
+    if (tool?.category) parts.push(tool.category);
+    if (cat?.best_for) parts.push(cat.best_for);
+    return parts.length > 0 ? parts.join(" · ") : null;
+  };
+  const getModelExtra = (id: string) => {
+    const model = models.find((m) => m.id === id);
+    const cat = catalogEntries.find((c) => c.model_id === id);
+    const parts: string[] = [];
+    if (model?.provider) parts.push(model.provider);
+    if (model?.modality) parts.push(model.modality);
+    if (cat?.best_for) parts.push(cat.best_for);
+    return parts.length > 0 ? parts.join(" · ") : null;
+  };
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -127,6 +148,7 @@ const Stack = () => {
           <StackSection
             evaluations={toolEvals}
             getName={getToolName}
+            getExtra={getToolExtra}
             onClickItem={(id) => navigate(`/katalog/${id}`)}
           />
         </TabsContent>
@@ -135,7 +157,7 @@ const Stack = () => {
           <StackSection
             evaluations={modelEvals}
             getName={getModelName}
-            getExtra={getModelProvider}
+            getExtra={getModelExtra}
             onClickItem={(id) => navigate(`/katalog/modell/${id}`)}
           />
         </TabsContent>
