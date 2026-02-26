@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
-import { CircleCheck, CircleMinus, CircleX, FlaskConical, Wrench, Brain } from "lucide-react";
+import { CircleCheck, CircleX, FlaskConical, Wrench, Brain, ChevronRight } from "lucide-react";
 
 const statusConfig = {
   ALLOWED: { label: "Tillatt", icon: CircleCheck, color: "bg-success text-success-foreground" },
@@ -46,19 +46,25 @@ const StackSection = ({ evaluations, getName, getExtra, onClickItem }: StackSect
                 return (
                   <Card
                     key={ev.id}
-                    className={`${onClickItem ? "cursor-pointer hover:border-primary" : ""} transition-colors`}
+                    className={`${onClickItem ? "cursor-pointer hover:border-primary group" : ""} transition-colors`}
                     onClick={() => onClickItem?.(itemId)}
                   >
                     <CardContent className="p-4 space-y-2">
                       <div className="flex items-center justify-between">
                         <span className="font-medium">{getName(itemId)}</span>
-                        <Badge className={cfg.color}>{cfg.label}</Badge>
+                        <div className="flex items-center gap-2">
+                          <Badge className={cfg.color}>{cfg.label}</Badge>
+                          {onClickItem && <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />}
+                        </div>
                       </div>
                       {getExtra && getExtra(itemId) && (
                         <p className="text-xs text-muted-foreground">{getExtra(itemId)}</p>
                       )}
                       {ev.rationale && <p className="text-sm text-muted-foreground">{ev.rationale}</p>}
                       {ev.version && <span className="text-xs text-muted-foreground">{ev.version}</span>}
+                      {onClickItem && (
+                        <p className="text-xs text-primary font-medium pt-1">Se detaljer og veiledning →</p>
+                      )}
                     </CardContent>
                   </Card>
                 );
