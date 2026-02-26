@@ -15,6 +15,7 @@ interface ToolFormDialogProps {
   onOpenChange: (open: boolean) => void;
   tool?: any | null;
   onSaved: () => void;
+  initialCatalogEntry?: any | null;
 }
 
 const catalogFields = [
@@ -25,7 +26,7 @@ const catalogFields = [
   { key: "security_guidance", label: "Sikkerhetsveiledning", icon: Shield, rows: 2 },
 ] as const;
 
-export const ToolFormDialog = ({ open, onOpenChange, tool, onSaved }: ToolFormDialogProps) => {
+export const ToolFormDialog = ({ open, onOpenChange, tool, onSaved, initialCatalogEntry }: ToolFormDialogProps) => {
   const [name, setName] = useState("");
   const [category, setCategory] = useState("");
   const [vendor, setVendor] = useState("");
@@ -51,8 +52,9 @@ export const ToolFormDialog = ({ open, onOpenChange, tool, onSaved }: ToolFormDi
       setVendor(tool.vendor || "");
       setLink(tool.link || "");
       setNotes(tool.notes || "");
-      // Load catalog entry
-      supabase.from("catalog_entries").select("*").eq("tool_id", tool.id).maybeSingle().then(({ data }) => {
+      // Use pre-loaded catalog entry if available, otherwise fetch
+      if (initialCatalogEntry !== undefined) {
+        const data = initialCatalogEntry;
         setCatalogEntryId(data?.id || null);
         setCatalog({
           best_for: data?.best_for || "",
@@ -61,13 +63,25 @@ export const ToolFormDialog = ({ open, onOpenChange, tool, onSaved }: ToolFormDi
           avoid_this: data?.avoid_this || "",
           security_guidance: data?.security_guidance || "",
         });
-      });
+      } else {
+        supabase.from("catalog_entries").select("*").eq("tool_id", tool.id).maybeSingle().then(({ data, error }) => {
+          if (error) { console.error("Failed to load catalog entry:", error); return; }
+          setCatalogEntryId(data?.id || null);
+          setCatalog({
+            best_for: data?.best_for || "",
+            example_prompts: data?.example_prompts || "",
+            do_this: data?.do_this || "",
+            avoid_this: data?.avoid_this || "",
+            security_guidance: data?.security_guidance || "",
+          });
+        });
+      }
     } else {
       setName(""); setCategory(""); setVendor(""); setLink(""); setNotes("");
       setCatalogEntryId(null);
       setCatalog({ best_for: "", example_prompts: "", do_this: "", avoid_this: "", security_guidance: "" });
     }
-  }, [tool, open]);
+  }, [tool, open, initialCatalogEntry]);
 
   const handleGenerate = async () => {
     if (!name.trim()) { toast.error("Fyll inn navn først"); return; }
