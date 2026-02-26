@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,7 @@ const statusConfig: Record<string, { label: string; icon: React.ComponentType<{ 
 
 const ModelDetail = () => {
   const { modelId } = useParams<{ modelId: string }>();
+  const navigate = useNavigate();
   const [model, setModel] = useState<any>(null);
   const [catalogEntry, setCatalogEntry] = useState<any>(null);
   const [evaluation, setEvaluation] = useState<any>(null);
@@ -41,11 +42,9 @@ const ModelDetail = () => {
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
-      <Link to="/katalog">
-        <Button variant="ghost" size="sm" className="gap-1">
-          <ArrowLeft className="h-4 w-4" /> Tilbake til Katalog
-        </Button>
-      </Link>
+      <Button variant="ghost" size="sm" className="gap-1" onClick={() => navigate(-1)}>
+        <ArrowLeft className="h-4 w-4" /> Tilbake
+      </Button>
 
       <div className="space-y-2">
         <div className="flex items-center gap-3">
