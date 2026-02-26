@@ -1,20 +1,30 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { adminAction, isAdmin } from "@/lib/adminAction";
 import { toast } from "sonner";
-import { CircleCheck, CircleMinus, CircleX, FlaskConical, Search, Wrench, Brain } from "lucide-react";
+import { CircleCheck, CircleX, FlaskConical, Search, Wrench, Brain, Plus, Pencil, Trash2 } from "lucide-react";
+import { ToolFormDialog } from "@/components/catalog/ToolFormDialog";
+import { ModelFormDialog } from "@/components/catalog/ModelFormDialog";
+import { DeleteConfirmDialog } from "@/components/catalog/DeleteConfirmDialog";
 
 const statusConfig: Record<string, { label: string; icon: React.ComponentType<{ className?: string }>; color: string }> = {
   ALLOWED: { label: "Tillatt", icon: CircleCheck, color: "bg-success text-success-foreground" },
   NOT_ALLOWED: { label: "Ikke tillatt", icon: CircleX, color: "bg-destructive text-destructive-foreground" },
   TRIAL: { label: "Prøveperiode", icon: FlaskConical, color: "bg-accent text-accent-foreground" },
 };
+
+const statuses = [
+  { value: "ALLOWED", label: "Tillatt", icon: CircleCheck },
+  { value: "NOT_ALLOWED", label: "Ikke tillatt", icon: CircleX },
+  { value: "TRIAL", label: "Prøveperiode", icon: FlaskConical },
+];
 
 const Catalog = () => {
   const [tools, setTools] = useState<any[]>([]);
@@ -27,7 +37,15 @@ const Catalog = () => {
   const navigate = useNavigate();
   const admin = isAdmin();
 
-  useEffect(() => {
+  // CRUD dialog state
+  const [toolDialogOpen, setToolDialogOpen] = useState(false);
+  const [modelDialogOpen, setModelDialogOpen] = useState(false);
+  const [editingTool, setEditingTool] = useState<any | null>(null);
+  const [editingModel, setEditingModel] = useState<any | null>(null);
+  const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; name: string; id: string; table: "tools" | "models" }>({ open: false, name: "", id: "", table: "tools" });
+
+  const fetchData = useCallback(() => {
+    setLoading(true);
     Promise.all([
       supabase.from("tools").select("*"),
       supabase.from("models").select("*"),
@@ -42,6 +60,8 @@ const Catalog = () => {
     });
   }, []);
 
+  useEffect(() => { fetchData(); }, [fetchData]);
+
   if (loading) return <p className="text-muted-foreground">Laster katalog...</p>;
 
   const getToolEval = (id: string) => evaluations.find((e) => e.tool_id === id);
@@ -49,17 +69,7 @@ const Catalog = () => {
   const getCatalogEntry = (itemId: string, type: "tool" | "model") =>
     catalogEntries.find((c) => (type === "tool" ? c.tool_id === itemId : c.model_id === itemId));
 
-  const statuses = [
-    { value: "ALLOWED", label: "Tillatt", icon: CircleCheck },
-    { value: "NOT_ALLOWED", label: "Ikke tillatt", icon: CircleX },
-    { value: "TRIAL", label: "Prøveperiode", icon: FlaskConical },
-  ];
-
-  const handleStatusChange = async (
-    newStatus: string,
-    itemType: "tool" | "model",
-    itemId: string
-  ) => {
+  const handleStatusChange = async (newStatus: string, itemType: "tool" | "model", itemId: string) => {
     if (!admin) { toast.error("Kun admin kan endre status"); return; }
     const existing = itemType === "tool" ? getToolEval(itemId) : getModelEval(itemId);
     try {
@@ -119,12 +129,7 @@ const Catalog = () => {
       <div className="flex gap-3">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Søk i katalogen..."
-            className="pl-9"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
+          <Input placeholder="Søk i katalogen..." className="pl-9" value={search} onChange={(e) => setSearch(e.target.value)} />
         </div>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
           <SelectTrigger className="w-[180px]">
@@ -156,6 +161,13 @@ const Catalog = () => {
         </TabsList>
 
         <TabsContent value="tools" className="mt-6">
+          {admin && (
+            <div className="mb-4">
+              <Button size="sm" className="gap-1.5" onClick={() => { setEditingTool(null); setToolDialogOpen(true); }}>
+                <Plus className="h-4 w-4" /> Legg til verktøy
+              </Button>
+            </div>
+          )}
           {filteredTools.length === 0 ? (
             <p className="text-muted-foreground text-center py-12">Ingen verktøy funnet.</p>
           ) : (
@@ -170,30 +182,40 @@ const Catalog = () => {
                         <span className="font-medium cursor-pointer hover:underline" onClick={() => navigate(`/katalog/${tool.id}`)}>
                           {tool.name}
                         </span>
-                        {admin ? (
-                          <Select
-                            value={cfg ? ev.decided_status : ""}
-                            onValueChange={(val) => handleStatusChange(val, "tool", tool.id)}
-                          >
-                            <SelectTrigger className="w-auto h-7 text-xs px-2 gap-1" onClick={(e) => e.stopPropagation()}>
-                              <SelectValue placeholder="Sett status">
-                                {cfg ? renderStatusLabel(cfg) : "Sett status"}
-                              </SelectValue>
-                            </SelectTrigger>
-                            <SelectContent>
-                              {statuses.map((s) => {
-                                const Icon = s.icon;
-                                return (
-                                  <SelectItem key={s.value} value={s.value}>
-                                    <span className="flex items-center gap-1.5"><Icon className="h-3.5 w-3.5" /> {s.label}</span>
-                                  </SelectItem>
-                                );
-                              })}
-                            </SelectContent>
-                          </Select>
-                        ) : cfg ? (
-                          <Badge className={cfg.color}>{renderStatusLabel(cfg)}</Badge>
-                        ) : null}
+                        <div className="flex items-center gap-1">
+                          {admin ? (
+                            <>
+                              <Select
+                                value={cfg ? ev.decided_status : ""}
+                                onValueChange={(val) => handleStatusChange(val, "tool", tool.id)}
+                              >
+                                <SelectTrigger className="w-auto h-7 text-xs px-2 gap-1" onClick={(e) => e.stopPropagation()}>
+                                  <SelectValue placeholder="Sett status">
+                                    {cfg ? renderStatusLabel(cfg) : "Sett status"}
+                                  </SelectValue>
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {statuses.map((s) => {
+                                    const Icon = s.icon;
+                                    return (
+                                      <SelectItem key={s.value} value={s.value}>
+                                        <span className="flex items-center gap-1.5"><Icon className="h-3.5 w-3.5" /> {s.label}</span>
+                                      </SelectItem>
+                                    );
+                                  })}
+                                </SelectContent>
+                              </Select>
+                              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.stopPropagation(); setEditingTool(tool); setToolDialogOpen(true); }}>
+                                <Pencil className="h-3.5 w-3.5" />
+                              </Button>
+                              <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={(e) => { e.stopPropagation(); setDeleteDialog({ open: true, name: tool.name, id: tool.id, table: "tools" }); }}>
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </Button>
+                            </>
+                          ) : cfg ? (
+                            <Badge className={cfg.color}>{renderStatusLabel(cfg)}</Badge>
+                          ) : null}
+                        </div>
                       </div>
                       <div className="flex items-center gap-2 text-xs text-muted-foreground">
                         {tool.category && <span>{tool.category}</span>}
@@ -211,6 +233,13 @@ const Catalog = () => {
         </TabsContent>
 
         <TabsContent value="models" className="mt-6">
+          {admin && (
+            <div className="mb-4">
+              <Button size="sm" className="gap-1.5" onClick={() => { setEditingModel(null); setModelDialogOpen(true); }}>
+                <Plus className="h-4 w-4" /> Legg til modell
+              </Button>
+            </div>
+          )}
           {filteredModels.length === 0 ? (
             <p className="text-muted-foreground text-center py-12">Ingen modeller funnet.</p>
           ) : (
@@ -225,30 +254,40 @@ const Catalog = () => {
                         <span className="font-medium cursor-pointer hover:underline" onClick={() => navigate(`/katalog/modell/${model.id}`)}>
                           {model.name}
                         </span>
-                        {admin ? (
-                          <Select
-                            value={cfg ? ev.decided_status : ""}
-                            onValueChange={(val) => handleStatusChange(val, "model", model.id)}
-                          >
-                            <SelectTrigger className="w-auto h-7 text-xs px-2 gap-1" onClick={(e) => e.stopPropagation()}>
-                              <SelectValue placeholder="Sett status">
-                                {cfg ? renderStatusLabel(cfg) : "Sett status"}
-                              </SelectValue>
-                            </SelectTrigger>
-                            <SelectContent>
-                              {statuses.map((s) => {
-                                const Icon = s.icon;
-                                return (
-                                  <SelectItem key={s.value} value={s.value}>
-                                    <span className="flex items-center gap-1.5"><Icon className="h-3.5 w-3.5" /> {s.label}</span>
-                                  </SelectItem>
-                                );
-                              })}
-                            </SelectContent>
-                          </Select>
-                        ) : cfg ? (
-                          <Badge className={cfg.color}>{renderStatusLabel(cfg)}</Badge>
-                        ) : null}
+                        <div className="flex items-center gap-1">
+                          {admin ? (
+                            <>
+                              <Select
+                                value={cfg ? ev.decided_status : ""}
+                                onValueChange={(val) => handleStatusChange(val, "model", model.id)}
+                              >
+                                <SelectTrigger className="w-auto h-7 text-xs px-2 gap-1" onClick={(e) => e.stopPropagation()}>
+                                  <SelectValue placeholder="Sett status">
+                                    {cfg ? renderStatusLabel(cfg) : "Sett status"}
+                                  </SelectValue>
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {statuses.map((s) => {
+                                    const Icon = s.icon;
+                                    return (
+                                      <SelectItem key={s.value} value={s.value}>
+                                        <span className="flex items-center gap-1.5"><Icon className="h-3.5 w-3.5" /> {s.label}</span>
+                                      </SelectItem>
+                                    );
+                                  })}
+                                </SelectContent>
+                              </Select>
+                              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.stopPropagation(); setEditingModel(model); setModelDialogOpen(true); }}>
+                                <Pencil className="h-3.5 w-3.5" />
+                              </Button>
+                              <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={(e) => { e.stopPropagation(); setDeleteDialog({ open: true, name: model.name, id: model.id, table: "models" }); }}>
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </Button>
+                            </>
+                          ) : cfg ? (
+                            <Badge className={cfg.color}>{renderStatusLabel(cfg)}</Badge>
+                          ) : null}
+                        </div>
                       </div>
                       <div className="flex items-center gap-2 text-xs text-muted-foreground">
                         {model.provider && <span>{model.provider}</span>}
@@ -265,6 +304,18 @@ const Catalog = () => {
           )}
         </TabsContent>
       </Tabs>
+
+      {/* CRUD Dialogs */}
+      <ToolFormDialog open={toolDialogOpen} onOpenChange={setToolDialogOpen} tool={editingTool} onSaved={fetchData} />
+      <ModelFormDialog open={modelDialogOpen} onOpenChange={setModelDialogOpen} model={editingModel} onSaved={fetchData} />
+      <DeleteConfirmDialog
+        open={deleteDialog.open}
+        onOpenChange={(open) => setDeleteDialog((prev) => ({ ...prev, open }))}
+        itemName={deleteDialog.name}
+        itemId={deleteDialog.id}
+        table={deleteDialog.table}
+        onDeleted={fetchData}
+      />
     </div>
   );
 };
