@@ -5,7 +5,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import ReactMarkdown from "react-markdown";
-import { StatusEditor } from "@/components/StatusEditor";
 import { ArrowLeft, Target, MessageSquare, CheckCircle2, XCircle, Shield, CircleCheck, CircleX, FlaskConical } from "lucide-react";
 
 const statusConfig: Record<string, { label: string; icon: React.ComponentType<{ className?: string }>; color: string }> = {
@@ -59,8 +58,6 @@ const ToolDetail = () => {
         </div>
         {tool.vendor && <p className="text-muted-foreground">{tool.vendor}</p>}
       </div>
-
-      <StatusEditor evaluation={evaluation} itemType="tool" itemId={toolId!} onSaved={(ev) => setEvaluation(ev)} />
 
       {catalogEntry && (
         <div className="space-y-4">
