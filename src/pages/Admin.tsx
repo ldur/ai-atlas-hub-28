@@ -305,8 +305,7 @@ function EvaluationsTab() {
   const getType = (ev: any) => ev.tool_id ? "tool" : ev.model_id ? "model" : "unknown";
 
   const statusColors: Record<string, string> = {
-    STANDARD: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200",
-    ALLOWED: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
+    ALLOWED: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200",
     NOT_ALLOWED: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
     TRIAL: "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200",
   };
@@ -399,7 +398,6 @@ function EvaluationsTab() {
           <SelectTrigger className="w-[160px]"><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectItem value="ALL">Alle statuser</SelectItem>
-            <SelectItem value="STANDARD">Standard</SelectItem>
             <SelectItem value="ALLOWED">Tillatt</SelectItem>
             <SelectItem value="NOT_ALLOWED">Ikke tillatt</SelectItem>
             <SelectItem value="TRIAL">Prøveperiode</SelectItem>
@@ -438,8 +436,7 @@ function EvaluationsTab() {
               <Select value={status} onValueChange={setStatus}>
                 <SelectTrigger className="w-[160px]"><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="STANDARD"><span className="flex items-center gap-1.5"><CircleCheck className="h-3.5 w-3.5" /> Standard</span></SelectItem>
-                  <SelectItem value="ALLOWED"><span className="flex items-center gap-1.5"><CircleMinus className="h-3.5 w-3.5" /> Tillatt</span></SelectItem>
+                  <SelectItem value="ALLOWED"><span className="flex items-center gap-1.5"><CircleCheck className="h-3.5 w-3.5" /> Tillatt</span></SelectItem>
                   <SelectItem value="NOT_ALLOWED"><span className="flex items-center gap-1.5"><CircleX className="h-3.5 w-3.5" /> Ikke tillatt</span></SelectItem>
                   <SelectItem value="TRIAL"><span className="flex items-center gap-1.5"><FlaskConical className="h-3.5 w-3.5" /> Prøveperiode</span></SelectItem>
                 </SelectContent>

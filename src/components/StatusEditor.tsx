@@ -8,8 +8,7 @@ import { toast } from "sonner";
 import { CircleCheck, CircleMinus, CircleX, FlaskConical, Save, Loader2 } from "lucide-react";
 
 const statuses = [
-  { value: "STANDARD", label: "Standard", icon: CircleCheck },
-  { value: "ALLOWED", label: "Tillatt ved behov", icon: CircleMinus },
+  { value: "ALLOWED", label: "Tillatt", icon: CircleCheck },
   { value: "NOT_ALLOWED", label: "Ikke tillatt", icon: CircleX },
   { value: "TRIAL", label: "Prøveperiode", icon: FlaskConical },
 ];
