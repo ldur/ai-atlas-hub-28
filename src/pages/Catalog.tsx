@@ -306,7 +306,7 @@ const Catalog = () => {
       </Tabs>
 
       {/* CRUD Dialogs */}
-      <ToolFormDialog open={toolDialogOpen} onOpenChange={setToolDialogOpen} tool={editingTool} onSaved={fetchData} />
+      <ToolFormDialog open={toolDialogOpen} onOpenChange={setToolDialogOpen} tool={editingTool} onSaved={fetchData} initialCatalogEntry={editingTool ? getCatalogEntry(editingTool.id, "tool") || null : null} />
       <ModelFormDialog open={modelDialogOpen} onOpenChange={setModelDialogOpen} model={editingModel} onSaved={fetchData} />
       <DeleteConfirmDialog
         open={deleteDialog.open}
