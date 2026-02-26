@@ -11,8 +11,7 @@ import { toast } from "sonner";
 import { CircleCheck, CircleMinus, CircleX, FlaskConical, Search, Wrench, Brain } from "lucide-react";
 
 const statusConfig: Record<string, { label: string; icon: React.ComponentType<{ className?: string }>; color: string }> = {
-  STANDARD: { label: "Standard", icon: CircleCheck, color: "bg-success text-success-foreground" },
-  ALLOWED: { label: "Tillatt", icon: CircleMinus, color: "bg-warning text-warning-foreground" },
+  ALLOWED: { label: "Tillatt", icon: CircleCheck, color: "bg-success text-success-foreground" },
   NOT_ALLOWED: { label: "Ikke tillatt", icon: CircleX, color: "bg-destructive text-destructive-foreground" },
   TRIAL: { label: "Prøveperiode", icon: FlaskConical, color: "bg-accent text-accent-foreground" },
 };
@@ -51,8 +50,7 @@ const Catalog = () => {
     catalogEntries.find((c) => (type === "tool" ? c.tool_id === itemId : c.model_id === itemId));
 
   const statuses = [
-    { value: "STANDARD", label: "Standard", icon: CircleCheck },
-    { value: "ALLOWED", label: "Tillatt", icon: CircleMinus },
+    { value: "ALLOWED", label: "Tillatt", icon: CircleCheck },
     { value: "NOT_ALLOWED", label: "Ikke tillatt", icon: CircleX },
     { value: "TRIAL", label: "Prøveperiode", icon: FlaskConical },
   ];

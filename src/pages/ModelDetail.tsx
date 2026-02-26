@@ -10,8 +10,7 @@ import { StatusEditor } from "@/components/StatusEditor";
 import { ArrowLeft, Target, MessageSquare, CheckCircle2, XCircle, Shield, CircleCheck, CircleMinus, CircleX, FlaskConical } from "lucide-react";
 
 const statusConfig: Record<string, { label: string; icon: React.ComponentType<{ className?: string }>; color: string }> = {
-  STANDARD: { label: "Standard", icon: CircleCheck, color: "bg-success text-success-foreground" },
-  ALLOWED: { label: "Tillatt ved behov", icon: CircleMinus, color: "bg-warning text-warning-foreground" },
+  ALLOWED: { label: "Tillatt", icon: CircleCheck, color: "bg-success text-success-foreground" },
   NOT_ALLOWED: { label: "Ikke tillatt", icon: CircleX, color: "bg-destructive text-destructive-foreground" },
   TRIAL: { label: "Prøveperiode", icon: FlaskConical, color: "bg-accent text-accent-foreground" },
 };
