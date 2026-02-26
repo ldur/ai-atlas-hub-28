@@ -141,18 +141,12 @@ const Admin = () => {
       <h1 className="text-2xl font-bold tracking-tight">Admin Panel</h1>
       <BulkGenerateSection />
       <Tabs defaultValue="submissions">
-        <TabsList className="grid grid-cols-5 w-full">
+        <TabsList className="grid grid-cols-2 w-full">
           <TabsTrigger value="submissions">Innleveringer</TabsTrigger>
-          <TabsTrigger value="tools">Verktøy</TabsTrigger>
           <TabsTrigger value="evaluations">Evalueringer</TabsTrigger>
-          <TabsTrigger value="catalog">Katalog</TabsTrigger>
-          <TabsTrigger value="learning">Læring</TabsTrigger>
         </TabsList>
         <TabsContent value="submissions"><SubmissionsTab /></TabsContent>
-        <TabsContent value="tools"><ToolsTab /></TabsContent>
         <TabsContent value="evaluations"><EvaluationsTab /></TabsContent>
-        <TabsContent value="catalog"><CatalogTab /></TabsContent>
-        <TabsContent value="learning"><LearningTab /></TabsContent>
       </Tabs>
     </div>
   );
@@ -267,51 +261,6 @@ function SubmissionsTab() {
   );
 }
 
-function ToolsTab() {
-  const [tools, setTools] = useState<any[]>([]);
-  const [name, setName] = useState("");
-  const [category, setCategory] = useState("");
-  const [vendor, setVendor] = useState("");
-  const { toast } = useToast();
-
-  const fetch = () => supabase.from("tools").select("*").order("name").then(({ data }) => setTools(data || []));
-  useEffect(() => { fetch(); }, []);
-
-  const handleAdd = async () => {
-    if (!name.trim()) return;
-    const { error } = await supabase.from("tools").insert({ name: name.trim(), category: category || null, vendor: vendor || null });
-    if (error) toast({ title: "Feil", description: error.message, variant: "destructive" });
-    else { setName(""); setCategory(""); setVendor(""); fetch(); }
-  };
-
-  const handleDelete = async (id: string) => {
-    await supabase.from("tools").delete().eq("id", id);
-    fetch();
-  };
-
-  return (
-    <div className="space-y-4 mt-4">
-      <div className="flex gap-2">
-        <Input placeholder="Navn" value={name} onChange={(e) => setName(e.target.value)} />
-        <Input placeholder="Kategori" value={category} onChange={(e) => setCategory(e.target.value)} />
-        <Input placeholder="Leverandør" value={vendor} onChange={(e) => setVendor(e.target.value)} />
-        <Button onClick={handleAdd} size="icon"><Plus className="h-4 w-4" /></Button>
-      </div>
-      {tools.map((t) => (
-        <div key={t.id} className="flex items-center justify-between border rounded-md p-3">
-          <div>
-            <span className="font-medium">{t.name}</span>
-            {t.category && <Badge variant="secondary" className="ml-2">{t.category}</Badge>}
-            {t.vendor && <span className="ml-2 text-sm text-muted-foreground">{t.vendor}</span>}
-          </div>
-          <Button variant="ghost" size="icon" onClick={() => handleDelete(t.id)}>
-            <Trash2 className="h-4 w-4" />
-          </Button>
-        </div>
-      ))}
-    </div>
-  );
-}
 
 function EvaluationsTab() {
   const [evals, setEvals] = useState<any[]>([]);
@@ -626,110 +575,6 @@ function EvaluationsTab() {
   );
 }
 
-function CatalogTab() {
-  const [entries, setEntries] = useState<any[]>([]);
-  const [tools, setTools] = useState<any[]>([]);
-  const [toolId, setToolId] = useState("");
-  const [bestFor, setBestFor] = useState("");
-  const [doThis, setDoThis] = useState("");
-  const [avoidThis, setAvoidThis] = useState("");
-  const [examplePrompts, setExamplePrompts] = useState("");
-  const [securityGuidance, setSecurityGuidance] = useState("");
-  const { toast } = useToast();
 
-  const fetch = () => {
-    Promise.all([
-      supabase.from("catalog_entries").select("*"),
-      supabase.from("tools").select("*"),
-    ]).then(([c, t]) => { setEntries(c.data || []); setTools(t.data || []); });
-  };
-  useEffect(() => { fetch(); }, []);
-
-  const handleAdd = async () => {
-    const { error } = await supabase.from("catalog_entries").insert({
-      tool_id: toolId || null,
-      best_for: bestFor || null,
-      do_this: doThis || null,
-      avoid_this: avoidThis || null,
-      example_prompts: examplePrompts || null,
-      security_guidance: securityGuidance || null,
-    });
-    if (error) toast({ title: "Feil", description: error.message, variant: "destructive" });
-    else { setBestFor(""); setDoThis(""); setAvoidThis(""); setExamplePrompts(""); setSecurityGuidance(""); fetch(); }
-  };
-
-  const getToolName = (id: string) => tools.find((t) => t.id === id)?.name || "Generelt";
-
-  return (
-    <div className="space-y-4 mt-4">
-      <Select value={toolId} onValueChange={setToolId}>
-        <SelectTrigger><SelectValue placeholder="Velg verktøy (valgfritt)" /></SelectTrigger>
-        <SelectContent>{tools.map((t) => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}</SelectContent>
-      </Select>
-      <Input placeholder="Best for" value={bestFor} onChange={(e) => setBestFor(e.target.value)} />
-      <Textarea placeholder="Gjør dette" value={doThis} onChange={(e) => setDoThis(e.target.value)} />
-      <Textarea placeholder="Unngå dette" value={avoidThis} onChange={(e) => setAvoidThis(e.target.value)} />
-      <Textarea placeholder="Eksempelprompter (markdown)" value={examplePrompts} onChange={(e) => setExamplePrompts(e.target.value)} />
-      <Textarea placeholder="Sikkerhetsveiledning" value={securityGuidance} onChange={(e) => setSecurityGuidance(e.target.value)} />
-      <Button onClick={handleAdd} className="gap-1.5"><Plus className="h-4 w-4" /> Legg til</Button>
-
-      {entries.map((e) => (
-        <Card key={e.id}>
-          <CardContent className="p-4 text-sm">
-            <p className="font-medium">{e.tool_id ? getToolName(e.tool_id) : "Generelt"}</p>
-            {e.best_for && <p className="text-muted-foreground">{e.best_for}</p>}
-          </CardContent>
-        </Card>
-      ))}
-    </div>
-  );
-}
-
-function LearningTab() {
-  const [items, setItems] = useState<any[]>([]);
-  const { toast } = useToast();
-
-  const fetch = () => supabase.from("learning_items").select("*").order("created_at", { ascending: false }).then(({ data }) => setItems(data || []));
-  useEffect(() => { fetch(); }, []);
-
-  const togglePublish = async (id: string, published: boolean) => {
-    await supabase.from("learning_items").update({ published: !published }).eq("id", id);
-    fetch();
-  };
-
-  const handleDelete = async (id: string) => {
-    await supabase.from("learning_items").delete().eq("id", id);
-    fetch();
-  };
-
-  return (
-    <div className="space-y-3 mt-4">
-      {items.length === 0 && <p className="text-muted-foreground">Ingen læringsinnhold ennå.</p>}
-      {items.map((item) => (
-        <Card key={item.id}>
-          <CardContent className="p-4 flex items-center justify-between">
-            <div className="space-y-1">
-              <div className="flex items-center gap-2">
-                <span className="font-medium">{item.title}</span>
-                <Badge variant={item.published ? "default" : "secondary"}>
-                  {item.published ? "Publisert" : "Upublisert"}
-                </Badge>
-              </div>
-              <p className="text-xs text-muted-foreground">{item.type}</p>
-            </div>
-            <div className="flex gap-1">
-              <Button variant="outline" size="sm" onClick={() => togglePublish(item.id, item.published)}>
-                {item.published ? "Avpubliser" : "Publiser"}
-              </Button>
-              <Button variant="ghost" size="icon" onClick={() => handleDelete(item.id)}>
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      ))}
-    </div>
-  );
-}
 
 export default Admin;
