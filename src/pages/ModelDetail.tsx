@@ -5,9 +5,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import ReactMarkdown from "react-markdown";
-import { CatalogEntryEditor } from "@/components/CatalogEntryEditor";
 import { StatusEditor } from "@/components/StatusEditor";
-import { ArrowLeft, Target, MessageSquare, CheckCircle2, XCircle, Shield, CircleCheck, CircleMinus, CircleX, FlaskConical } from "lucide-react";
+import { ArrowLeft, Target, MessageSquare, CheckCircle2, XCircle, Shield, CircleCheck, CircleX, FlaskConical } from "lucide-react";
 
 const statusConfig: Record<string, { label: string; icon: React.ComponentType<{ className?: string }>; color: string }> = {
   ALLOWED: { label: "Tillatt", icon: CircleCheck, color: "bg-success text-success-foreground" },
@@ -71,7 +70,6 @@ const ModelDetail = () => {
       )}
 
       <StatusEditor evaluation={evaluation} itemType="model" itemId={modelId!} onSaved={(ev) => setEvaluation(ev)} />
-      <CatalogEntryEditor entry={catalogEntry} itemType="model" itemId={modelId!} itemName={model.name} itemMeta={{ provider: model.provider, modality: model.modality }} onSaved={(entry) => setCatalogEntry(entry)} onDeleted={() => setCatalogEntry(null)} />
 
       {catalogEntry && (
         <div className="space-y-4">
