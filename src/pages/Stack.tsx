@@ -18,10 +18,12 @@ interface StackSectionProps {
   evaluations: any[];
   getName: (id: string) => string;
   getExtra?: (id: string) => string | null;
+  getLink?: (id: string) => string | null;
+  getLinkLabel?: (id: string) => string | null;
   onClickItem?: (id: string) => void;
 }
 
-const StackSection = ({ evaluations, getName, getExtra, onClickItem }: StackSectionProps) => {
+const StackSection = ({ evaluations, getName, getExtra, getLink, getLinkLabel, onClickItem }: StackSectionProps) => {
   const hasItems = evaluations.length > 0;
 
   if (!hasItems) {
@@ -59,6 +61,17 @@ const StackSection = ({ evaluations, getName, getExtra, onClickItem }: StackSect
                       </div>
                       {getExtra && getExtra(itemId) && (
                         <p className="text-xs text-muted-foreground">{getExtra(itemId)}</p>
+                      )}
+                      {getLink && getLink(itemId) && (
+                        <a
+                          href={getLink(itemId)!}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          className="text-xs text-primary underline hover:text-primary/80 inline-flex items-center gap-1"
+                        >
+                          {getLinkLabel?.(itemId) || getLink(itemId)}
+                        </a>
                       )}
                       {ev.rationale && <p className="text-sm text-muted-foreground">{ev.rationale}</p>}
                       {ev.version && <span className="text-xs text-muted-foreground">{ev.version}</span>}
@@ -108,6 +121,8 @@ const Stack = () => {
   const getToolName = (id: string) => tools.find((t) => t.id === id)?.name || "Ukjent";
   const getModelName = (id: string) => models.find((m) => m.id === id)?.name || "Ukjent";
   const getModelProvider = (id: string) => models.find((m) => m.id === id)?.provider || null;
+  const getToolLink = (id: string) => tools.find((t) => t.id === id)?.link || null;
+  const getToolVendor = (id: string) => tools.find((t) => t.id === id)?.vendor || null;
   const getToolExtra = (id: string) => {
     const tool = tools.find((t) => t.id === id);
     const cat = catalogEntries.find((c) => c.tool_id === id);
@@ -149,6 +164,8 @@ const Stack = () => {
             evaluations={toolEvals}
             getName={getToolName}
             getExtra={getToolExtra}
+            getLink={getToolLink}
+            getLinkLabel={getToolVendor}
             onClickItem={(id) => navigate(`/katalog/${id}`)}
           />
         </TabsContent>
