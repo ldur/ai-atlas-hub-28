@@ -32,6 +32,9 @@ serve(async (req) => {
             content: `Du er en AI-rådgiver for en norsk organisasjon som kartlegger og evaluerer AI-verktøy og modeller.
 Gi praktisk, konkret veiledning på norsk. Svar ALLTID som gyldig JSON med disse nøklene:
 {
+  "category": "Kort kategori for verktøyet/modellen (f.eks. Kodehjelp, Chatbot, Bildegenerering, Skriveassistent, Produktivitet)",
+  "vendor": "Leverandørens/selskapets offisielle navn",
+  "link": "Offisiell URL til verktøyet/modellen (https://...)",
   "best_for": "Kort beskrivelse av hva verktøyet/modellen er best egnet for (1-2 setninger)",
   "example_prompts": "3-5 eksempelprompter i markdown-liste format som viser god bruk",
   "do_this": "2-3 konkrete tips for god bruk (kort tekst)",
@@ -54,13 +57,16 @@ Ingen annen tekst utenfor JSON-objektet.`,
               parameters: {
                 type: "object",
                 properties: {
+                  category: { type: "string" },
+                  vendor: { type: "string" },
+                  link: { type: "string" },
                   best_for: { type: "string" },
                   example_prompts: { type: "string" },
                   do_this: { type: "string" },
                   avoid_this: { type: "string" },
                   security_guidance: { type: "string" },
                 },
-                required: ["best_for", "example_prompts", "do_this", "avoid_this", "security_guidance"],
+                required: ["category", "vendor", "link", "best_for", "example_prompts", "do_this", "avoid_this", "security_guidance"],
                 additionalProperties: false,
               },
             },
