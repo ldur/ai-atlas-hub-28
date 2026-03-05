@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTheme } from "next-themes";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,11 +11,12 @@ import {
 import { Button } from "@/components/ui/button";
 import { getNickname, setNickname as saveNickname, getAdminToken, clearAdminToken, setAliasId } from "@/lib/nickname";
 import { isAdmin } from "@/lib/adminAction";
-import { User, Shield, LogOut, ChevronDown } from "lucide-react";
+import { User, Shield, LogOut, ChevronDown, Sun, Moon } from "lucide-react";
 
 export function UserMenu() {
   const [nickname, setNickname] = useState<string | null>(null);
   const [admin, setAdmin] = useState(false);
+  const { theme, setTheme } = useTheme();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -76,6 +78,10 @@ export function UserMenu() {
             Admin-modus aktiv
           </DropdownMenuItem>
         )}
+        <DropdownMenuItem onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>
+          {theme === "dark" ? <Sun className="h-3.5 w-3.5 mr-2" /> : <Moon className="h-3.5 w-3.5 mr-2" />}
+          {theme === "dark" ? "Lys modus" : "Mørk modus"}
+        </DropdownMenuItem>
         <DropdownMenuSeparator />
         {!admin && (
           <DropdownMenuItem onClick={handleGoAdmin}>
