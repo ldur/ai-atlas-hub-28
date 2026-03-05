@@ -270,6 +270,8 @@ const translations = {
   "admin.not_yet_evaluated": { no: "Ikke evaluert ennå", en: "Not yet evaluated" },
   "admin.has_catalog_entry": { no: "Har katalogoppføring", en: "Has catalog entry" },
   "admin.no_catalog_entry": { no: "Mangler katalogoppføring", en: "Missing catalog entry" },
+  "admin.high_is_good": { no: "høy er bra", en: "high is good" },
+  "admin.high_is_bad": { no: "høy er dårlig", en: "high is bad" },
 
   // User menu
   "user.admin_active": { no: "Admin-modus aktiv", en: "Admin mode active" },
