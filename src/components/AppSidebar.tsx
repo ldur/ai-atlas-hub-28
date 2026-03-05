@@ -11,21 +11,23 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { useI18n } from "@/lib/i18n";
 
-const navItems = [
-  { title: "Hjem", url: "/", icon: Home },
-  { title: "Kartlegging", url: "/kartlegging", icon: ClipboardList },
-  { title: "Innsikt", url: "/innsikt", icon: BarChart3 },
-  { title: "Anbefalt Stack", url: "/stack", icon: CheckSquare },
-  { title: "Katalog", url: "/katalog", icon: BookOpen },
-  { title: "Læring", url: "/laering", icon: GraduationCap },
-  { title: "Admin", url: "/admin", icon: Lock },
+const navKeys = [
+  { key: "nav.home" as const, url: "/", icon: Home },
+  { key: "nav.survey" as const, url: "/kartlegging", icon: ClipboardList },
+  { key: "nav.insights" as const, url: "/innsikt", icon: BarChart3 },
+  { key: "nav.stack" as const, url: "/stack", icon: CheckSquare },
+  { key: "nav.catalog" as const, url: "/katalog", icon: BookOpen },
+  { key: "nav.learning" as const, url: "/laering", icon: GraduationCap },
+  { key: "nav.admin" as const, url: "/admin", icon: Lock },
 ];
 
 export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const location = useLocation();
+  const { t } = useI18n();
 
   return (
     <Sidebar collapsible="icon" className="border-r border-sidebar-border">
@@ -40,9 +42,9 @@ export function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {navItems.map((item) => (
+              {navKeys.map((item) => (
                 <SidebarMenuItem key={item.url}>
-                  <SidebarMenuButton asChild tooltip={item.title}>
+                  <SidebarMenuButton asChild tooltip={t(item.key)}>
                     <NavLink
                       to={item.url}
                       end={item.url === "/"}
@@ -50,7 +52,7 @@ export function AppSidebar() {
                       activeClassName="bg-sidebar-accent text-sidebar-primary font-semibold"
                     >
                       <item.icon className="h-4 w-4" />
-                      <span>{item.title}</span>
+                      <span>{t(item.key)}</span>
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>

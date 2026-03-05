@@ -6,12 +6,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { getNickname, setNickname, setAliasId, getAliasId, generateNickname } from "@/lib/nickname";
 import { supabase } from "@/integrations/supabase/client";
 import { Brain, ClipboardList, BarChart3, CheckSquare, BookOpen, GraduationCap, Lock, RefreshCw } from "lucide-react";
+import { useI18n } from "@/lib/i18n";
 
 const Index = () => {
   const [nickname, setNicknameState] = useState("");
   const [existingNickname, setExistingNickname] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { t } = useI18n();
 
   useEffect(() => {
     const saved = getNickname();
@@ -51,23 +53,21 @@ const Index = () => {
       <div className="max-w-3xl mx-auto space-y-8">
         <div className="space-y-2">
           <h1 className="text-3xl font-bold tracking-tight">
-            Velkommen tilbake, <span className="text-primary">{existingNickname}</span>
+            {t("index.welcome_back")} <span className="text-primary">{existingNickname}</span>
           </h1>
-          <p className="text-muted-foreground text-lg">
-            Hva vil du gjøre i dag?
-          </p>
+          <p className="text-muted-foreground text-lg">{t("index.what_today")}</p>
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
-          <QuickLink icon={ClipboardList} title="Kartlegging" desc="Del hvilke AI-verktøy du bruker" to="/kartlegging" />
-          <QuickLink icon={BarChart3} title="Innsikt" desc="Se hva organisasjonen bruker" to="/innsikt" />
-          <QuickLink icon={CheckSquare} title="Anbefalt Stack" desc="Se anbefalte verktøy" to="/stack" />
-          <QuickLink icon={BookOpen} title="Katalog" desc="Utforsk verktøykatalogen" to="/katalog" />
-          <QuickLink icon={GraduationCap} title="Læring" desc="Tips, prompter og case studies" to="/laering" />
+          <QuickLink icon={ClipboardList} title={t("nav.survey")} desc={t("index.survey_desc")} to="/kartlegging" />
+          <QuickLink icon={BarChart3} title={t("nav.insights")} desc={t("index.insights_desc")} to="/innsikt" />
+          <QuickLink icon={CheckSquare} title={t("nav.stack")} desc={t("index.stack_desc")} to="/stack" />
+          <QuickLink icon={BookOpen} title={t("nav.catalog")} desc={t("index.catalog_desc")} to="/katalog" />
+          <QuickLink icon={GraduationCap} title={t("nav.learning")} desc={t("index.learning_desc")} to="/laering" />
         </div>
 
         <p className="text-sm text-muted-foreground flex items-center gap-1.5">
-          <Lock className="h-3.5 w-3.5" /> Ingen sporing. Ingen innlogging. Helt anonymt.
+          <Lock className="h-3.5 w-3.5" /> {t("index.no_tracking")}
         </p>
       </div>
     );
@@ -79,39 +79,34 @@ const Index = () => {
         <h1 className="text-4xl font-bold tracking-tight flex items-center justify-center gap-2">
           <Brain className="h-9 w-9" /> AI Tool Atlas
         </h1>
-        <p className="text-muted-foreground text-lg">
-          Del hvilke AI-verktøy du bruker – helt anonymt
-        </p>
+        <p className="text-muted-foreground text-lg">{t("index.share_anonymous")}</p>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Velg et kallenavn</CardTitle>
-          <CardDescription>
-            Du trenger ikke logge inn. Velg et kallenavn så vi kan koble svarene dine.
-            Ingen personopplysninger lagres.
-          </CardDescription>
+          <CardTitle>{t("index.choose_nickname")}</CardTitle>
+          <CardDescription>{t("index.nickname_desc")}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex gap-2">
             <Input
               value={nickname}
               onChange={(e) => setNicknameState(e.target.value)}
-              placeholder="Ditt kallenavn"
+              placeholder={t("index.your_nickname")}
               maxLength={30}
             />
-            <Button variant="outline" size="icon" onClick={handleGenerateNew} title="Generer nytt">
+            <Button variant="outline" size="icon" onClick={handleGenerateNew} title={t("index.generate_new")}>
               <RefreshCw className="h-4 w-4" />
             </Button>
           </div>
           <Button className="w-full" onClick={handleStart} disabled={!nickname.trim() || loading}>
-            {loading ? "Lagrer..." : "Kom i gang"}
+            {loading ? t("common.saving") : t("index.get_started")}
           </Button>
         </CardContent>
       </Card>
 
       <p className="text-center text-sm text-muted-foreground flex items-center justify-center gap-1.5">
-        <Lock className="h-3.5 w-3.5" /> Ingen sporing · Ingen innlogging · Helt anonymt
+        <Lock className="h-3.5 w-3.5" /> {t("index.no_tracking_short")}
       </p>
     </div>
   );

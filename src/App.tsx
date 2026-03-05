@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
+import { I18nProvider } from "@/lib/i18n";
 import { Layout } from "@/components/Layout";
 import Index from "./pages/Index";
 import Survey from "./pages/Survey";
@@ -20,6 +21,7 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
+    <I18nProvider>
     <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} storageKey="ai-atlas-theme">
       <TooltipProvider>
         <Toaster />
@@ -42,6 +44,7 @@ const App = () => (
         </BrowserRouter>
       </TooltipProvider>
     </ThemeProvider>
+    </I18nProvider>
   </QueryClientProvider>
 );
 

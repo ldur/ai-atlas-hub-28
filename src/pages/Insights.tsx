@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
+import { useI18n } from "@/lib/i18n";
 
 const COLORS = [
   "hsl(230, 65%, 52%)", "hsl(250, 55%, 58%)", "hsl(142, 72%, 39%)",
@@ -34,6 +35,7 @@ function countField(submissions: any[], field: string): { name: string; value: n
 const Insights = () => {
   const [submissions, setSubmissions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const { t } = useI18n();
 
   useEffect(() => {
     supabase.from("submissions").select("*").then(({ data }) => {
@@ -42,7 +44,7 @@ const Insights = () => {
     });
   }, []);
 
-  if (loading) return <p className="text-muted-foreground">Laster data...</p>;
+  if (loading) return <p className="text-muted-foreground">{t("common.loading")}</p>;
 
   const toolsData = countArray(submissions, "tools_used").slice(0, 10);
   const modelsData = countArray(submissions, "models_used").slice(0, 10);
@@ -53,13 +55,13 @@ const Insights = () => {
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Innsikt</h1>
-        <p className="text-muted-foreground">Aggregert statistikk fra {submissions.length} innleveringer</p>
+        <h1 className="text-2xl font-bold tracking-tight">{t("insights.title")}</h1>
+        <p className="text-muted-foreground">{t("insights.subtitle", { count: submissions.length })}</p>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
         <Card>
-          <CardHeader><CardTitle className="text-lg">Mest brukte verktøy</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="text-lg">{t("insights.most_used_tools")}</CardTitle></CardHeader>
           <CardContent className="h-72">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={toolsData} layout="vertical" margin={{ left: 80 }}>
@@ -73,7 +75,7 @@ const Insights = () => {
         </Card>
 
         <Card>
-          <CardHeader><CardTitle className="text-lg">Mest brukte modeller</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="text-lg">{t("insights.most_used_models")}</CardTitle></CardHeader>
           <CardContent className="h-72">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={modelsData} layout="vertical" margin={{ left: 100 }}>
@@ -87,7 +89,7 @@ const Insights = () => {
         </Card>
 
         <Card>
-          <CardHeader><CardTitle className="text-lg">Bruksområder</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="text-lg">{t("insights.use_cases")}</CardTitle></CardHeader>
           <CardContent className="h-72">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={useCasesData} layout="vertical" margin={{ left: 100 }}>
@@ -101,7 +103,7 @@ const Insights = () => {
         </Card>
 
         <Card>
-          <CardHeader><CardTitle className="text-lg">Tidsbesparelse per uke</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="text-lg">{t("insights.time_saved")}</CardTitle></CardHeader>
           <CardContent className="h-72">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
@@ -116,7 +118,7 @@ const Insights = () => {
         </Card>
 
         <Card>
-          <CardHeader><CardTitle className="text-lg">Sensitiv data-risiko</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="text-lg">{t("insights.data_risk")}</CardTitle></CardHeader>
           <CardContent className="h-72">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>

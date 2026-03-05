@@ -6,12 +6,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import ReactMarkdown from "react-markdown";
 import { ArrowLeft, Target, MessageSquare, CheckCircle2, XCircle, Shield, CircleCheck, CircleX, FlaskConical } from "lucide-react";
-
-const statusConfig: Record<string, { label: string; icon: React.ComponentType<{ className?: string }>; color: string }> = {
-  ALLOWED: { label: "Tillatt", icon: CircleCheck, color: "bg-success text-success-foreground" },
-  NOT_ALLOWED: { label: "Ikke tillatt", icon: CircleX, color: "bg-destructive text-destructive-foreground" },
-  TRIAL: { label: "Prøveperiode", icon: FlaskConical, color: "bg-accent text-accent-foreground" },
-};
+import { useI18n } from "@/lib/i18n";
 
 const ModelDetail = () => {
   const { modelId } = useParams<{ modelId: string }>();
@@ -20,6 +15,13 @@ const ModelDetail = () => {
   const [catalogEntry, setCatalogEntry] = useState<any>(null);
   const [evaluation, setEvaluation] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const { t } = useI18n();
+
+  const statusConfig: Record<string, { label: string; icon: React.ComponentType<{ className?: string }>; color: string }> = {
+    ALLOWED: { label: t("status.allowed"), icon: CircleCheck, color: "bg-success text-success-foreground" },
+    NOT_ALLOWED: { label: t("status.not_allowed"), icon: CircleX, color: "bg-destructive text-destructive-foreground" },
+    TRIAL: { label: t("status.trial"), icon: FlaskConical, color: "bg-accent text-accent-foreground" },
+  };
 
   useEffect(() => {
     if (!modelId) return;
@@ -35,15 +37,15 @@ const ModelDetail = () => {
     });
   }, [modelId]);
 
-  if (loading) return <p className="text-muted-foreground p-6">Laster...</p>;
-  if (!model) return <p className="text-muted-foreground p-6">Modell ikke funnet.</p>;
+  if (loading) return <p className="text-muted-foreground p-6">{t("detail.loading")}</p>;
+  if (!model) return <p className="text-muted-foreground p-6">{t("detail.model_not_found")}</p>;
 
   const statusCfg = evaluation ? statusConfig[evaluation.decided_status] : null;
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
       <Button variant="ghost" size="sm" className="gap-1" onClick={() => navigate(-1)}>
-        <ArrowLeft className="h-4 w-4" /> Tilbake
+        <ArrowLeft className="h-4 w-4" /> {t("common.back")}
       </Button>
 
       <div className="space-y-2">
@@ -62,7 +64,7 @@ const ModelDetail = () => {
 
       {model.notes && (
         <Card>
-          <CardHeader><CardTitle className="text-base">Notater</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="text-base">{t("detail.notes")}</CardTitle></CardHeader>
           <CardContent className="text-sm text-muted-foreground">{model.notes}</CardContent>
         </Card>
       )}
@@ -71,13 +73,13 @@ const ModelDetail = () => {
         <div className="space-y-4">
           {catalogEntry.best_for && (
             <Card>
-              <CardHeader><CardTitle className="text-base flex items-center gap-1.5"><Target className="h-4 w-4" /> Best for</CardTitle></CardHeader>
+              <CardHeader><CardTitle className="text-base flex items-center gap-1.5"><Target className="h-4 w-4" /> {t("detail.best_for")}</CardTitle></CardHeader>
               <CardContent className="text-sm text-muted-foreground">{catalogEntry.best_for}</CardContent>
             </Card>
           )}
           {catalogEntry.example_prompts && (
             <Card>
-              <CardHeader><CardTitle className="text-base flex items-center gap-1.5"><MessageSquare className="h-4 w-4" /> Eksempelprompter</CardTitle></CardHeader>
+              <CardHeader><CardTitle className="text-base flex items-center gap-1.5"><MessageSquare className="h-4 w-4" /> {t("detail.example_prompts")}</CardTitle></CardHeader>
               <CardContent className="prose-catalog text-sm text-muted-foreground">
                 <ReactMarkdown>{catalogEntry.example_prompts}</ReactMarkdown>
               </CardContent>
@@ -85,19 +87,19 @@ const ModelDetail = () => {
           )}
           {catalogEntry.do_this && (
             <Card>
-              <CardHeader><CardTitle className="text-base text-success flex items-center gap-1.5"><CheckCircle2 className="h-4 w-4" /> Gjør dette</CardTitle></CardHeader>
+              <CardHeader><CardTitle className="text-base text-success flex items-center gap-1.5"><CheckCircle2 className="h-4 w-4" /> {t("detail.do_this")}</CardTitle></CardHeader>
               <CardContent className="text-sm text-muted-foreground">{catalogEntry.do_this}</CardContent>
             </Card>
           )}
           {catalogEntry.avoid_this && (
             <Card>
-              <CardHeader><CardTitle className="text-base text-destructive flex items-center gap-1.5"><XCircle className="h-4 w-4" /> Unngå dette</CardTitle></CardHeader>
+              <CardHeader><CardTitle className="text-base text-destructive flex items-center gap-1.5"><XCircle className="h-4 w-4" /> {t("detail.avoid_this")}</CardTitle></CardHeader>
               <CardContent className="text-sm text-muted-foreground">{catalogEntry.avoid_this}</CardContent>
             </Card>
           )}
           {catalogEntry.security_guidance && (
             <Card>
-              <CardHeader><CardTitle className="text-base flex items-center gap-1.5"><Shield className="h-4 w-4" /> Sikkerhetsveiledning</CardTitle></CardHeader>
+              <CardHeader><CardTitle className="text-base flex items-center gap-1.5"><Shield className="h-4 w-4" /> {t("detail.security")}</CardTitle></CardHeader>
               <CardContent className="text-sm text-muted-foreground">{catalogEntry.security_guidance}</CardContent>
             </Card>
           )}
