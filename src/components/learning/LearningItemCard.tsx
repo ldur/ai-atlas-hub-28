@@ -75,10 +75,13 @@ export function LearningItemCard({ item, isAdmin, onUpdated }: LearningItemCardP
     <>
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2 min-w-0">
-              <CardTitle className="text-lg truncate">{item.title}</CardTitle>
-              <Badge variant="secondary">{t(typeLabelMap[item.type] as any) || item.type}</Badge>
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <CardTitle className="text-lg">{item.title}</CardTitle>
+                <Badge variant="secondary">{t(typeLabelMap[item.type] as any) || item.type}</Badge>
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">{new Date(item.created_at).toLocaleDateString("nb-NO")}</p>
             </div>
             {isAdmin && (
               <div className="flex gap-1 shrink-0">
@@ -91,7 +94,6 @@ export function LearningItemCard({ item, isAdmin, onUpdated }: LearningItemCardP
               </div>
             )}
           </div>
-          <p className="text-xs text-muted-foreground">{new Date(item.created_at).toLocaleDateString("nb-NO")}</p>
         </CardHeader>
         <CardContent>
           <div className="prose prose-sm max-w-none text-muted-foreground prose-a:text-primary prose-a:underline">
