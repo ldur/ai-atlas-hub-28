@@ -15,6 +15,7 @@ interface ModelFormDialogProps {
   onOpenChange: (open: boolean) => void;
   model?: any | null;
   onSaved: () => void;
+  initialCatalogEntry?: any | null;
 }
 
 const catalogFields = [
@@ -25,7 +26,7 @@ const catalogFields = [
   { key: "security_guidance", label: "Sikkerhetsveiledning", icon: Shield, rows: 2 },
 ] as const;
 
-export const ModelFormDialog = ({ open, onOpenChange, model, onSaved }: ModelFormDialogProps) => {
+export const ModelFormDialog = ({ open, onOpenChange, model, onSaved, initialCatalogEntry }: ModelFormDialogProps) => {
   const [name, setName] = useState("");
   const [provider, setProvider] = useState("");
   const [modality, setModality] = useState("");
@@ -49,7 +50,8 @@ export const ModelFormDialog = ({ open, onOpenChange, model, onSaved }: ModelFor
       setProvider(model.provider || "");
       setModality(model.modality || "");
       setNotes(model.notes || "");
-      supabase.from("catalog_entries").select("*").eq("model_id", model.id).maybeSingle().then(({ data }) => {
+      if (initialCatalogEntry !== undefined) {
+        const data = initialCatalogEntry;
         setCatalogEntryId(data?.id || null);
         setCatalog({
           best_for: data?.best_for || "",
@@ -58,13 +60,25 @@ export const ModelFormDialog = ({ open, onOpenChange, model, onSaved }: ModelFor
           avoid_this: data?.avoid_this || "",
           security_guidance: data?.security_guidance || "",
         });
-      });
+      } else {
+        supabase.from("catalog_entries").select("*").eq("model_id", model.id).maybeSingle().then(({ data, error }) => {
+          if (error) { console.error("Failed to load catalog entry:", error); return; }
+          setCatalogEntryId(data?.id || null);
+          setCatalog({
+            best_for: data?.best_for || "",
+            example_prompts: data?.example_prompts || "",
+            do_this: data?.do_this || "",
+            avoid_this: data?.avoid_this || "",
+            security_guidance: data?.security_guidance || "",
+          });
+        });
+      }
     } else {
       setName(""); setProvider(""); setModality(""); setNotes("");
       setCatalogEntryId(null);
       setCatalog({ best_for: "", example_prompts: "", do_this: "", avoid_this: "", security_guidance: "" });
     }
-  }, [model, open]);
+  }, [model, open, initialCatalogEntry]);
 
   const handleGenerate = async () => {
     if (!name.trim()) { toast.error("Fyll inn navn først"); return; }
