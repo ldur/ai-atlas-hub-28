@@ -32,6 +32,7 @@ const Learning = () => {
   const [links, setLinks] = useState<any[]>([]);
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("");
+  const [tagFilter, setTagFilter] = useState("");
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [linkOpen, setLinkOpen] = useState(false);
@@ -107,11 +108,14 @@ const Learning = () => {
     }
   };
 
+  const allTags = Array.from(new Set(items.flatMap((item) => item.tags || []))).sort();
+
   const filtered = items.filter((item) => {
     const matchSearch = item.title.toLowerCase().includes(search.toLowerCase()) ||
       (item.content || "").toLowerCase().includes(search.toLowerCase());
     const matchType = !typeFilter || item.type === typeFilter;
-    return matchSearch && matchType;
+    const matchTag = !tagFilter || (item.tags || []).includes(tagFilter);
+    return matchSearch && matchType && matchTag;
   });
 
   const filteredLinks = links.filter((link) => {
@@ -152,6 +156,14 @@ const Learning = () => {
                 <Badge key={k} variant={typeFilter === k ? "default" : "outline"} className="cursor-pointer" onClick={() => setTypeFilter(k)}>{t(typeLabelMap[k] as any)}</Badge>
               ))}
             </div>
+            {allTags.length > 0 && (
+              <div className="flex gap-1 flex-wrap">
+                <Badge variant={!tagFilter ? "default" : "outline"} className="cursor-pointer" onClick={() => setTagFilter("")}>{t("common.all")}</Badge>
+                {allTags.map((tag) => (
+                  <Badge key={tag} variant={tagFilter === tag ? "default" : "outline"} className="cursor-pointer" onClick={() => setTagFilter(tag)}>{tag}</Badge>
+                ))}
+              </div>
+            )}
             <Dialog open={open} onOpenChange={setOpen}>
               <DialogTrigger asChild>
                 <Button size="sm" className="gap-1.5"><Plus className="h-4 w-4" /> {t("learning.share_tip")}</Button>
