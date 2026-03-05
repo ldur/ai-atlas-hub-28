@@ -199,6 +199,44 @@ export type Database = {
         }
         Relationships: []
       }
+      shared_links: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          published: boolean | null
+          submitted_by: string | null
+          title: string | null
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          published?: boolean | null
+          submitted_by?: string | null
+          title?: string | null
+          url: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          published?: boolean | null
+          submitted_by?: string | null
+          title?: string | null
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shared_links_submitted_by_fkey"
+            columns: ["submitted_by"]
+            isOneToOne: false
+            referencedRelation: "user_aliases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       submissions: {
         Row: {
           alias_id: string | null

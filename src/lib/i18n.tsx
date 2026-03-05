@@ -152,6 +152,18 @@ const translations = {
   "learning.type.prompt-pack": { no: "Prompt-pakke", en: "Prompt pack" },
   "learning.type.guideline": { no: "Retningslinje", en: "Guideline" },
   "learning.type.case-study": { no: "Case Study", en: "Case Study" },
+  "learning.tab.content": { no: "Innhold", en: "Content" },
+  "learning.tab.links": { no: "Lenker", en: "Links" },
+  "learning.share_link": { no: "Del en lenke", en: "Share a link" },
+  "learning.share_link_dialog": { no: "Del en lenke fra en annen app", en: "Share a link from another app" },
+  "learning.link_url": { no: "URL", en: "URL" },
+  "learning.link_url_placeholder": { no: "https://...", en: "https://..." },
+  "learning.link_title": { no: "Tittel (valgfritt)", en: "Title (optional)" },
+  "learning.link_description": { no: "Beskrivelse (valgfritt)", en: "Description (optional)" },
+  "learning.link_submitted": { no: "Lenke innsendt!", en: "Link submitted!" },
+  "learning.link_submitted_desc": { no: "Lenken vil bli gjennomgått av admin.", en: "The link will be reviewed by admin." },
+  "learning.no_links": { no: "Ingen lenker delt ennå.", en: "No links shared yet." },
+  "learning.invalid_url": { no: "Ugyldig URL", en: "Invalid URL" },
 
   // Admin page
   "admin.title": { no: "Admin Panel", en: "Admin Panel" },
