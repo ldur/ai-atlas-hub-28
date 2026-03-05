@@ -22,6 +22,9 @@ const translations = {
   "common.unknown": { no: "Ukjent", en: "Unknown" },
   "common.error": { no: "Feil", en: "Error" },
   "common.none": { no: "Ingen", en: "None" },
+  "common.saved": { no: "Lagret", en: "Saved" },
+  "common.deleted": { no: "Slettet", en: "Deleted" },
+  "common.delete_confirm": { no: "Dette kan ikke angres.", en: "This cannot be undone." },
 
   // Statuses
   "status.allowed": { no: "Tillatt", en: "Allowed" },
