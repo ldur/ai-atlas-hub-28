@@ -592,6 +592,24 @@ function ItemRow({ item, totalSubmissions, onEvaluate, onViewDetail, t }: {
         </div>
       )}
 
+      {/* V/R/C scores */}
+      {hasEval && (item.evaluation.value_score || item.evaluation.risk_score || item.evaluation.cost_score) && (
+        <div className="hidden sm:flex items-center gap-1.5 shrink-0 text-xs text-muted-foreground tabular-nums">
+          <Tooltip>
+            <TooltipTrigger><span className="font-medium">V:{item.evaluation.value_score || "–"}</span></TooltipTrigger>
+            <TooltipContent className="text-xs">{t("admin.value")}</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger><span className="font-medium">R:{item.evaluation.risk_score || "–"}</span></TooltipTrigger>
+            <TooltipContent className="text-xs">{t("admin.risk")}</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger><span className="font-medium">C:{item.evaluation.cost_score || "–"}</span></TooltipTrigger>
+            <TooltipContent className="text-xs">{t("admin.cost")}</TooltipContent>
+          </Tooltip>
+        </div>
+      )}
+
       {/* Status */}
       <div className="shrink-0 w-28 text-right">
         {hasEval && cfg ? (
