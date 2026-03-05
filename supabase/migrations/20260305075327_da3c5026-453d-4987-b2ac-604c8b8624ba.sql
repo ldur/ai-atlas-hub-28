@@ -1,0 +1,1 @@
+UPDATE learning_items SET published = true WHERE published = false OR published IS NULL;
