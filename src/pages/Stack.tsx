@@ -128,7 +128,6 @@ const Stack = () => {
     const tool = tools.find((t) => t.id === id);
     const cat = catalogEntries.find((c) => c.tool_id === id);
     const parts: string[] = [];
-    if (tool?.vendor) parts.push(tool.vendor);
     if (tool?.category) parts.push(tool.category);
     if (cat?.best_for) parts.push(cat.best_for);
     return parts.length > 0 ? parts.join(" · ") : null;
@@ -137,7 +136,6 @@ const Stack = () => {
     const model = models.find((m) => m.id === id);
     const cat = catalogEntries.find((c) => c.model_id === id);
     const parts: string[] = [];
-    if (model?.provider) parts.push(model.provider);
     if (model?.modality) parts.push(model.modality);
     if (cat?.best_for) parts.push(cat.best_for);
     return parts.length > 0 ? parts.join(" · ") : null;
