@@ -90,7 +90,7 @@ const Learning = () => {
       url: linkUrl.trim(),
       title: linkTitle.trim() || null,
       description: linkDesc.trim() || null,
-      published: false,
+      published: true,
       submitted_by: aliasId || null,
     });
     if (error) {
