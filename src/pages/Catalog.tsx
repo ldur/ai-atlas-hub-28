@@ -221,6 +221,17 @@ const Catalog = () => {
                         {tool.category && <span>{tool.category}</span>}
                         {tool.vendor && <span>· {tool.vendor}</span>}
                       </div>
+                      {tool.link && (
+                        <a
+                          href={tool.link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          className="text-xs text-primary underline hover:text-primary/80 inline-flex items-center gap-1"
+                        >
+                          {tool.vendor || tool.link}
+                        </a>
+                      )}
                       {getCatalogEntry(tool.id, "tool")?.best_for && (
                         <p className="text-xs text-muted-foreground line-clamp-2">{getCatalogEntry(tool.id, "tool").best_for}</p>
                       )}
@@ -293,6 +304,17 @@ const Catalog = () => {
                         {model.provider && <span>{model.provider}</span>}
                         {model.modality && <span>· {model.modality}</span>}
                       </div>
+                      {model.link && (
+                        <a
+                          href={model.link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          className="text-xs text-primary underline hover:text-primary/80 inline-flex items-center gap-1"
+                        >
+                          {model.provider || model.link}
+                        </a>
+                      )}
                       {getCatalogEntry(model.id, "model")?.best_for && (
                         <p className="text-xs text-muted-foreground line-clamp-2">{getCatalogEntry(model.id, "model").best_for}</p>
                       )}
