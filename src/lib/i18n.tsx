@@ -228,6 +228,26 @@ const translations = {
   "admin.time_saved": { no: "Tid spart", en: "Time saved" },
   "admin.sensitive_data": { no: "Sensitiv data", en: "Sensitive data" },
 
+  // Submission Analytics
+  "admin.analytics_title": { no: "Beslutningsstøtte", en: "Decision Support" },
+  "admin.analytics_desc": { no: "Aggregert analyse av innleveringer for å prioritere klassifisering", en: "Aggregated submission analysis to prioritize classification" },
+  "admin.total_responses": { no: "Svar totalt", en: "Total responses" },
+  "admin.saves_5h": { no: "Sparer 5t+", en: "Saves 5h+" },
+  "admin.data_risk_count": { no: "Datarisiko", en: "Data risk" },
+  "admin.needs_review": { no: "Trenger vurdering", en: "Needs review" },
+  "admin.unclassified": { no: "uklassifiserte", en: "unclassified" },
+  "admin.action_needed": { no: "Krever handling – populære men uklassifiserte", en: "Action needed – popular but unclassified" },
+  "admin.mentions": { no: "nevnelser", en: "mentions" },
+  "admin.must_keep_short": { no: "må-ha", en: "must-keep" },
+  "admin.classify": { no: "Klassifiser", en: "Classify" },
+  "admin.tool_ranking": { no: "Verktøy etter popularitet", en: "Tools by popularity" },
+  "admin.model_ranking": { no: "Modeller etter popularitet", en: "Models by popularity" },
+  "admin.freetext_tools": { no: "Verktøy fra fritekst (ikke i katalogen)", en: "Freetext tools (not in catalog)" },
+  "admin.freetext_desc": { no: "Disse verktøyene ble nevnt i fritekstfeltet men finnes ikke i katalogen ennå", en: "These tools were mentioned in freetext but are not in the catalog yet" },
+  "admin.pain_points_title": { no: "Utfordringer rapportert", en: "Reported pain points" },
+  "admin.show_less": { no: "Vis færre", en: "Show less" },
+  "admin.show_all": { no: "Vis alle ({count})", en: "Show all ({count})" },
+
   // User menu
   "user.admin_active": { no: "Admin-modus aktiv", en: "Admin mode active" },
   "user.login_admin": { no: "Logg inn som admin", en: "Log in as admin" },

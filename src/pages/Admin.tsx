@@ -18,6 +18,7 @@ import {
   CircleCheck, CircleMinus, CircleX, FlaskConical, ClipboardList, History,
   Link2, ExternalLink, Check, X
 } from "lucide-react";
+import { SubmissionAnalytics } from "@/components/admin/SubmissionAnalytics";
 
 const ADMIN_CODE = "atlas-admin-2024";
 
@@ -158,20 +159,40 @@ const Admin = () => {
 
 function SubmissionsTab() {
   const [submissions, setSubmissions] = useState<any[]>([]);
+  const [tools, setTools] = useState<any[]>([]);
+  const [models, setModels] = useState<any[]>([]);
+  const [evaluations, setEvaluations] = useState<any[]>([]);
   const [search, setSearch] = useState("");
   const [selectedSubmission, setSelectedSubmission] = useState<any | null>(null);
+  const [showEvalForm, setShowEvalForm] = useState(false);
+  const [evalEntityType, setEvalEntityType] = useState<"tool" | "model">("tool");
+  const [evalEntityId, setEvalEntityId] = useState("");
+  const [evalStatus, setEvalStatus] = useState("ALLOWED");
+  const [evalRationale, setEvalRationale] = useState("");
   const { toast } = useToast();
   const { t } = useI18n();
 
-  const fetchSubmissions = () => supabase.from("submissions").select("*").order("created_at", { ascending: false }).then(({ data }) => setSubmissions(data || []));
-  useEffect(() => { fetchSubmissions(); }, []);
+  const fetchAll = () => {
+    Promise.all([
+      supabase.from("submissions").select("*").order("created_at", { ascending: false }),
+      supabase.from("tools").select("id, name").order("name"),
+      supabase.from("models").select("id, name").order("name"),
+      supabase.from("evaluations").select("id, tool_id, model_id, decided_status"),
+    ]).then(([sRes, tRes, mRes, eRes]) => {
+      setSubmissions(sRes.data || []);
+      setTools(tRes.data || []);
+      setModels(mRes.data || []);
+      setEvaluations(eRes.data || []);
+    });
+  };
+  useEffect(() => { fetchAll(); }, []);
 
   const handleDelete = async (id: string) => {
     try {
       await adminAction({ action: "delete", table: "submissions", id });
       toast({ title: t("admin.submission_deleted") });
       setSelectedSubmission(null);
-      fetchSubmissions();
+      fetchAll();
     } catch (e: any) {
       toast({ title: t("common.error"), description: e.message, variant: "destructive" });
     }
@@ -205,8 +226,80 @@ function SubmissionsTab() {
     ].some(v => v && String(v).toLowerCase().includes(q));
   });
 
+  const handleCreateEvaluation = (type: "tool" | "model", entityId: string) => {
+    setEvalEntityType(type);
+    setEvalEntityId(entityId);
+    setEvalStatus("ALLOWED");
+    setEvalRationale("");
+    setShowEvalForm(true);
+  };
+
+  const handleSaveEvaluation = async () => {
+    if (!evalEntityId) return;
+    try {
+      await adminAction({
+        action: "insert",
+        table: "evaluations",
+        payload: {
+          tool_id: evalEntityType === "tool" ? evalEntityId : null,
+          model_id: evalEntityType === "model" ? evalEntityId : null,
+          decided_status: evalStatus,
+          rationale: evalRationale || null,
+        },
+      });
+      toast({ title: t("admin.evaluation_created") });
+      setShowEvalForm(false);
+      fetchAll();
+    } catch (e: any) {
+      toast({ title: t("common.error"), description: e.message, variant: "destructive" });
+    }
+  };
+
+  const evalEntityName = evalEntityType === "tool"
+    ? tools.find(t => t.id === evalEntityId)?.name
+    : models.find(m => m.id === evalEntityId)?.name;
+
   return (
-    <div className="space-y-3 mt-4">
+    <div className="space-y-4 mt-4">
+      <SubmissionAnalytics
+        submissions={submissions}
+        tools={tools}
+        models={models}
+        evaluations={evaluations}
+        onCreateEvaluation={handleCreateEvaluation}
+      />
+
+      {/* Quick classify dialog */}
+      <Dialog open={showEvalForm} onOpenChange={setShowEvalForm}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              {t("admin.classify")} – {evalEntityName || ""}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <Select value={evalStatus} onValueChange={setEvalStatus}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ALLOWED"><span className="flex items-center gap-1.5"><CircleCheck className="h-3.5 w-3.5" /> {t("status.allowed")}</span></SelectItem>
+                <SelectItem value="NOT_ALLOWED"><span className="flex items-center gap-1.5"><CircleX className="h-3.5 w-3.5" /> {t("status.not_allowed")}</span></SelectItem>
+                <SelectItem value="TRIAL"><span className="flex items-center gap-1.5"><FlaskConical className="h-3.5 w-3.5" /> {t("status.trial")}</span></SelectItem>
+              </SelectContent>
+            </Select>
+            <Textarea
+              placeholder={t("admin.rationale_placeholder")}
+              value={evalRationale}
+              onChange={e => setEvalRationale(e.target.value)}
+              rows={3}
+            />
+            <div className="flex gap-2 justify-end">
+              <Button variant="outline" size="sm" onClick={() => setShowEvalForm(false)}>{t("common.cancel")}</Button>
+              <Button size="sm" onClick={handleSaveEvaluation}>{t("common.create")}</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <div className="flex gap-2 items-center flex-wrap">
         <Input placeholder={t("admin.search_submissions")} value={search} onChange={e => setSearch(e.target.value)} className="flex-1 min-w-[200px]" />
         <Button variant="outline" size="sm" onClick={exportCsv} disabled={submissions.length === 0} className="gap-1.5">
