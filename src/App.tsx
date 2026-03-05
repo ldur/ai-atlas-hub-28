@@ -3,6 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { ThemeProvider } from "next-themes";
 import { Layout } from "@/components/Layout";
 import Index from "./pages/Index";
 import Survey from "./pages/Survey";
@@ -19,26 +20,28 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Layout>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/kartlegging" element={<Survey />} />
-            <Route path="/innsikt" element={<Insights />} />
-            <Route path="/stack" element={<Stack />} />
-            <Route path="/katalog" element={<Catalog />} />
-            <Route path="/katalog/:toolId" element={<ToolDetail />} />
-            <Route path="/katalog/modell/:modelId" element={<ModelDetail />} />
-            <Route path="/laering" element={<Learning />} />
-            <Route path="/admin" element={<Admin />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </Layout>
-      </BrowserRouter>
-    </TooltipProvider>
+    <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} storageKey="ai-atlas-theme">
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Layout>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/kartlegging" element={<Survey />} />
+              <Route path="/innsikt" element={<Insights />} />
+              <Route path="/stack" element={<Stack />} />
+              <Route path="/katalog" element={<Catalog />} />
+              <Route path="/katalog/:toolId" element={<ToolDetail />} />
+              <Route path="/katalog/modell/:modelId" element={<ModelDetail />} />
+              <Route path="/laering" element={<Learning />} />
+              <Route path="/admin" element={<Admin />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </Layout>
+        </BrowserRouter>
+      </TooltipProvider>
+    </ThemeProvider>
   </QueryClientProvider>
 );
 
