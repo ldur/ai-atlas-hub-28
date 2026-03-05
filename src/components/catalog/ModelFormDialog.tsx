@@ -75,6 +75,8 @@ export const ModelFormDialog = ({ open, onOpenChange, model, onSaved }: ModelFor
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
+      if (data.vendor && !provider.trim()) setProvider(data.vendor);
+      if (data.category && !modality.trim()) setModality(data.category);
       setCatalog({
         best_for: data.best_for || "",
         example_prompts: data.example_prompts || "",
@@ -141,7 +143,13 @@ export const ModelFormDialog = ({ open, onOpenChange, model, onSaved }: ModelFor
         <div className="space-y-3">
           <div className="space-y-1.5">
             <Label className="text-xs">Navn *</Label>
-            <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="F.eks. GPT-4o" />
+            <div className="flex gap-2">
+              <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="F.eks. GPT-4o" className="flex-1" />
+              <Button variant="outline" size="sm" onClick={handleGenerate} disabled={generating} className="gap-1.5 shrink-0">
+                {generating ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
+                {generating ? "Genererer..." : "Fyll med AI"}
+              </Button>
+            </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
@@ -160,13 +168,7 @@ export const ModelFormDialog = ({ open, onOpenChange, model, onSaved }: ModelFor
 
           <Separator />
 
-          <div className="flex items-center justify-between">
-            <Label className="text-sm font-semibold">Katalogoppføring</Label>
-            <Button variant="outline" size="sm" onClick={handleGenerate} disabled={generating} className="gap-1.5">
-              {generating ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
-              {generating ? "Genererer..." : "Fyll med AI"}
-            </Button>
-          </div>
+          <Label className="text-sm font-semibold">Katalogoppføring</Label>
 
           {catalogFields.map(({ key, label, icon: Icon, rows }) => (
             <div key={key} className="space-y-1">
