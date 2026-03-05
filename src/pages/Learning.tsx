@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { getAliasId } from "@/lib/nickname";
@@ -149,20 +150,30 @@ const Learning = () => {
         </TabsList>
 
         <TabsContent value="content" className="space-y-4 mt-4">
-          <div className="flex items-center justify-between gap-2 flex-wrap">
-            <div className="flex gap-1 flex-wrap">
-              <Badge variant={!typeFilter ? "default" : "outline"} className="cursor-pointer" onClick={() => setTypeFilter("")}>{t("common.all")}</Badge>
-              {typeKeys.map((k) => (
-                <Badge key={k} variant={typeFilter === k ? "default" : "outline"} className="cursor-pointer" onClick={() => setTypeFilter(k)}>{t(typeLabelMap[k] as any)}</Badge>
-              ))}
-            </div>
-            {allTags.length > 0 && (
-              <div className="flex gap-1 flex-wrap">
-                <Badge variant={!tagFilter ? "default" : "outline"} className="cursor-pointer" onClick={() => setTagFilter("")}>{t("common.all")}</Badge>
-                {allTags.map((tag) => (
-                  <Badge key={tag} variant={tagFilter === tag ? "default" : "outline"} className="cursor-pointer" onClick={() => setTagFilter(tag)}>{tag}</Badge>
+          <div className="flex items-center gap-2 flex-wrap">
+            <Select value={typeFilter} onValueChange={(v) => setTypeFilter(v === "all" ? "" : v)}>
+              <SelectTrigger className="w-[160px]">
+                <SelectValue placeholder={t("learning.filter_type")} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t("common.all")}</SelectItem>
+                {typeKeys.map((k) => (
+                  <SelectItem key={k} value={k}>{t(typeLabelMap[k] as any)}</SelectItem>
                 ))}
-              </div>
+              </SelectContent>
+            </Select>
+            {allTags.length > 0 && (
+              <Select value={tagFilter} onValueChange={(v) => setTagFilter(v === "all" ? "" : v)}>
+                <SelectTrigger className="w-[160px]">
+                  <SelectValue placeholder={t("learning.filter_tag")} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{t("common.all")}</SelectItem>
+                  {allTags.map((tag) => (
+                    <SelectItem key={tag} value={tag}>{tag}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             )}
             <Dialog open={open} onOpenChange={setOpen}>
               <DialogTrigger asChild>
