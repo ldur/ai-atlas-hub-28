@@ -8,15 +8,17 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { supabase } from "@/integrations/supabase/client";
 import { getAliasId } from "@/lib/nickname";
 import { useToast } from "@/hooks/use-toast";
+import { useI18n } from "@/lib/i18n";
 import ReactMarkdown from "react-markdown";
 import { Plus, Search, X } from "lucide-react";
 
-const typeLabels: Record<string, string> = {
-  tip: "Tips",
-  "show-tell": "Show & Tell",
-  "prompt-pack": "Prompt-pakke",
-  guideline: "Retningslinje",
-  "case-study": "Case Study",
+const typeKeys = ["tip", "show-tell", "prompt-pack", "guideline", "case-study"] as const;
+const typeLabelMap: Record<string, string> = {
+  tip: "learning.type.tip",
+  "show-tell": "learning.type.show-tell",
+  "prompt-pack": "learning.type.prompt-pack",
+  guideline: "learning.type.guideline",
+  "case-study": "learning.type.case-study",
 };
 
 const Learning = () => {
@@ -31,6 +33,7 @@ const Learning = () => {
   const [newTags, setNewTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState("");
   const { toast } = useToast();
+  const { t } = useI18n();
 
   const addTag = () => {
     const tag = tagInput.trim().toLowerCase();
@@ -62,9 +65,9 @@ const Learning = () => {
       submitted_by: aliasId || null,
     });
     if (error) {
-      toast({ title: "Feil", description: error.message, variant: "destructive" });
+      toast({ title: t("common.error"), description: error.message, variant: "destructive" });
     } else {
-      toast({ title: "Innsendt!", description: "Ditt bidrag vil bli gjennomgått av admin." });
+      toast({ title: t("learning.submitted"), description: t("learning.submitted_desc") });
       setNewTitle(""); setNewContent(""); setNewTags([]); setOpen(false);
     }
   };
@@ -76,34 +79,34 @@ const Learning = () => {
     return matchSearch && matchType;
   });
 
-  if (loading) return <p className="text-muted-foreground">Laster...</p>;
+  if (loading) return <p className="text-muted-foreground">{t("common.loading")}</p>;
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Læring</h1>
-          <p className="text-muted-foreground">Tips, prompter, retningslinjer og case studies</p>
+          <h1 className="text-2xl font-bold tracking-tight">{t("learning.title")}</h1>
+          <p className="text-muted-foreground">{t("learning.subtitle")}</p>
         </div>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
-            <Button className="gap-1.5"><Plus className="h-4 w-4" /> Del et tips</Button>
+            <Button className="gap-1.5"><Plus className="h-4 w-4" /> {t("learning.share_tip")}</Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Del ditt tips eller workflow</DialogTitle>
+              <DialogTitle>{t("learning.share_dialog_title")}</DialogTitle>
             </DialogHeader>
             <div className="space-y-3">
-              <Input placeholder="Tittel" value={newTitle} onChange={(e) => setNewTitle(e.target.value)} maxLength={100} />
+              <Input placeholder={t("form.name")} value={newTitle} onChange={(e) => setNewTitle(e.target.value)} maxLength={100} />
               <select
                 className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                 value={newType}
                 onChange={(e) => setNewType(e.target.value)}
               >
-                {Object.entries(typeLabels).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+                {typeKeys.map((k) => <option key={k} value={k}>{t(typeLabelMap[k] as any)}</option>)}
               </select>
               <Textarea
-                placeholder="Innhold (støtter markdown)"
+                placeholder={t("learning.content_placeholder")}
                 value={newContent}
                 onChange={(e) => setNewContent(e.target.value)}
                 rows={6}
@@ -112,7 +115,7 @@ const Learning = () => {
               <div className="space-y-2">
                 <div className="flex gap-2">
                   <Input
-                    placeholder="Legg til tag og trykk Enter"
+                    placeholder={t("learning.add_tag")}
                     value={tagInput}
                     onChange={(e) => setTagInput(e.target.value)}
                     onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addTag(); } }}
@@ -133,7 +136,7 @@ const Learning = () => {
                 )}
               </div>
               <Button className="w-full" onClick={handleSubmitTip} disabled={!newTitle.trim() || !newContent.trim()}>
-                Send inn
+                {t("common.submit")}
               </Button>
             </div>
           </DialogContent>
@@ -143,27 +146,27 @@ const Learning = () => {
       <div className="flex gap-3 flex-wrap">
         <div className="relative flex-1 min-w-[200px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Søk..." className="pl-9" value={search} onChange={(e) => setSearch(e.target.value)} />
+          <Input placeholder={t("common.search")} className="pl-9" value={search} onChange={(e) => setSearch(e.target.value)} />
         </div>
         <div className="flex gap-1 flex-wrap">
           <Badge
             variant={!typeFilter ? "default" : "outline"}
             className="cursor-pointer"
             onClick={() => setTypeFilter("")}
-          >Alle</Badge>
-          {Object.entries(typeLabels).map(([k, v]) => (
+          >{t("common.all")}</Badge>
+          {typeKeys.map((k) => (
             <Badge
               key={k}
               variant={typeFilter === k ? "default" : "outline"}
               className="cursor-pointer"
               onClick={() => setTypeFilter(k)}
-            >{v}</Badge>
+            >{t(typeLabelMap[k] as any)}</Badge>
           ))}
         </div>
       </div>
 
       {filtered.length === 0 && (
-        <p className="text-muted-foreground text-center py-12">Ingen innhold ennå.</p>
+        <p className="text-muted-foreground text-center py-12">{t("learning.no_content")}</p>
       )}
 
       <div className="space-y-4">
@@ -172,7 +175,7 @@ const Learning = () => {
             <CardHeader>
               <div className="flex items-center gap-2">
                 <CardTitle className="text-lg">{item.title}</CardTitle>
-                <Badge variant="secondary">{typeLabels[item.type] || item.type}</Badge>
+                <Badge variant="secondary">{t(typeLabelMap[item.type] as any) || item.type}</Badge>
               </div>
               <p className="text-xs text-muted-foreground">{new Date(item.created_at).toLocaleDateString("nb-NO")}</p>
             </CardHeader>
