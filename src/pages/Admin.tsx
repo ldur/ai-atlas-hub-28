@@ -19,6 +19,7 @@ import {
   Link2, ExternalLink, Check, X
 } from "lucide-react";
 import { SubmissionAnalytics } from "@/components/admin/SubmissionAnalytics";
+import { EvaluationDashboard } from "@/components/admin/EvaluationDashboard";
 
 const ADMIN_CODE = "atlas-admin-2024";
 
@@ -143,14 +144,14 @@ const Admin = () => {
     <div className="max-w-5xl mx-auto space-y-6">
       <h1 className="text-2xl font-bold tracking-tight">{t("admin.title")}</h1>
       <BulkGenerateSection />
-      <Tabs defaultValue="submissions">
+      <Tabs defaultValue="evaluations">
         <TabsList className="grid grid-cols-3 w-full">
-          <TabsTrigger value="submissions">{t("admin.submissions")}</TabsTrigger>
           <TabsTrigger value="evaluations">{t("admin.evaluations")}</TabsTrigger>
+          <TabsTrigger value="submissions">{t("admin.submissions")}</TabsTrigger>
           <TabsTrigger value="shared-links">{t("admin.shared_links")}</TabsTrigger>
         </TabsList>
-        <TabsContent value="submissions"><SubmissionsTab /></TabsContent>
         <TabsContent value="evaluations"><EvaluationsTab /></TabsContent>
+        <TabsContent value="submissions"><SubmissionsTab /></TabsContent>
         <TabsContent value="shared-links"><SharedLinksTab /></TabsContent>
       </Tabs>
     </div>
@@ -361,312 +362,39 @@ function SubmissionsTab() {
 
 
 function EvaluationsTab() {
-  const [evals, setEvals] = useState<any[]>([]);
   const [tools, setTools] = useState<any[]>([]);
   const [models, setModels] = useState<any[]>([]);
-  const [filterStatus, setFilterStatus] = useState("ALL");
-  const [filterType, setFilterType] = useState<"all" | "tool" | "model">("all");
-  const [selectedItem, setSelectedItem] = useState<any | null>(null);
-
-  const [entityType, setEntityType] = useState<"tool" | "model">("tool");
-  const [entityId, setEntityId] = useState("");
-  const [status, setStatus] = useState("ALLOWED");
-  const [rationale, setRationale] = useState("");
-  const [version, setVersion] = useState("v1");
-  const [valueScore, setValueScore] = useState("");
-  const [riskScore, setRiskScore] = useState("");
-  const [costScore, setCostScore] = useState("");
-  const [showForm, setShowForm] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
-
-  const { toast } = useToast();
-  const { t } = useI18n();
+  const [evaluations, setEvaluations] = useState<any[]>([]);
+  const [catalogEntries, setCatalogEntries] = useState<any[]>([]);
+  const [submissions, setSubmissions] = useState<any[]>([]);
 
   const fetchAll = () => {
     Promise.all([
-      supabase.from("evaluations").select("*").order("decided_at", { ascending: false }),
       supabase.from("tools").select("*").order("name"),
       supabase.from("models").select("*").order("name"),
-    ]).then(([e, tRes, m]) => {
-      setEvals(e.data || []);
-      setTools(tRes.data || []);
+      supabase.from("evaluations").select("*").order("decided_at", { ascending: false }),
+      supabase.from("catalog_entries").select("id, tool_id, model_id"),
+      supabase.from("submissions").select("tools_used, models_used, use_cases, must_keep_tool"),
+    ]).then(([t, m, e, c, s]) => {
+      setTools(t.data || []);
       setModels(m.data || []);
+      setEvaluations(e.data || []);
+      setCatalogEntries(c.data || []);
+      setSubmissions(s.data || []);
     });
   };
   useEffect(() => { fetchAll(); }, []);
 
-  const getName = (ev: any) => {
-    if (ev.tool_id) return tools.find(tool => tool.id === ev.tool_id)?.name || t("common.unknown");
-    if (ev.model_id) return models.find(m => m.id === ev.model_id)?.name || t("common.unknown");
-    return "–";
-  };
-
-  const getType = (ev: any) => ev.tool_id ? "tool" : ev.model_id ? "model" : "unknown";
-
-  const statusColors: Record<string, string> = {
-    ALLOWED: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200",
-    NOT_ALLOWED: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
-    TRIAL: "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200",
-  };
-
-  const resetForm = () => {
-    setEntityType("tool"); setEntityId(""); setStatus("ALLOWED"); setRationale("");
-    setVersion("v1"); setValueScore(""); setRiskScore(""); setCostScore("");
-    setEditingId(null); setShowForm(false);
-  };
-
-  const startEdit = (ev: any) => {
-    setEntityType(ev.tool_id ? "tool" : "model");
-    setEntityId(ev.tool_id || ev.model_id || "");
-    setStatus(ev.decided_status);
-    setRationale(ev.rationale || "");
-    setVersion(ev.version || "v1");
-    setValueScore(ev.value_score?.toString() || "");
-    setRiskScore(ev.risk_score?.toString() || "");
-    setCostScore(ev.cost_score?.toString() || "");
-    setEditingId(ev.id);
-    setShowForm(true);
-  };
-
-  const handleSave = async () => {
-    if (!entityId) { toast({ title: t("admin.select_entity"), variant: "destructive" }); return; }
-    const payload: any = {
-      tool_id: entityType === "tool" ? entityId : null,
-      model_id: entityType === "model" ? entityId : null,
-      decided_status: status,
-      rationale: rationale || null,
-      version: version || "v1",
-      value_score: valueScore ? parseInt(valueScore) : null,
-      risk_score: riskScore ? parseInt(riskScore) : null,
-      cost_score: costScore ? parseInt(costScore) : null,
-    };
-
-    try {
-      if (editingId) {
-        await adminAction({ action: "update", table: "evaluations", id: editingId, payload });
-        toast({ title: t("admin.evaluation_updated") });
-      } else {
-        await adminAction({ action: "insert", table: "evaluations", payload });
-        toast({ title: t("admin.evaluation_created") });
-      }
-      resetForm();
-      fetchAll();
-    } catch (e: any) {
-      toast({ title: t("common.error"), description: e.message, variant: "destructive" });
-    }
-  };
-
-  const handleDelete = async (id: string) => {
-    try {
-      await adminAction({ action: "delete", table: "evaluations", id });
-      toast({ title: t("admin.evaluation_deleted") });
-      fetchAll();
-    } catch (e: any) {
-      toast({ title: t("common.error"), description: e.message, variant: "destructive" });
-    }
-  };
-
-  const entities = entityType === "tool" ? tools : models;
-
-  const filtered = evals.filter(ev => {
-    if (filterStatus !== "ALL" && ev.decided_status !== filterStatus) return false;
-    if (filterType === "tool" && !ev.tool_id) return false;
-    if (filterType === "model" && !ev.model_id) return false;
-    return true;
-  });
-
-  const getHistoryForEntity = (ev: any) => {
-    const key = ev.tool_id || ev.model_id;
-    return evals.filter(e => (e.tool_id || e.model_id) === key).sort((a, b) =>
-      new Date(b.decided_at).getTime() - new Date(a.decided_at).getTime()
-    );
-  };
-
   return (
-    <div className="space-y-4 mt-4">
-      <div className="flex gap-2 flex-wrap items-center">
-        <Select value={filterType} onValueChange={(v: any) => setFilterType(v)}>
-          <SelectTrigger className="w-[140px]"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">{t("admin.all_types")}</SelectItem>
-            <SelectItem value="tool"><span className="flex items-center gap-1.5"><Wrench className="h-3.5 w-3.5" /> {t("common.tools")}</span></SelectItem>
-            <SelectItem value="model"><span className="flex items-center gap-1.5"><Brain className="h-3.5 w-3.5" /> {t("common.models")}</span></SelectItem>
-          </SelectContent>
-        </Select>
-        <Select value={filterStatus} onValueChange={setFilterStatus}>
-          <SelectTrigger className="w-[160px]"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="ALL">{t("status.all_statuses")}</SelectItem>
-            <SelectItem value="ALLOWED">{t("status.allowed")}</SelectItem>
-            <SelectItem value="NOT_ALLOWED">{t("status.not_allowed")}</SelectItem>
-            <SelectItem value="TRIAL">{t("status.trial")}</SelectItem>
-          </SelectContent>
-        </Select>
-        <span className="text-sm text-muted-foreground ml-auto">{filtered.length} {t("admin.evaluations").toLowerCase()}</span>
-        <Button size="sm" onClick={() => { resetForm(); setShowForm(true); }} className="gap-1.5">
-          <Plus className="h-3.5 w-3.5" /> {t("admin.new_evaluation")}
-        </Button>
-      </div>
-
-      {showForm && (
-        <Card className="border-primary/30">
-          <CardHeader>
-            <CardTitle className="text-base flex items-center gap-1.5">
-              {editingId ? <><Pencil className="h-4 w-4" /> {t("admin.edit_evaluation")}</> : <><Plus className="h-4 w-4" /> {t("admin.new_evaluation")}</>}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="flex gap-2">
-              <Select value={entityType} onValueChange={(v: any) => { setEntityType(v); setEntityId(""); }}>
-                <SelectTrigger className="w-[140px]"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="tool"><span className="flex items-center gap-1.5"><Wrench className="h-3.5 w-3.5" /> {t("common.tools")}</span></SelectItem>
-                  <SelectItem value="model"><span className="flex items-center gap-1.5"><Brain className="h-3.5 w-3.5" /> {t("common.models")}</span></SelectItem>
-                </SelectContent>
-              </Select>
-              <Select value={entityId} onValueChange={setEntityId}>
-                <SelectTrigger className="flex-1"><SelectValue placeholder={entityType === "tool" ? t("admin.select_tool") : t("admin.select_model")} /></SelectTrigger>
-                <SelectContent>
-                  {entities.map(e => <SelectItem key={e.id} value={e.id}>{e.name}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex gap-2 flex-wrap">
-              <Select value={status} onValueChange={setStatus}>
-                <SelectTrigger className="w-[160px]"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="ALLOWED"><span className="flex items-center gap-1.5"><CircleCheck className="h-3.5 w-3.5" /> {t("status.allowed")}</span></SelectItem>
-                  <SelectItem value="NOT_ALLOWED"><span className="flex items-center gap-1.5"><CircleX className="h-3.5 w-3.5" /> {t("status.not_allowed")}</span></SelectItem>
-                  <SelectItem value="TRIAL"><span className="flex items-center gap-1.5"><FlaskConical className="h-3.5 w-3.5" /> {t("status.trial")}</span></SelectItem>
-                </SelectContent>
-              </Select>
-              <Input placeholder="Version (e.g. v1)" value={version} onChange={e => setVersion(e.target.value)} className="w-[120px]" />
-            </div>
-            <div className="grid grid-cols-3 gap-2">
-              <div>
-                <Label className="text-xs text-muted-foreground">{t("admin.value")} (1-5)</Label>
-                <Input type="number" min="1" max="5" placeholder="–" value={valueScore} onChange={e => setValueScore(e.target.value)} />
-              </div>
-              <div>
-                <Label className="text-xs text-muted-foreground">{t("admin.risk")} (1-5)</Label>
-                <Input type="number" min="1" max="5" placeholder="–" value={riskScore} onChange={e => setRiskScore(e.target.value)} />
-              </div>
-              <div>
-                <Label className="text-xs text-muted-foreground">{t("admin.cost")} (1-5)</Label>
-                <Input type="number" min="1" max="5" placeholder="–" value={costScore} onChange={e => setCostScore(e.target.value)} />
-              </div>
-            </div>
-            <Textarea placeholder={t("admin.rationale_placeholder")} value={rationale} onChange={e => setRationale(e.target.value)} />
-            <div className="flex gap-2 justify-end">
-              <Button variant="outline" size="sm" onClick={resetForm}>{t("common.cancel")}</Button>
-              <Button size="sm" onClick={handleSave}>{editingId ? t("common.update") : t("common.create")}</Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {filtered.length === 0 && <p className="text-muted-foreground">{t("admin.no_evaluations")}</p>}
-      {filtered.map((ev) => (
-        <Card key={ev.id} className="cursor-pointer hover:border-primary/50 transition-colors" onClick={() => setSelectedItem(ev)}>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 flex-wrap">
-                {getType(ev) === "tool" ? <Wrench className="h-4 w-4" /> : <Brain className="h-4 w-4" />}
-                <span className="font-medium">{getName(ev)}</span>
-                <span className={`text-xs px-2 py-0.5 rounded-full ${statusColors[ev.decided_status] || ""}`}>
-                  {ev.decided_status}
-                </span>
-                {ev.version && <Badge variant="outline" className="text-xs">{ev.version}</Badge>}
-                {(ev.value_score || ev.risk_score || ev.cost_score) && (
-                  <span className="text-xs text-muted-foreground">
-                    V:{ev.value_score || "–"} R:{ev.risk_score || "–"} C:{ev.cost_score || "–"}
-                  </span>
-                )}
-              </div>
-              <div className="flex items-center gap-1">
-                <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); startEdit(ev); }}>
-                  <Pencil className="h-4 w-4" />
-                </Button>
-                <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); handleDelete(ev.id); }}>
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-            {ev.rationale && <p className="text-sm text-muted-foreground mt-1 line-clamp-1">{ev.rationale}</p>}
-            <p className="text-xs text-muted-foreground mt-1">{new Date(ev.decided_at).toLocaleString("nb-NO")}</p>
-          </CardContent>
-        </Card>
-      ))}
-
-      <Dialog open={!!selectedItem} onOpenChange={(open) => !open && setSelectedItem(null)}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              {selectedItem && (
-                <>
-                  {getType(selectedItem) === "tool" ? <Wrench className="h-4 w-4" /> : <Brain className="h-4 w-4" />}
-                  {getName(selectedItem)}
-                </>
-              )}
-            </DialogTitle>
-          </DialogHeader>
-          {selectedItem && (
-            <div className="space-y-4">
-              <div className="space-y-2 text-sm">
-                <div className="flex items-center gap-2">
-                  <span className={`px-2 py-0.5 rounded-full text-xs ${statusColors[selectedItem.decided_status] || ""}`}>
-                    {selectedItem.decided_status}
-                  </span>
-                  {selectedItem.version && <Badge variant="outline">{selectedItem.version}</Badge>}
-                </div>
-                {(selectedItem.value_score || selectedItem.risk_score || selectedItem.cost_score) && (
-                  <div className="grid grid-cols-3 gap-2 text-center">
-                    <div className="border rounded p-2">
-                      <p className="text-xs text-muted-foreground">{t("admin.value")}</p>
-                      <p className="font-bold">{selectedItem.value_score || "–"}</p>
-                    </div>
-                    <div className="border rounded p-2">
-                      <p className="text-xs text-muted-foreground">{t("admin.risk")}</p>
-                      <p className="font-bold">{selectedItem.risk_score || "–"}</p>
-                    </div>
-                    <div className="border rounded p-2">
-                      <p className="text-xs text-muted-foreground">{t("admin.cost")}</p>
-                      <p className="font-bold">{selectedItem.cost_score || "–"}</p>
-                    </div>
-                  </div>
-                )}
-                {selectedItem.rationale && <p><strong>{t("admin.rationale")}:</strong> {selectedItem.rationale}</p>}
-                <p className="text-xs text-muted-foreground">{t("admin.decided")}: {new Date(selectedItem.decided_at).toLocaleString("nb-NO")}</p>
-              </div>
-
-              <div>
-                <h4 className="text-sm font-medium mb-2 flex items-center gap-1.5"><History className="h-4 w-4" /> {t("admin.eval_history")}</h4>
-                <div className="space-y-2 max-h-48 overflow-y-auto">
-                  {getHistoryForEntity(selectedItem).map((h) => (
-                    <div key={h.id} className={`text-xs border rounded p-2 ${h.id === selectedItem.id ? "border-primary bg-primary/5" : ""}`}>
-                      <div className="flex items-center gap-2">
-                        <span className={`px-1.5 py-0.5 rounded ${statusColors[h.decided_status] || ""}`}>{h.decided_status}</span>
-                        {h.version && <span className="text-muted-foreground">{h.version}</span>}
-                        <span className="text-muted-foreground ml-auto">{new Date(h.decided_at).toLocaleDateString("nb-NO")}</span>
-                      </div>
-                      {h.rationale && <p className="text-muted-foreground mt-1">{h.rationale}</p>}
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="flex justify-end gap-2 pt-2">
-                <Button variant="outline" size="sm" onClick={() => { startEdit(selectedItem); setSelectedItem(null); }} className="gap-1.5">
-                  <Pencil className="h-3.5 w-3.5" /> {t("common.edit")}
-                </Button>
-                <Button variant="destructive" size="sm" onClick={() => { handleDelete(selectedItem.id); }} className="gap-1.5">
-                  <Trash2 className="h-3.5 w-3.5" /> {t("common.delete")}
-                </Button>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+    <div className="mt-4">
+      <EvaluationDashboard
+        tools={tools}
+        models={models}
+        evaluations={evaluations}
+        catalogEntries={catalogEntries}
+        submissions={submissions}
+        onRefresh={fetchAll}
+      />
     </div>
   );
 }
