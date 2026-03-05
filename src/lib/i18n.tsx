@@ -155,6 +155,8 @@ const translations = {
   "learning.type.prompt-pack": { no: "Prompt-pakke", en: "Prompt pack" },
   "learning.type.guideline": { no: "Retningslinje", en: "Guideline" },
   "learning.type.case-study": { no: "Case Study", en: "Case Study" },
+  "learning.filter_type": { no: "Type", en: "Type" },
+  "learning.filter_tag": { no: "Emneknagger", en: "Tags" },
   "learning.tab.content": { no: "Innhold", en: "Content" },
   "learning.tab.links": { no: "Lenker", en: "Links" },
   "learning.share_link": { no: "Del en lenke", en: "Share a link" },
