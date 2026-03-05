@@ -1,6 +1,7 @@
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
-import { Home, ClipboardList, BarChart3, CheckSquare, BookOpen, GraduationCap, Lock, Brain } from "lucide-react";
+import { Home, ClipboardList, BarChart3, CheckSquare, BookOpen, GraduationCap, Lock } from "lucide-react";
+import logo from "@/assets/logo.png";
 import {
   Sidebar,
   SidebarContent,
@@ -34,7 +35,7 @@ export function AppSidebar() {
       <div className="flex items-center gap-2 px-4 py-5">
         {!collapsed && (
           <h1 className="text-lg font-bold text-sidebar-primary-foreground tracking-tight flex items-center gap-2">
-            <Brain className="h-5 w-5" /> AI Tool Atlas
+            <img src={logo} alt="AI Tool Atlas" className="h-6 w-6 rounded" /> AI Tool Atlas
           </h1>
         )}
       </div>
