@@ -542,6 +542,18 @@ function StatBadge({ icon, label, count, active, onClick }: {
   );
 }
 
+/** Returns tailwind classes for a 1-5 score. invertedScale: true means high = bad (risk, cost) */
+function scoreColor(score: number | null, invertedScale: boolean): string {
+  if (!score) return "text-muted-foreground";
+  // For value: high=good (green). For risk/cost: high=bad (red).
+  const effective = invertedScale ? score : 6 - score;
+  if (effective <= 1) return "text-primary bg-primary/10";
+  if (effective <= 2) return "text-primary/80 bg-primary/5";
+  if (effective <= 3) return "text-muted-foreground bg-muted";
+  if (effective <= 4) return "text-destructive/80 bg-destructive/5";
+  return "text-destructive bg-destructive/10";
+}
+
 function ItemRow({ item, totalSubmissions, onEvaluate, onViewDetail, t }: {
   item: UnifiedItem;
   totalSubmissions: number;
@@ -594,18 +606,30 @@ function ItemRow({ item, totalSubmissions, onEvaluate, onViewDetail, t }: {
 
       {/* V/R/C scores */}
       {hasEval && (item.evaluation.value_score || item.evaluation.risk_score || item.evaluation.cost_score) && (
-        <div className="hidden sm:flex items-center gap-1.5 shrink-0 text-xs text-muted-foreground tabular-nums">
+        <div className="hidden sm:flex items-center gap-1.5 shrink-0 text-xs tabular-nums">
           <Tooltip>
-            <TooltipTrigger><span className="font-medium">V:{item.evaluation.value_score || "–"}</span></TooltipTrigger>
-            <TooltipContent className="text-xs">{t("admin.value")}</TooltipContent>
+            <TooltipTrigger>
+              <span className={`font-medium px-1.5 py-0.5 rounded ${scoreColor(item.evaluation.value_score, false)}`}>
+                V:{item.evaluation.value_score || "–"}
+              </span>
+            </TooltipTrigger>
+            <TooltipContent className="text-xs">{t("admin.value")} – {t("admin.high_is_good")}</TooltipContent>
           </Tooltip>
           <Tooltip>
-            <TooltipTrigger><span className="font-medium">R:{item.evaluation.risk_score || "–"}</span></TooltipTrigger>
-            <TooltipContent className="text-xs">{t("admin.risk")}</TooltipContent>
+            <TooltipTrigger>
+              <span className={`font-medium px-1.5 py-0.5 rounded ${scoreColor(item.evaluation.risk_score, true)}`}>
+                R:{item.evaluation.risk_score || "–"}
+              </span>
+            </TooltipTrigger>
+            <TooltipContent className="text-xs">{t("admin.risk")} – {t("admin.high_is_bad")}</TooltipContent>
           </Tooltip>
           <Tooltip>
-            <TooltipTrigger><span className="font-medium">C:{item.evaluation.cost_score || "–"}</span></TooltipTrigger>
-            <TooltipContent className="text-xs">{t("admin.cost")}</TooltipContent>
+            <TooltipTrigger>
+              <span className={`font-medium px-1.5 py-0.5 rounded ${scoreColor(item.evaluation.cost_score, true)}`}>
+                C:{item.evaluation.cost_score || "–"}
+              </span>
+            </TooltipTrigger>
+            <TooltipContent className="text-xs">{t("admin.cost")} – {t("admin.high_is_bad")}</TooltipContent>
           </Tooltip>
         </div>
       )}
