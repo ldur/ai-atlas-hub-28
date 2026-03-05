@@ -94,8 +94,16 @@ export function LearningItemCard({ item, isAdmin, onUpdated }: LearningItemCardP
           <p className="text-xs text-muted-foreground">{new Date(item.created_at).toLocaleDateString("nb-NO")}</p>
         </CardHeader>
         <CardContent>
-          <div className="prose prose-sm max-w-none text-muted-foreground">
-            <ReactMarkdown>{item.content || ""}</ReactMarkdown>
+          <div className="prose prose-sm max-w-none text-muted-foreground prose-a:text-primary prose-a:underline">
+            <ReactMarkdown
+              components={{
+                a: ({ href, children }) => (
+                  <a href={href} target="_blank" rel="noopener noreferrer">
+                    {children}
+                  </a>
+                ),
+              }}
+            >{item.content || ""}</ReactMarkdown>
           </div>
           {item.tags?.length > 0 && (
             <div className="flex gap-1 mt-3">
