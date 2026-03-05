@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { adminAction } from "@/lib/adminAction";
 import { getAdminToken, setAdminToken } from "@/lib/nickname";
 import { useToast } from "@/hooks/use-toast";
+import { useI18n } from "@/lib/i18n";
 import {
   Lock, Sparkles, Loader2, Wrench, Brain, Download, Trash2, Pencil, Plus,
   CircleCheck, CircleMinus, CircleX, FlaskConical, ClipboardList, History
@@ -23,6 +24,7 @@ function BulkGenerateSection() {
   const [running, setRunning] = useState(false);
   const [results, setResults] = useState<{ type: string; name: string; status: string }[]>([]);
   const { toast } = useToast();
+  const { t } = useI18n();
 
   const runBulk = async (type: "tool" | "model") => {
     setRunning(true);
@@ -45,9 +47,9 @@ function BulkGenerateSection() {
 
         if (data.processed === 0) break;
       }
-      toast({ title: `Ferdig! ${allResults.length} ${type === "tool" ? "verktøy" : "modeller"} generert.` });
+      toast({ title: `${allResults.length} ${type === "tool" ? t("common.tools").toLowerCase() : t("common.models").toLowerCase()} generated.` });
     } catch (e: any) {
-      toast({ title: "Feil", description: e.message, variant: "destructive" });
+      toast({ title: t("common.error"), description: e.message, variant: "destructive" });
     } finally {
       setRunning(false);
     }
@@ -61,24 +63,22 @@ function BulkGenerateSection() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base flex items-center gap-1.5"><Sparkles className="h-4 w-4" /> Bulk AI-generering av katalogoppføringer</CardTitle>
+        <CardTitle className="text-base flex items-center gap-1.5"><Sparkles className="h-4 w-4" /> {t("admin.bulk_title")}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
-        <p className="text-sm text-muted-foreground">
-          Generer kataloginnhold automatisk for alle verktøy og modeller som mangler oppføring.
-        </p>
+        <p className="text-sm text-muted-foreground">{t("admin.bulk_desc")}</p>
         <div className="flex gap-2 flex-wrap">
           <Button size="sm" onClick={() => runBulk("tool")} disabled={running} className="gap-1.5">
             {running ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Wrench className="h-3.5 w-3.5" />}
-            {running ? "Kjører..." : "Generer for verktøy"}
+            {running ? t("admin.running") : t("admin.gen_tools")}
           </Button>
           <Button size="sm" onClick={() => runBulk("model")} disabled={running} className="gap-1.5">
             {running ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Brain className="h-3.5 w-3.5" />}
-            {running ? "Kjører..." : "Generer for modeller"}
+            {running ? t("admin.running") : t("admin.gen_models")}
           </Button>
           <Button size="sm" variant="outline" onClick={runAll} disabled={running} className="gap-1.5">
             {running ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
-            {running ? "Kjører..." : "Generer for alle"}
+            {running ? t("admin.running") : t("admin.gen_all")}
           </Button>
         </div>
         {results.length > 0 && (
@@ -101,6 +101,7 @@ const Admin = () => {
   const [authenticated, setAuthenticated] = useState(false);
   const [code, setCode] = useState("");
   const { toast } = useToast();
+  const { t } = useI18n();
 
   useEffect(() => {
     const saved = getAdminToken();
@@ -112,7 +113,7 @@ const Admin = () => {
       setAdminToken(code);
       setAuthenticated(true);
     } else {
-      toast({ title: "Feil kode", variant: "destructive" });
+      toast({ title: t("admin.wrong_code"), variant: "destructive" });
     }
   };
 
@@ -122,28 +123,28 @@ const Admin = () => {
         <div className="text-center space-y-2">
           <Lock className="h-12 w-12 mx-auto text-muted-foreground" />
           <h1 className="text-2xl font-bold">Admin</h1>
-          <p className="text-muted-foreground">Skriv inn admin-koden for tilgang</p>
+          <p className="text-muted-foreground">{t("admin.enter_code")}</p>
         </div>
         <Input
           type="password"
-          placeholder="Admin-kode"
+          placeholder={t("admin.code_placeholder")}
           value={code}
           onChange={(e) => setCode(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && handleLogin()}
         />
-        <Button className="w-full" onClick={handleLogin}>Logg inn</Button>
+        <Button className="w-full" onClick={handleLogin}>{t("admin.login")}</Button>
       </div>
     );
   }
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
-      <h1 className="text-2xl font-bold tracking-tight">Admin Panel</h1>
+      <h1 className="text-2xl font-bold tracking-tight">{t("admin.title")}</h1>
       <BulkGenerateSection />
       <Tabs defaultValue="submissions">
         <TabsList className="grid grid-cols-2 w-full">
-          <TabsTrigger value="submissions">Innleveringer</TabsTrigger>
-          <TabsTrigger value="evaluations">Evalueringer</TabsTrigger>
+          <TabsTrigger value="submissions">{t("admin.submissions")}</TabsTrigger>
+          <TabsTrigger value="evaluations">{t("admin.evaluations")}</TabsTrigger>
         </TabsList>
         <TabsContent value="submissions"><SubmissionsTab /></TabsContent>
         <TabsContent value="evaluations"><EvaluationsTab /></TabsContent>
@@ -157,6 +158,7 @@ function SubmissionsTab() {
   const [search, setSearch] = useState("");
   const [selectedSubmission, setSelectedSubmission] = useState<any | null>(null);
   const { toast } = useToast();
+  const { t } = useI18n();
 
   const fetchSubmissions = () => supabase.from("submissions").select("*").order("created_at", { ascending: false }).then(({ data }) => setSubmissions(data || []));
   useEffect(() => { fetchSubmissions(); }, []);
@@ -164,16 +166,16 @@ function SubmissionsTab() {
   const handleDelete = async (id: string) => {
     try {
       await adminAction({ action: "delete", table: "submissions", id });
-      toast({ title: "Innlevering slettet" });
+      toast({ title: t("admin.submission_deleted") });
       setSelectedSubmission(null);
       fetchSubmissions();
     } catch (e: any) {
-      toast({ title: "Feil", description: e.message, variant: "destructive" });
+      toast({ title: t("common.error"), description: e.message, variant: "destructive" });
     }
   };
 
   const exportCsv = () => {
-    const headers = ["Dato", "Team", "Rolle", "Verktøy", "Fritekst", "Modeller", "Bruksområder", "Tid spart", "Sensitiv data", "Utfordringer", "Må beholde"];
+    const headers = ["Date", "Team", "Role", "Tools", "Freetext", "Models", "Use cases", "Time saved", "Sensitive data", "Challenges", "Must keep"];
     const rows = submissions.map(s => [
       new Date(s.created_at).toLocaleString("nb-NO"),
       s.team || "", s.role || "",
@@ -186,9 +188,9 @@ function SubmissionsTab() {
     const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
-    a.href = url; a.download = `innleveringer-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.href = url; a.download = `submissions-${new Date().toISOString().slice(0, 10)}.csv`;
     a.click(); URL.revokeObjectURL(url);
-    toast({ title: "CSV eksportert" });
+    toast({ title: t("admin.csv_exported") });
   };
 
   const filtered = submissions.filter(s => {
@@ -203,24 +205,24 @@ function SubmissionsTab() {
   return (
     <div className="space-y-3 mt-4">
       <div className="flex gap-2 items-center flex-wrap">
-        <Input placeholder="Søk i innleveringer..." value={search} onChange={e => setSearch(e.target.value)} className="flex-1 min-w-[200px]" />
+        <Input placeholder={t("admin.search_submissions")} value={search} onChange={e => setSearch(e.target.value)} className="flex-1 min-w-[200px]" />
         <Button variant="outline" size="sm" onClick={exportCsv} disabled={submissions.length === 0} className="gap-1.5">
-          <Download className="h-3.5 w-3.5" /> Eksporter CSV
+          <Download className="h-3.5 w-3.5" /> {t("admin.export_csv")}
         </Button>
-        <span className="text-sm text-muted-foreground">{filtered.length} av {submissions.length}</span>
+        <span className="text-sm text-muted-foreground">{filtered.length} / {submissions.length}</span>
       </div>
-      {filtered.length === 0 && <p className="text-muted-foreground">Ingen innleveringer funnet.</p>}
+      {filtered.length === 0 && <p className="text-muted-foreground">{t("admin.no_submissions")}</p>}
       {filtered.map((s) => (
         <Card key={s.id} className="cursor-pointer hover:border-primary/50 transition-colors" onClick={() => setSelectedSubmission(s)}>
           <CardContent className="p-4 text-sm">
             <div className="flex justify-between items-start">
               <div className="space-y-1 flex-1">
                 <div className="flex gap-2 flex-wrap items-center">
-                  {(s.tools_used || []).slice(0, 3).map((t: string) => <Badge key={t} variant="secondary">{t}</Badge>)}
+                  {(s.tools_used || []).slice(0, 3).map((tool: string) => <Badge key={tool} variant="secondary">{tool}</Badge>)}
                   {(s.tools_used || []).length > 3 && <Badge variant="outline">+{(s.tools_used || []).length - 3}</Badge>}
                 </div>
                 <p className="text-muted-foreground">
-                  {s.time_saved_range ? `${s.time_saved_range}t spart` : "–"} · {new Date(s.created_at).toLocaleDateString("nb-NO")}
+                  {s.time_saved_range ? `${s.time_saved_range}h` : "–"} · {new Date(s.created_at).toLocaleDateString("nb-NO")}
                 </p>
               </div>
               <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); handleDelete(s.id); }}>
@@ -234,23 +236,23 @@ function SubmissionsTab() {
       <Dialog open={!!selectedSubmission} onOpenChange={(open) => !open && setSelectedSubmission(null)}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>Innlevering – {selectedSubmission && new Date(selectedSubmission.created_at).toLocaleString("nb-NO")}</DialogTitle>
+            <DialogTitle>{t("admin.submissions")} – {selectedSubmission && new Date(selectedSubmission.created_at).toLocaleString("nb-NO")}</DialogTitle>
           </DialogHeader>
           {selectedSubmission && (
             <div className="space-y-3 text-sm">
-              {selectedSubmission.team && <p><strong>Team:</strong> {selectedSubmission.team}</p>}
-              {selectedSubmission.role && <p><strong>Rolle:</strong> {selectedSubmission.role}</p>}
-              <p><strong>Verktøy:</strong> {(selectedSubmission.tools_used || []).join(", ") || "–"}</p>
-              {selectedSubmission.tools_freetext && <p><strong>Fritekst:</strong> {selectedSubmission.tools_freetext}</p>}
-              <p><strong>Modeller:</strong> {(selectedSubmission.models_used || []).join(", ") || "–"}</p>
-              <p><strong>Bruksområder:</strong> {(selectedSubmission.use_cases || []).join(", ") || "–"}</p>
-              <p><strong>Tid spart:</strong> {selectedSubmission.time_saved_range || "–"}</p>
-              <p><strong>Sensitiv data:</strong> {selectedSubmission.data_sensitivity || "–"}</p>
-              {selectedSubmission.pain_points && <p><strong>Utfordringer:</strong> {selectedSubmission.pain_points}</p>}
-              {selectedSubmission.must_keep_tool && <p><strong>Må beholde:</strong> {selectedSubmission.must_keep_tool}</p>}
+              {selectedSubmission.team && <p><strong>{t("admin.team")}:</strong> {selectedSubmission.team}</p>}
+              {selectedSubmission.role && <p><strong>{t("admin.role")}:</strong> {selectedSubmission.role}</p>}
+              <p><strong>{t("common.tools")}:</strong> {(selectedSubmission.tools_used || []).join(", ") || "–"}</p>
+              {selectedSubmission.tools_freetext && <p><strong>{t("admin.freetext")}:</strong> {selectedSubmission.tools_freetext}</p>}
+              <p><strong>{t("common.models")}:</strong> {(selectedSubmission.models_used || []).join(", ") || "–"}</p>
+              <p><strong>{t("survey.what_for")}:</strong> {(selectedSubmission.use_cases || []).join(", ") || "–"}</p>
+              <p><strong>{t("admin.time_saved")}:</strong> {selectedSubmission.time_saved_range || "–"}</p>
+              <p><strong>{t("admin.sensitive_data")}:</strong> {selectedSubmission.data_sensitivity || "–"}</p>
+              {selectedSubmission.pain_points && <p><strong>{t("admin.challenges")}:</strong> {selectedSubmission.pain_points}</p>}
+              {selectedSubmission.must_keep_tool && <p><strong>{t("admin.must_keep")}:</strong> {selectedSubmission.must_keep_tool}</p>}
               <div className="flex justify-end pt-2">
                 <Button variant="destructive" size="sm" onClick={() => handleDelete(selectedSubmission.id)} className="gap-1.5">
-                  <Trash2 className="h-3.5 w-3.5" /> Slett innlevering
+                  <Trash2 className="h-3.5 w-3.5" /> {t("admin.delete_submission")}
                 </Button>
               </div>
             </div>
@@ -282,23 +284,24 @@ function EvaluationsTab() {
   const [editingId, setEditingId] = useState<string | null>(null);
 
   const { toast } = useToast();
+  const { t } = useI18n();
 
   const fetchAll = () => {
     Promise.all([
       supabase.from("evaluations").select("*").order("decided_at", { ascending: false }),
       supabase.from("tools").select("*").order("name"),
       supabase.from("models").select("*").order("name"),
-    ]).then(([e, t, m]) => {
+    ]).then(([e, tRes, m]) => {
       setEvals(e.data || []);
-      setTools(t.data || []);
+      setTools(tRes.data || []);
       setModels(m.data || []);
     });
   };
   useEffect(() => { fetchAll(); }, []);
 
   const getName = (ev: any) => {
-    if (ev.tool_id) return tools.find(t => t.id === ev.tool_id)?.name || "Ukjent verktøy";
-    if (ev.model_id) return models.find(m => m.id === ev.model_id)?.name || "Ukjent modell";
+    if (ev.tool_id) return tools.find(tool => tool.id === ev.tool_id)?.name || t("common.unknown");
+    if (ev.model_id) return models.find(m => m.id === ev.model_id)?.name || t("common.unknown");
     return "–";
   };
 
@@ -330,7 +333,7 @@ function EvaluationsTab() {
   };
 
   const handleSave = async () => {
-    if (!entityId) { toast({ title: "Velg verktøy eller modell", variant: "destructive" }); return; }
+    if (!entityId) { toast({ title: t("admin.select_entity"), variant: "destructive" }); return; }
     const payload: any = {
       tool_id: entityType === "tool" ? entityId : null,
       model_id: entityType === "model" ? entityId : null,
@@ -345,25 +348,25 @@ function EvaluationsTab() {
     try {
       if (editingId) {
         await adminAction({ action: "update", table: "evaluations", id: editingId, payload });
-        toast({ title: "Evaluering oppdatert" });
+        toast({ title: t("admin.evaluation_updated") });
       } else {
         await adminAction({ action: "insert", table: "evaluations", payload });
-        toast({ title: "Evaluering opprettet" });
+        toast({ title: t("admin.evaluation_created") });
       }
       resetForm();
       fetchAll();
     } catch (e: any) {
-      toast({ title: "Feil", description: e.message, variant: "destructive" });
+      toast({ title: t("common.error"), description: e.message, variant: "destructive" });
     }
   };
 
   const handleDelete = async (id: string) => {
     try {
       await adminAction({ action: "delete", table: "evaluations", id });
-      toast({ title: "Evaluering slettet" });
+      toast({ title: t("admin.evaluation_deleted") });
       fetchAll();
     } catch (e: any) {
-      toast({ title: "Feil", description: e.message, variant: "destructive" });
+      toast({ title: t("common.error"), description: e.message, variant: "destructive" });
     }
   };
 
@@ -389,23 +392,23 @@ function EvaluationsTab() {
         <Select value={filterType} onValueChange={(v: any) => setFilterType(v)}>
           <SelectTrigger className="w-[140px]"><SelectValue /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Alle typer</SelectItem>
-            <SelectItem value="tool"><span className="flex items-center gap-1.5"><Wrench className="h-3.5 w-3.5" /> Verktøy</span></SelectItem>
-            <SelectItem value="model"><span className="flex items-center gap-1.5"><Brain className="h-3.5 w-3.5" /> Modeller</span></SelectItem>
+            <SelectItem value="all">{t("admin.all_types")}</SelectItem>
+            <SelectItem value="tool"><span className="flex items-center gap-1.5"><Wrench className="h-3.5 w-3.5" /> {t("common.tools")}</span></SelectItem>
+            <SelectItem value="model"><span className="flex items-center gap-1.5"><Brain className="h-3.5 w-3.5" /> {t("common.models")}</span></SelectItem>
           </SelectContent>
         </Select>
         <Select value={filterStatus} onValueChange={setFilterStatus}>
           <SelectTrigger className="w-[160px]"><SelectValue /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="ALL">Alle statuser</SelectItem>
-            <SelectItem value="ALLOWED">Tillatt</SelectItem>
-            <SelectItem value="NOT_ALLOWED">Ikke tillatt</SelectItem>
-            <SelectItem value="TRIAL">Prøveperiode</SelectItem>
+            <SelectItem value="ALL">{t("status.all_statuses")}</SelectItem>
+            <SelectItem value="ALLOWED">{t("status.allowed")}</SelectItem>
+            <SelectItem value="NOT_ALLOWED">{t("status.not_allowed")}</SelectItem>
+            <SelectItem value="TRIAL">{t("status.trial")}</SelectItem>
           </SelectContent>
         </Select>
-        <span className="text-sm text-muted-foreground ml-auto">{filtered.length} evalueringer</span>
+        <span className="text-sm text-muted-foreground ml-auto">{filtered.length} {t("admin.evaluations").toLowerCase()}</span>
         <Button size="sm" onClick={() => { resetForm(); setShowForm(true); }} className="gap-1.5">
-          <Plus className="h-3.5 w-3.5" /> Ny evaluering
+          <Plus className="h-3.5 w-3.5" /> {t("admin.new_evaluation")}
         </Button>
       </div>
 
@@ -413,7 +416,7 @@ function EvaluationsTab() {
         <Card className="border-primary/30">
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-1.5">
-              {editingId ? <><Pencil className="h-4 w-4" /> Rediger evaluering</> : <><Plus className="h-4 w-4" /> Ny evaluering</>}
+              {editingId ? <><Pencil className="h-4 w-4" /> {t("admin.edit_evaluation")}</> : <><Plus className="h-4 w-4" /> {t("admin.new_evaluation")}</>}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
@@ -421,12 +424,12 @@ function EvaluationsTab() {
               <Select value={entityType} onValueChange={(v: any) => { setEntityType(v); setEntityId(""); }}>
                 <SelectTrigger className="w-[140px]"><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="tool"><span className="flex items-center gap-1.5"><Wrench className="h-3.5 w-3.5" /> Verktøy</span></SelectItem>
-                  <SelectItem value="model"><span className="flex items-center gap-1.5"><Brain className="h-3.5 w-3.5" /> Modell</span></SelectItem>
+                  <SelectItem value="tool"><span className="flex items-center gap-1.5"><Wrench className="h-3.5 w-3.5" /> {t("common.tools")}</span></SelectItem>
+                  <SelectItem value="model"><span className="flex items-center gap-1.5"><Brain className="h-3.5 w-3.5" /> {t("common.models")}</span></SelectItem>
                 </SelectContent>
               </Select>
               <Select value={entityId} onValueChange={setEntityId}>
-                <SelectTrigger className="flex-1"><SelectValue placeholder={`Velg ${entityType === "tool" ? "verktøy" : "modell"}`} /></SelectTrigger>
+                <SelectTrigger className="flex-1"><SelectValue placeholder={entityType === "tool" ? t("admin.select_tool") : t("admin.select_model")} /></SelectTrigger>
                 <SelectContent>
                   {entities.map(e => <SelectItem key={e.id} value={e.id}>{e.name}</SelectItem>)}
                 </SelectContent>
@@ -436,37 +439,37 @@ function EvaluationsTab() {
               <Select value={status} onValueChange={setStatus}>
                 <SelectTrigger className="w-[160px]"><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="ALLOWED"><span className="flex items-center gap-1.5"><CircleCheck className="h-3.5 w-3.5" /> Tillatt</span></SelectItem>
-                  <SelectItem value="NOT_ALLOWED"><span className="flex items-center gap-1.5"><CircleX className="h-3.5 w-3.5" /> Ikke tillatt</span></SelectItem>
-                  <SelectItem value="TRIAL"><span className="flex items-center gap-1.5"><FlaskConical className="h-3.5 w-3.5" /> Prøveperiode</span></SelectItem>
+                  <SelectItem value="ALLOWED"><span className="flex items-center gap-1.5"><CircleCheck className="h-3.5 w-3.5" /> {t("status.allowed")}</span></SelectItem>
+                  <SelectItem value="NOT_ALLOWED"><span className="flex items-center gap-1.5"><CircleX className="h-3.5 w-3.5" /> {t("status.not_allowed")}</span></SelectItem>
+                  <SelectItem value="TRIAL"><span className="flex items-center gap-1.5"><FlaskConical className="h-3.5 w-3.5" /> {t("status.trial")}</span></SelectItem>
                 </SelectContent>
               </Select>
-              <Input placeholder="Versjon (f.eks. v1)" value={version} onChange={e => setVersion(e.target.value)} className="w-[120px]" />
+              <Input placeholder="Version (e.g. v1)" value={version} onChange={e => setVersion(e.target.value)} className="w-[120px]" />
             </div>
             <div className="grid grid-cols-3 gap-2">
               <div>
-                <Label className="text-xs text-muted-foreground">Verdi (1-5)</Label>
+                <Label className="text-xs text-muted-foreground">{t("admin.value")} (1-5)</Label>
                 <Input type="number" min="1" max="5" placeholder="–" value={valueScore} onChange={e => setValueScore(e.target.value)} />
               </div>
               <div>
-                <Label className="text-xs text-muted-foreground">Risiko (1-5)</Label>
+                <Label className="text-xs text-muted-foreground">{t("admin.risk")} (1-5)</Label>
                 <Input type="number" min="1" max="5" placeholder="–" value={riskScore} onChange={e => setRiskScore(e.target.value)} />
               </div>
               <div>
-                <Label className="text-xs text-muted-foreground">Kostnad (1-5)</Label>
+                <Label className="text-xs text-muted-foreground">{t("admin.cost")} (1-5)</Label>
                 <Input type="number" min="1" max="5" placeholder="–" value={costScore} onChange={e => setCostScore(e.target.value)} />
               </div>
             </div>
-            <Textarea placeholder="Begrunnelse / notater for beslutningen..." value={rationale} onChange={e => setRationale(e.target.value)} />
+            <Textarea placeholder={t("admin.rationale_placeholder")} value={rationale} onChange={e => setRationale(e.target.value)} />
             <div className="flex gap-2 justify-end">
-              <Button variant="outline" size="sm" onClick={resetForm}>Avbryt</Button>
-              <Button size="sm" onClick={handleSave}>{editingId ? "Oppdater" : "Opprett"}</Button>
+              <Button variant="outline" size="sm" onClick={resetForm}>{t("common.cancel")}</Button>
+              <Button size="sm" onClick={handleSave}>{editingId ? t("common.update") : t("common.create")}</Button>
             </div>
           </CardContent>
         </Card>
       )}
 
-      {filtered.length === 0 && <p className="text-muted-foreground">Ingen evalueringer funnet.</p>}
+      {filtered.length === 0 && <p className="text-muted-foreground">{t("admin.no_evaluations")}</p>}
       {filtered.map((ev) => (
         <Card key={ev.id} className="cursor-pointer hover:border-primary/50 transition-colors" onClick={() => setSelectedItem(ev)}>
           <CardContent className="p-4">
@@ -480,7 +483,7 @@ function EvaluationsTab() {
                 {ev.version && <Badge variant="outline" className="text-xs">{ev.version}</Badge>}
                 {(ev.value_score || ev.risk_score || ev.cost_score) && (
                   <span className="text-xs text-muted-foreground">
-                    V:{ev.value_score || "–"} R:{ev.risk_score || "–"} K:{ev.cost_score || "–"}
+                    V:{ev.value_score || "–"} R:{ev.risk_score || "–"} C:{ev.cost_score || "–"}
                   </span>
                 )}
               </div>
@@ -523,25 +526,25 @@ function EvaluationsTab() {
                 {(selectedItem.value_score || selectedItem.risk_score || selectedItem.cost_score) && (
                   <div className="grid grid-cols-3 gap-2 text-center">
                     <div className="border rounded p-2">
-                      <p className="text-xs text-muted-foreground">Verdi</p>
+                      <p className="text-xs text-muted-foreground">{t("admin.value")}</p>
                       <p className="font-bold">{selectedItem.value_score || "–"}</p>
                     </div>
                     <div className="border rounded p-2">
-                      <p className="text-xs text-muted-foreground">Risiko</p>
+                      <p className="text-xs text-muted-foreground">{t("admin.risk")}</p>
                       <p className="font-bold">{selectedItem.risk_score || "–"}</p>
                     </div>
                     <div className="border rounded p-2">
-                      <p className="text-xs text-muted-foreground">Kostnad</p>
+                      <p className="text-xs text-muted-foreground">{t("admin.cost")}</p>
                       <p className="font-bold">{selectedItem.cost_score || "–"}</p>
                     </div>
                   </div>
                 )}
-                {selectedItem.rationale && <p><strong>Begrunnelse:</strong> {selectedItem.rationale}</p>}
-                <p className="text-xs text-muted-foreground">Besluttet: {new Date(selectedItem.decided_at).toLocaleString("nb-NO")}</p>
+                {selectedItem.rationale && <p><strong>{t("admin.rationale")}:</strong> {selectedItem.rationale}</p>}
+                <p className="text-xs text-muted-foreground">{t("admin.decided")}: {new Date(selectedItem.decided_at).toLocaleString("nb-NO")}</p>
               </div>
 
               <div>
-                <h4 className="text-sm font-medium mb-2 flex items-center gap-1.5"><History className="h-4 w-4" /> Evalueringshistorikk</h4>
+                <h4 className="text-sm font-medium mb-2 flex items-center gap-1.5"><History className="h-4 w-4" /> {t("admin.eval_history")}</h4>
                 <div className="space-y-2 max-h-48 overflow-y-auto">
                   {getHistoryForEntity(selectedItem).map((h) => (
                     <div key={h.id} className={`text-xs border rounded p-2 ${h.id === selectedItem.id ? "border-primary bg-primary/5" : ""}`}>
@@ -558,10 +561,10 @@ function EvaluationsTab() {
 
               <div className="flex justify-end gap-2 pt-2">
                 <Button variant="outline" size="sm" onClick={() => { startEdit(selectedItem); setSelectedItem(null); }} className="gap-1.5">
-                  <Pencil className="h-3.5 w-3.5" /> Rediger
+                  <Pencil className="h-3.5 w-3.5" /> {t("common.edit")}
                 </Button>
                 <Button variant="destructive" size="sm" onClick={() => { handleDelete(selectedItem.id); }} className="gap-1.5">
-                  <Trash2 className="h-3.5 w-3.5" /> Slett
+                  <Trash2 className="h-3.5 w-3.5" /> {t("common.delete")}
                 </Button>
               </div>
             </div>

@@ -11,31 +11,10 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { getAliasId, getNickname } from "@/lib/nickname";
 import { useToast } from "@/hooks/use-toast";
+import { useI18n } from "@/lib/i18n";
 import { CheckCircle2, ArrowRight } from "lucide-react";
 
 const DRAFT_KEY = "ai-tool-atlas-survey-draft";
-
-const useCaseOptions = [
-  { id: "koding", label: "Koding" },
-  { id: "dokumentasjon", label: "Dokumentasjon" },
-  { id: "analyse", label: "Analyse" },
-  { id: "kundedialog", label: "Kundedialog" },
-  { id: "design", label: "Design / Media" },
-  { id: "automatisering", label: "Automatisering" },
-];
-
-const timeSavedOptions = [
-  { value: "0", label: "0 timer" },
-  { value: "1-2", label: "1–2 timer" },
-  { value: "3-5", label: "3–5 timer" },
-  { value: "5+", label: "5+ timer" },
-];
-
-const sensitivityOptions = [
-  { value: "aldri", label: "Aldri" },
-  { value: "usikker", label: "Usikker" },
-  { value: "ja", label: "Ja" },
-];
 
 interface SurveyData {
   toolsUsed: string[];
@@ -67,21 +46,43 @@ const Survey = () => {
   const [knownModels, setKnownModels] = useState<string[]>([]);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { t } = useI18n();
+
+  const useCaseOptions = [
+    { id: "koding", labelKey: "usecase.coding" as const },
+    { id: "dokumentasjon", labelKey: "usecase.documentation" as const },
+    { id: "analyse", labelKey: "usecase.analysis" as const },
+    { id: "kundedialog", labelKey: "usecase.customer_dialog" as const },
+    { id: "design", labelKey: "usecase.design" as const },
+    { id: "automatisering", labelKey: "usecase.automation" as const },
+  ];
+
+  const timeSavedOptions = [
+    { value: "0", labelKey: "time.0" as const },
+    { value: "1-2", labelKey: "time.1-2" as const },
+    { value: "3-5", labelKey: "time.3-5" as const },
+    { value: "5+", labelKey: "time.5+" as const },
+  ];
+
+  const sensitivityOptions = [
+    { value: "aldri", labelKey: "sensitivity.never" as const },
+    { value: "usikker", labelKey: "sensitivity.unsure" as const },
+    { value: "ja", labelKey: "sensitivity.yes" as const },
+  ];
 
   useEffect(() => {
-    // Fetch tools and models from database
     Promise.all([
       supabase.from("tools").select("name").order("name"),
       supabase.from("models").select("name").order("name"),
     ]).then(([toolsRes, modelsRes]) => {
       setKnownTools((toolsRes.data || []).map(t => t.name));
-      setKnownModels([...(modelsRes.data || []).map(m => m.name), "Vet ikke"]);
+      setKnownModels([...(modelsRes.data || []).map(m => m.name), t("survey.dont_know")]);
     });
   }, []);
 
   useEffect(() => {
     if (!getAliasId()) {
-      toast({ title: "Du må velge et kallenavn først", variant: "destructive" });
+      toast({ title: t("survey.need_nickname"), variant: "destructive" });
       navigate("/");
       return;
     }
@@ -103,7 +104,7 @@ const Survey = () => {
   const handleSubmit = async () => {
     const aliasId = getAliasId();
     if (!aliasId) {
-      toast({ title: "Du må velge et kallenavn først", variant: "destructive" });
+      toast({ title: t("survey.need_nickname"), variant: "destructive" });
       navigate("/");
       return;
     }
@@ -124,7 +125,7 @@ const Survey = () => {
       localStorage.removeItem(DRAFT_KEY);
       setSubmitted(true);
     } catch (e: any) {
-      toast({ title: "Feil ved innsending", description: e.message, variant: "destructive" });
+      toast({ title: t("survey.submit_error"), description: e.message, variant: "destructive" });
     } finally {
       setLoading(false);
     }
@@ -134,13 +135,13 @@ const Survey = () => {
     return (
       <div className="max-w-lg mx-auto mt-12 text-center space-y-6">
         <CheckCircle2 className="h-16 w-16 text-success mx-auto" />
-        <h1 className="text-3xl font-bold">Takk for ditt bidrag!</h1>
-        <p className="text-muted-foreground">Svarene dine er registrert anonymt.</p>
+        <h1 className="text-3xl font-bold">{t("survey.thanks")}</h1>
+        <p className="text-muted-foreground">{t("survey.recorded")}</p>
         <div className="flex gap-3 justify-center">
           <Button onClick={() => navigate("/innsikt")} className="gap-1">
-            Se innsikt <ArrowRight className="h-4 w-4" />
+            {t("survey.see_insights")} <ArrowRight className="h-4 w-4" />
           </Button>
-          <Button variant="outline" onClick={() => navigate("/katalog")}>Utforsk katalogen</Button>
+          <Button variant="outline" onClick={() => navigate("/katalog")}>{t("survey.explore_catalog")}</Button>
         </div>
       </div>
     );
@@ -149,15 +150,14 @@ const Survey = () => {
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Kartlegging</h1>
-        <p className="text-muted-foreground">Del hvilke AI-verktøy og modeller du bruker (~5 min)</p>
+        <h1 className="text-2xl font-bold tracking-tight">{t("survey.title")}</h1>
+        <p className="text-muted-foreground">{t("survey.subtitle")}</p>
       </div>
 
-      {/* Tools */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Hvilke AI-verktøy bruker du?</CardTitle>
-          <CardDescription>Velg fra listen og/eller skriv inn egne</CardDescription>
+          <CardTitle className="text-lg">{t("survey.which_tools")}</CardTitle>
+          <CardDescription>{t("survey.select_or_write")}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="flex flex-wrap gap-2">
@@ -173,17 +173,16 @@ const Survey = () => {
             ))}
           </div>
           <Input
-            placeholder="Andre verktøy (kommaseparert)"
+            placeholder={t("survey.other_tools")}
             value={data.toolsFreetext}
             onChange={(e) => setData({ ...data, toolsFreetext: e.target.value })}
           />
         </CardContent>
       </Card>
 
-      {/* Models */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Hvilke AI-modeller bruker du?</CardTitle>
+          <CardTitle className="text-lg">{t("survey.which_models")}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap gap-2">
@@ -201,10 +200,9 @@ const Survey = () => {
         </CardContent>
       </Card>
 
-      {/* Use cases */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Hva bruker du AI til?</CardTitle>
+          <CardTitle className="text-lg">{t("survey.what_for")}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           {useCaseOptions.map((uc) => (
@@ -214,54 +212,51 @@ const Survey = () => {
                 checked={data.useCases.includes(uc.id)}
                 onCheckedChange={() => setData({ ...data, useCases: toggleArray(data.useCases, uc.id) })}
               />
-              <Label htmlFor={uc.id}>{uc.label}</Label>
+              <Label htmlFor={uc.id}>{t(uc.labelKey)}</Label>
             </div>
           ))}
         </CardContent>
       </Card>
 
-      {/* Time saved */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Hvor mye tid sparer du per uke med AI?</CardTitle>
+          <CardTitle className="text-lg">{t("survey.time_saved")}</CardTitle>
         </CardHeader>
         <CardContent>
           <RadioGroup value={data.timeSaved} onValueChange={(v) => setData({ ...data, timeSaved: v })}>
             {timeSavedOptions.map((opt) => (
               <div key={opt.value} className="flex items-center gap-2">
                 <RadioGroupItem value={opt.value} id={`ts-${opt.value}`} />
-                <Label htmlFor={`ts-${opt.value}`}>{opt.label}</Label>
+                <Label htmlFor={`ts-${opt.value}`}>{t(opt.labelKey)}</Label>
               </div>
             ))}
           </RadioGroup>
         </CardContent>
       </Card>
 
-      {/* Data sensitivity */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Har du lagt inn sensitiv/kundedata i AI-verktøy?</CardTitle>
+          <CardTitle className="text-lg">{t("survey.sensitive_data")}</CardTitle>
         </CardHeader>
         <CardContent>
           <RadioGroup value={data.dataSensitivity} onValueChange={(v) => setData({ ...data, dataSensitivity: v })}>
             {sensitivityOptions.map((opt) => (
               <div key={opt.value} className="flex items-center gap-2">
                 <RadioGroupItem value={opt.value} id={`ds-${opt.value}`} />
-                <Label htmlFor={`ds-${opt.value}`}>{opt.label}</Label>
+                <Label htmlFor={`ds-${opt.value}`}>{t(opt.labelKey)}</Label>
               </div>
             ))}
           </RadioGroup>
         </CardContent>
       </Card>
 
-      {/* Pain points */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Hva fungerer dårlig i dag?</CardTitle>
+          <CardTitle className="text-lg">{t("survey.pain_points")}</CardTitle>
         </CardHeader>
         <CardContent>
           <Textarea
-            placeholder="Beskriv utfordringer du møter med AI-verktøy..."
+            placeholder={t("survey.pain_placeholder")}
             value={data.painPoints}
             onChange={(e) => setData({ ...data, painPoints: e.target.value })}
             maxLength={1000}
@@ -269,10 +264,9 @@ const Survey = () => {
         </CardContent>
       </Card>
 
-      {/* Must-keep tool */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Viktigste verktøy du ikke vil miste?</CardTitle>
+          <CardTitle className="text-lg">{t("survey.must_keep")}</CardTitle>
         </CardHeader>
         <CardContent>
           <Input
@@ -285,7 +279,7 @@ const Survey = () => {
       </Card>
 
       <Button className="w-full" size="lg" onClick={handleSubmit} disabled={loading}>
-        {loading ? "Sender inn..." : "Send inn kartlegging"}
+        {loading ? t("survey.submitting") : t("survey.submit_survey")}
       </Button>
     </div>
   );
