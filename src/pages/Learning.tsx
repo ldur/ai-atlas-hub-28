@@ -67,7 +67,7 @@ const Learning = () => {
       content: newContent.trim(),
       type: newType,
       tags: newTags.length > 0 ? newTags : null,
-      published: false,
+      published: true,
       submitted_by: aliasId || null,
     });
     if (error) {
