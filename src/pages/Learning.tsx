@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useI18n } from "@/lib/i18n";
 import ReactMarkdown from "react-markdown";
 import { Plus, Search, X, Link2, ExternalLink } from "lucide-react";
+import MarkdownToolbar from "@/components/learning/MarkdownToolbar";
 
 const typeKeys = ["tip", "show-tell", "prompt-pack", "guideline", "case-study"] as const;
 const typeLabelMap: Record<string, string> = {
@@ -40,6 +41,7 @@ const Learning = () => {
   const [linkDesc, setLinkDesc] = useState("");
   const { toast } = useToast();
   const { t } = useI18n();
+  const contentRef = useRef<HTMLTextAreaElement>(null);
 
   const addTag = () => {
     const tag = tagInput.trim().toLowerCase();
@@ -159,7 +161,10 @@ const Learning = () => {
                   <select className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={newType} onChange={(e) => setNewType(e.target.value)}>
                     {typeKeys.map((k) => <option key={k} value={k}>{t(typeLabelMap[k] as any)}</option>)}
                   </select>
-                  <Textarea placeholder={t("learning.content_placeholder")} value={newContent} onChange={(e) => setNewContent(e.target.value)} rows={6} maxLength={5000} />
+                  <div className="space-y-1">
+                    <MarkdownToolbar textareaRef={contentRef} value={newContent} onChange={setNewContent} />
+                    <Textarea ref={contentRef} placeholder={t("learning.content_placeholder")} value={newContent} onChange={(e) => setNewContent(e.target.value)} rows={6} maxLength={5000} />
+                  </div>
                   <div className="space-y-2">
                     <div className="flex gap-2">
                       <Input placeholder={t("learning.add_tag")} value={tagInput} onChange={(e) => setTagInput(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addTag(); } }} maxLength={30} />
