@@ -13,18 +13,7 @@ import { CircleCheck, CircleX, FlaskConical, Search, Wrench, Brain, Plus, Pencil
 import { ToolFormDialog } from "@/components/catalog/ToolFormDialog";
 import { ModelFormDialog } from "@/components/catalog/ModelFormDialog";
 import { DeleteConfirmDialog } from "@/components/catalog/DeleteConfirmDialog";
-
-const statusConfig: Record<string, { label: string; icon: React.ComponentType<{ className?: string }>; color: string }> = {
-  ALLOWED: { label: "Tillatt", icon: CircleCheck, color: "bg-success text-success-foreground" },
-  NOT_ALLOWED: { label: "Ikke tillatt", icon: CircleX, color: "bg-destructive text-destructive-foreground" },
-  TRIAL: { label: "Prøveperiode", icon: FlaskConical, color: "bg-accent text-accent-foreground" },
-};
-
-const statuses = [
-  { value: "ALLOWED", label: "Tillatt", icon: CircleCheck },
-  { value: "NOT_ALLOWED", label: "Ikke tillatt", icon: CircleX },
-  { value: "TRIAL", label: "Prøveperiode", icon: FlaskConical },
-];
+import { useI18n } from "@/lib/i18n";
 
 const Catalog = () => {
   const [tools, setTools] = useState<any[]>([]);
@@ -36,6 +25,19 @@ const Catalog = () => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const admin = isAdmin();
+  const { t } = useI18n();
+
+  const statusConfig: Record<string, { label: string; icon: React.ComponentType<{ className?: string }>; color: string }> = {
+    ALLOWED: { label: t("status.allowed"), icon: CircleCheck, color: "bg-success text-success-foreground" },
+    NOT_ALLOWED: { label: t("status.not_allowed"), icon: CircleX, color: "bg-destructive text-destructive-foreground" },
+    TRIAL: { label: t("status.trial"), icon: FlaskConical, color: "bg-accent text-accent-foreground" },
+  };
+
+  const statuses = [
+    { value: "ALLOWED", label: t("status.allowed"), icon: CircleCheck },
+    { value: "NOT_ALLOWED", label: t("status.not_allowed"), icon: CircleX },
+    { value: "TRIAL", label: t("status.trial"), icon: FlaskConical },
+  ];
 
   // CRUD dialog state
   const [toolDialogOpen, setToolDialogOpen] = useState(false);
@@ -62,7 +64,7 @@ const Catalog = () => {
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
-  if (loading) return <p className="text-muted-foreground">Laster katalog...</p>;
+  if (loading) return <p className="text-muted-foreground">{t("common.loading")}</p>;
 
   const getToolEval = (id: string) => evaluations.find((e) => e.tool_id === id);
   const getModelEval = (id: string) => evaluations.find((e) => e.model_id === id && !e.tool_id);
@@ -70,7 +72,7 @@ const Catalog = () => {
     catalogEntries.find((c) => (type === "tool" ? c.tool_id === itemId : c.model_id === itemId));
 
   const handleStatusChange = async (newStatus: string, itemType: "tool" | "model", itemId: string) => {
-    if (!admin) { toast.error("Kun admin kan endre status"); return; }
+    if (!admin) { toast.error(t("status.only_admin")); return; }
     const existing = itemType === "tool" ? getToolEval(itemId) : getModelEval(itemId);
     try {
       const payload = {
@@ -85,9 +87,9 @@ const Catalog = () => {
         const data = await adminAction({ action: "insert", table: "evaluations", payload });
         setEvaluations((prev) => [...prev, data]);
       }
-      toast.success("Status oppdatert");
+      toast.success(t("status.updated"));
     } catch (e: any) {
-      toast.error(e.message || "Kunne ikke oppdatere status");
+      toast.error(e.message || t("common.error"));
     }
   };
 
@@ -122,21 +124,21 @@ const Catalog = () => {
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Verktøykatalog</h1>
-        <p className="text-muted-foreground">Komplett oversikt over alle AI-verktøy og modeller</p>
+        <h1 className="text-2xl font-bold tracking-tight">{t("catalog.title")}</h1>
+        <p className="text-muted-foreground">{t("catalog.subtitle")}</p>
       </div>
 
       <div className="flex gap-3">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Søk i katalogen..." className="pl-9" value={search} onChange={(e) => setSearch(e.target.value)} />
+          <Input placeholder={t("catalog.search")} className="pl-9" value={search} onChange={(e) => setSearch(e.target.value)} />
         </div>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Filtrer status" />
           </SelectTrigger>
           <SelectContent className="bg-popover z-50">
-            <SelectItem value="ALL">Alle statuser</SelectItem>
+            <SelectItem value="ALL">{t("status.all_statuses")}</SelectItem>
             {statuses.map((s) => {
               const Icon = s.icon;
               return (
@@ -145,7 +147,7 @@ const Catalog = () => {
                 </SelectItem>
               );
             })}
-            <SelectItem value="NONE">Ikke klassifisert</SelectItem>
+            <SelectItem value="NONE">{t("status.not_classified")}</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -153,10 +155,10 @@ const Catalog = () => {
       <Tabs defaultValue="tools" className="w-full">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="tools" className="flex items-center gap-1.5">
-            <Wrench className="h-4 w-4" /> Verktøy ({filteredTools.length})
+            <Wrench className="h-4 w-4" /> {t("common.tools")} ({filteredTools.length})
           </TabsTrigger>
           <TabsTrigger value="models" className="flex items-center gap-1.5">
-            <Brain className="h-4 w-4" /> Modeller ({filteredModels.length})
+            <Brain className="h-4 w-4" /> {t("common.models")} ({filteredModels.length})
           </TabsTrigger>
         </TabsList>
 
@@ -164,12 +166,12 @@ const Catalog = () => {
           {admin && (
             <div className="mb-4">
               <Button size="sm" className="gap-1.5" onClick={() => { setEditingTool(null); setToolDialogOpen(true); }}>
-                <Plus className="h-4 w-4" /> Legg til verktøy
+                <Plus className="h-4 w-4" /> {t("catalog.add_tool")}
               </Button>
             </div>
           )}
           {filteredTools.length === 0 ? (
-            <p className="text-muted-foreground text-center py-12">Ingen verktøy funnet.</p>
+            <p className="text-muted-foreground text-center py-12">{t("catalog.no_tools")}</p>
           ) : (
             <div className="grid gap-3 sm:grid-cols-2">
               {filteredTools.map((tool) => {
@@ -246,12 +248,12 @@ const Catalog = () => {
           {admin && (
             <div className="mb-4">
               <Button size="sm" className="gap-1.5" onClick={() => { setEditingModel(null); setModelDialogOpen(true); }}>
-                <Plus className="h-4 w-4" /> Legg til modell
+                <Plus className="h-4 w-4" /> {t("catalog.add_model")}
               </Button>
             </div>
           )}
           {filteredModels.length === 0 ? (
-            <p className="text-muted-foreground text-center py-12">Ingen modeller funnet.</p>
+            <p className="text-muted-foreground text-center py-12">{t("catalog.no_models")}</p>
           ) : (
             <div className="grid gap-3 sm:grid-cols-2">
               {filteredModels.map((model) => {

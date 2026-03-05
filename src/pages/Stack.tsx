@@ -5,12 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { CircleCheck, CircleX, FlaskConical, Wrench, Brain, ChevronRight } from "lucide-react";
-
-const statusConfig = {
-  ALLOWED: { label: "Tillatt", icon: CircleCheck, color: "bg-success text-success-foreground" },
-  NOT_ALLOWED: { label: "Ikke tillatt", icon: CircleX, color: "bg-destructive text-destructive-foreground" },
-  TRIAL: { label: "Prøveperiode", icon: FlaskConical, color: "bg-accent text-accent-foreground" },
-};
+import { useI18n } from "@/lib/i18n";
 
 const groups = ["ALLOWED", "NOT_ALLOWED", "TRIAL"] as const;
 
@@ -21,20 +16,21 @@ interface StackSectionProps {
   getLink?: (id: string) => string | null;
   getLinkLabel?: (id: string) => string | null;
   onClickItem?: (id: string) => void;
+  statusLabels: Record<string, { label: string; icon: React.ComponentType<{ className?: string }>; color: string }>;
+  seeDetailsText: string;
+  noItemsText: string;
 }
 
-const StackSection = ({ evaluations, getName, getExtra, getLink, getLinkLabel, onClickItem }: StackSectionProps) => {
-  const hasItems = evaluations.length > 0;
-
-  if (!hasItems) {
-    return <p className="text-muted-foreground text-center py-12">Ingen elementer er evaluert ennå.</p>;
+const StackSection = ({ evaluations, getName, getExtra, getLink, getLinkLabel, onClickItem, statusLabels, seeDetailsText, noItemsText }: StackSectionProps) => {
+  if (evaluations.length === 0) {
+    return <p className="text-muted-foreground text-center py-12">{noItemsText}</p>;
   }
 
   return (
     <div className="space-y-6">
       {groups.map((status) => {
         const items = evaluations.filter((e) => e.decided_status === status);
-        const cfg = statusConfig[status];
+        const cfg = statusLabels[status];
         const StatusIcon = cfg.icon;
         if (items.length === 0) return null;
         return (
@@ -76,7 +72,7 @@ const StackSection = ({ evaluations, getName, getExtra, getLink, getLinkLabel, o
                       {ev.rationale && <p className="text-sm text-muted-foreground">{ev.rationale}</p>}
                       {ev.version && <span className="text-xs text-muted-foreground">{ev.version}</span>}
                       {onClickItem && (
-                        <p className="text-xs text-primary font-medium pt-1">Se detaljer og veiledning →</p>
+                        <p className="text-xs text-primary font-medium pt-1">{seeDetailsText}</p>
                       )}
                     </CardContent>
                   </Card>
@@ -97,6 +93,7 @@ const Stack = () => {
   const [catalogEntries, setCatalogEntries] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const { t } = useI18n();
 
   useEffect(() => {
     Promise.all([
@@ -113,13 +110,19 @@ const Stack = () => {
     });
   }, []);
 
-  if (loading) return <p className="text-muted-foreground">Laster...</p>;
+  if (loading) return <p className="text-muted-foreground">{t("common.loading")}</p>;
+
+  const statusLabels = {
+    ALLOWED: { label: t("status.allowed"), icon: CircleCheck, color: "bg-success text-success-foreground" },
+    NOT_ALLOWED: { label: t("status.not_allowed"), icon: CircleX, color: "bg-destructive text-destructive-foreground" },
+    TRIAL: { label: t("status.trial"), icon: FlaskConical, color: "bg-accent text-accent-foreground" },
+  };
 
   const toolEvals = evaluations.filter((e) => e.tool_id);
   const modelEvals = evaluations.filter((e) => e.model_id && !e.tool_id);
 
-  const getToolName = (id: string) => tools.find((t) => t.id === id)?.name || "Ukjent";
-  const getModelName = (id: string) => models.find((m) => m.id === id)?.name || "Ukjent";
+  const getToolName = (id: string) => tools.find((t) => t.id === id)?.name || t("common.unknown");
+  const getModelName = (id: string) => models.find((m) => m.id === id)?.name || t("common.unknown");
   const getModelProvider = (id: string) => models.find((m) => m.id === id)?.provider || null;
   const getToolLink = (id: string) => tools.find((t) => t.id === id)?.link || null;
   const getToolVendor = (id: string) => tools.find((t) => t.id === id)?.vendor || null;
@@ -144,17 +147,17 @@ const Stack = () => {
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Anbefalt Stack</h1>
-        <p className="text-muted-foreground">Organisasjonens anbefalte AI-verktøy og modeller</p>
+        <h1 className="text-2xl font-bold tracking-tight">{t("stack.title")}</h1>
+        <p className="text-muted-foreground">{t("stack.subtitle")}</p>
       </div>
 
       <Tabs defaultValue="tools" className="w-full">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="tools" className="flex items-center gap-1.5">
-            <Wrench className="h-4 w-4" /> Verktøy ({toolEvals.length})
+            <Wrench className="h-4 w-4" /> {t("common.tools")} ({toolEvals.length})
           </TabsTrigger>
           <TabsTrigger value="models" className="flex items-center gap-1.5">
-            <Brain className="h-4 w-4" /> Modeller ({modelEvals.length})
+            <Brain className="h-4 w-4" /> {t("common.models")} ({modelEvals.length})
           </TabsTrigger>
         </TabsList>
 
@@ -166,6 +169,9 @@ const Stack = () => {
             getLink={getToolLink}
             getLinkLabel={getToolVendor}
             onClickItem={(id) => navigate(`/katalog/${id}`)}
+            statusLabels={statusLabels}
+            seeDetailsText={t("stack.see_details")}
+            noItemsText={t("stack.no_items")}
           />
         </TabsContent>
 
@@ -177,6 +183,9 @@ const Stack = () => {
             getLink={getModelLink}
             getLinkLabel={getModelProvider}
             onClickItem={(id) => navigate(`/katalog/modell/${id}`)}
+            statusLabels={statusLabels}
+            seeDetailsText={t("stack.see_details")}
+            noItemsText={t("stack.no_items")}
           />
         </TabsContent>
       </Tabs>
