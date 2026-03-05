@@ -13,7 +13,7 @@ import { adminAction } from "@/lib/adminAction";
 import { useToast } from "@/hooks/use-toast";
 import { useI18n } from "@/lib/i18n";
 import ReactMarkdown from "react-markdown";
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil, Trash2, Plus, X } from "lucide-react";
 import MarkdownToolbar from "@/components/learning/MarkdownToolbar";
 
 const typeKeys = ["tip", "show-tell", "prompt-pack", "guideline", "case-study"] as const;
@@ -37,6 +37,8 @@ export function LearningItemCard({ item, isAdmin, onUpdated }: LearningItemCardP
   const [title, setTitle] = useState(item.title);
   const [content, setContent] = useState(item.content || "");
   const [type, setType] = useState(item.type);
+  const [tags, setTags] = useState<string[]>(item.tags || []);
+  const [tagInput, setTagInput] = useState("");
   const [saving, setSaving] = useState(false);
   const { toast } = useToast();
   const { t } = useI18n();
@@ -49,7 +51,7 @@ export function LearningItemCard({ item, isAdmin, onUpdated }: LearningItemCardP
         action: "update",
         table: "learning_items",
         id: item.id,
-        payload: { title: title.trim(), content: content.trim(), type },
+        payload: { title: title.trim(), content: content.trim(), type, tags: tags.length > 0 ? tags : null },
       });
       toast({ title: t("common.saved") });
       setEditOpen(false);
@@ -85,7 +87,7 @@ export function LearningItemCard({ item, isAdmin, onUpdated }: LearningItemCardP
             </div>
             {isAdmin && (
               <div className="flex gap-1 shrink-0">
-                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setTitle(item.title); setContent(item.content || ""); setType(item.type); setEditOpen(true); }}>
+                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setTitle(item.title); setContent(item.content || ""); setType(item.type); setTags(item.tags || []); setTagInput(""); setEditOpen(true); }}>
                   <Pencil className="h-3.5 w-3.5" />
                 </Button>
                 <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => setDeleteOpen(true)}>
@@ -128,6 +130,29 @@ export function LearningItemCard({ item, isAdmin, onUpdated }: LearningItemCardP
             <div className="space-y-1">
               <MarkdownToolbar textareaRef={contentRef} value={content} onChange={setContent} />
               <Textarea ref={contentRef} value={content} onChange={(e) => setContent(e.target.value)} rows={6} maxLength={5000} />
+            </div>
+            <div className="space-y-2">
+              <div className="flex gap-2">
+                <Input
+                  placeholder={t("learning.add_tag")}
+                  value={tagInput}
+                  onChange={(e) => setTagInput(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); const tag = tagInput.trim().toLowerCase(); if (tag && !tags.includes(tag)) setTags([...tags, tag]); setTagInput(""); } }}
+                  maxLength={30}
+                />
+                <Button type="button" variant="outline" size="sm" onClick={() => { const tag = tagInput.trim().toLowerCase(); if (tag && !tags.includes(tag)) setTags([...tags, tag]); setTagInput(""); }} disabled={!tagInput.trim()}>
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+              {tags.length > 0 && (
+                <div className="flex gap-1 flex-wrap">
+                  {tags.map(tag => (
+                    <Badge key={tag} variant="secondary" className="cursor-pointer gap-1" onClick={() => setTags(tags.filter(t => t !== tag))}>
+                      {tag} <X className="h-3 w-3" />
+                    </Badge>
+                  ))}
+                </div>
+              )}
             </div>
             <Button className="w-full" onClick={handleSave} disabled={saving || !title.trim()}>
               {saving ? t("common.saving") : t("common.save")}
