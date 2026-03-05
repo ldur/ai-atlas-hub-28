@@ -15,7 +15,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useI18n } from "@/lib/i18n";
 import {
   Lock, Sparkles, Loader2, Wrench, Brain, Download, Trash2, Pencil, Plus,
-  CircleCheck, CircleMinus, CircleX, FlaskConical, ClipboardList, History
+  CircleCheck, CircleMinus, CircleX, FlaskConical, ClipboardList, History,
+  Link2, ExternalLink, Check, X
 } from "lucide-react";
 
 const ADMIN_CODE = "atlas-admin-2024";
@@ -142,12 +143,14 @@ const Admin = () => {
       <h1 className="text-2xl font-bold tracking-tight">{t("admin.title")}</h1>
       <BulkGenerateSection />
       <Tabs defaultValue="submissions">
-        <TabsList className="grid grid-cols-2 w-full">
+        <TabsList className="grid grid-cols-3 w-full">
           <TabsTrigger value="submissions">{t("admin.submissions")}</TabsTrigger>
           <TabsTrigger value="evaluations">{t("admin.evaluations")}</TabsTrigger>
+          <TabsTrigger value="shared-links">{t("admin.shared_links")}</TabsTrigger>
         </TabsList>
         <TabsContent value="submissions"><SubmissionsTab /></TabsContent>
         <TabsContent value="evaluations"><EvaluationsTab /></TabsContent>
+        <TabsContent value="shared-links"><SharedLinksTab /></TabsContent>
       </Tabs>
     </div>
   );
@@ -576,5 +579,96 @@ function EvaluationsTab() {
 }
 
 
+function SharedLinksTab() {
+  const [links, setLinks] = useState<any[]>([]);
+  const [filter, setFilter] = useState<"all" | "pending" | "published">("all");
+  const { toast } = useToast();
+  const { t } = useI18n();
+
+  const fetchLinks = () => supabase.from("shared_links").select("*").order("created_at", { ascending: false }).then(({ data }) => setLinks(data || []));
+  useEffect(() => { fetchLinks(); }, []);
+
+  const handleApprove = async (id: string) => {
+    try {
+      await adminAction({ action: "update", table: "shared_links", id, payload: { published: true } });
+      toast({ title: t("admin.link_approved") });
+      fetchLinks();
+    } catch (e: any) {
+      toast({ title: t("common.error"), description: e.message, variant: "destructive" });
+    }
+  };
+
+  const handleReject = async (id: string) => {
+    try {
+      await adminAction({ action: "delete", table: "shared_links", id });
+      toast({ title: t("admin.link_rejected") });
+      fetchLinks();
+    } catch (e: any) {
+      toast({ title: t("common.error"), description: e.message, variant: "destructive" });
+    }
+  };
+
+  const filtered = links.filter(l => {
+    if (filter === "pending") return !l.published;
+    if (filter === "published") return l.published;
+    return true;
+  });
+
+  const pendingCount = links.filter(l => !l.published).length;
+
+  return (
+    <div className="space-y-3 mt-4">
+      <div className="flex gap-2 items-center flex-wrap">
+        <Select value={filter} onValueChange={(v: any) => setFilter(v)}>
+          <SelectTrigger className="w-[160px]"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">{t("admin.filter_links")}</SelectItem>
+            <SelectItem value="pending">{t("admin.pending_only")}</SelectItem>
+            <SelectItem value="published">{t("admin.published_only")}</SelectItem>
+          </SelectContent>
+        </Select>
+        <span className="text-sm text-muted-foreground">{filtered.length} / {links.length}</span>
+        {pendingCount > 0 && (
+          <Badge variant="destructive" className="ml-auto">{pendingCount} {t("admin.pending").toLowerCase()}</Badge>
+        )}
+      </div>
+
+      {filtered.length === 0 && <p className="text-muted-foreground">{t("admin.no_links")}</p>}
+
+      {filtered.map((link) => (
+        <Card key={link.id} className={!link.published ? "border-amber-300 dark:border-amber-700" : ""}>
+          <CardContent className="p-4">
+            <div className="flex items-start justify-between gap-3">
+              <div className="space-y-1 flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <Link2 className="h-4 w-4 text-muted-foreground shrink-0" />
+                  <span className="font-medium truncate">{link.title || link.url}</span>
+                  <Badge variant={link.published ? "default" : "secondary"} className="text-xs shrink-0">
+                    {link.published ? t("admin.published") : t("admin.pending")}
+                  </Badge>
+                </div>
+                <a href={link.url} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline truncate block">
+                  {link.url}
+                </a>
+                {link.description && <p className="text-sm text-muted-foreground line-clamp-2">{link.description}</p>}
+                <p className="text-xs text-muted-foreground">{new Date(link.created_at).toLocaleDateString("nb-NO")}</p>
+              </div>
+              <div className="flex items-center gap-1 shrink-0">
+                {!link.published && (
+                  <Button variant="outline" size="icon" onClick={() => handleApprove(link.id)} title={t("admin.approve")}>
+                    <Check className="h-4 w-4 text-emerald-600" />
+                  </Button>
+                )}
+                <Button variant="ghost" size="icon" onClick={() => handleReject(link.id)} title={t("admin.reject")}>
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  );
+}
 
 export default Admin;

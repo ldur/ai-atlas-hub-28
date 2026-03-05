@@ -165,6 +165,19 @@ const translations = {
   "learning.no_links": { no: "Ingen lenker delt ennå.", en: "No links shared yet." },
   "learning.invalid_url": { no: "Ugyldig URL", en: "Invalid URL" },
 
+  // Admin - shared links
+  "admin.shared_links": { no: "Delte lenker", en: "Shared Links" },
+  "admin.no_links": { no: "Ingen lenker funnet.", en: "No links found." },
+  "admin.link_approved": { no: "Lenke godkjent", en: "Link approved" },
+  "admin.link_rejected": { no: "Lenke avvist og slettet", en: "Link rejected and deleted" },
+  "admin.pending": { no: "Venter", en: "Pending" },
+  "admin.published": { no: "Publisert", en: "Published" },
+  "admin.approve": { no: "Godkjenn", en: "Approve" },
+  "admin.reject": { no: "Avvis", en: "Reject" },
+  "admin.filter_links": { no: "Alle lenker", en: "All links" },
+  "admin.pending_only": { no: "Ventende", en: "Pending" },
+  "admin.published_only": { no: "Publiserte", en: "Published" },
+
   // Admin page
   "admin.title": { no: "Admin Panel", en: "Admin Panel" },
   "admin.enter_code": { no: "Skriv inn admin-koden for tilgang", en: "Enter admin code for access" },
