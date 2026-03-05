@@ -123,6 +123,7 @@ const Stack = () => {
   const getModelProvider = (id: string) => models.find((m) => m.id === id)?.provider || null;
   const getToolLink = (id: string) => tools.find((t) => t.id === id)?.link || null;
   const getToolVendor = (id: string) => tools.find((t) => t.id === id)?.vendor || null;
+  const getModelLink = (id: string) => models.find((m) => m.id === id)?.link || null;
   const getToolExtra = (id: string) => {
     const tool = tools.find((t) => t.id === id);
     const cat = catalogEntries.find((c) => c.tool_id === id);
@@ -175,6 +176,8 @@ const Stack = () => {
             evaluations={modelEvals}
             getName={getModelName}
             getExtra={getModelExtra}
+            getLink={getModelLink}
+            getLinkLabel={getModelProvider}
             onClickItem={(id) => navigate(`/katalog/modell/${id}`)}
           />
         </TabsContent>
