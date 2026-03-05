@@ -219,7 +219,6 @@ const Catalog = () => {
                       </div>
                       <div className="flex items-center gap-2 text-xs text-muted-foreground">
                         {tool.category && <span>{tool.category}</span>}
-                        {tool.vendor && <span>· {tool.vendor}</span>}
                       </div>
                       {tool.link && (
                         <a
@@ -301,8 +300,7 @@ const Catalog = () => {
                         </div>
                       </div>
                       <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        {model.provider && <span>{model.provider}</span>}
-                        {model.modality && <span>· {model.modality}</span>}
+                        {model.modality && <span>{model.modality}</span>}
                       </div>
                       {model.link && (
                         <a
