@@ -30,6 +30,7 @@ export const ModelFormDialog = ({ open, onOpenChange, model, onSaved, initialCat
   const [name, setName] = useState("");
   const [provider, setProvider] = useState("");
   const [modality, setModality] = useState("");
+  const [link, setLink] = useState("");
   const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
   const [generating, setGenerating] = useState(false);
@@ -49,6 +50,7 @@ export const ModelFormDialog = ({ open, onOpenChange, model, onSaved, initialCat
       setName(model.name || "");
       setProvider(model.provider || "");
       setModality(model.modality || "");
+      setLink(model.link || "");
       setNotes(model.notes || "");
       if (initialCatalogEntry !== undefined) {
         const data = initialCatalogEntry;
@@ -74,7 +76,7 @@ export const ModelFormDialog = ({ open, onOpenChange, model, onSaved, initialCat
         });
       }
     } else {
-      setName(""); setProvider(""); setModality(""); setNotes("");
+      setName(""); setProvider(""); setModality(""); setLink(""); setNotes("");
       setCatalogEntryId(null);
       setCatalog({ best_for: "", example_prompts: "", do_this: "", avoid_this: "", security_guidance: "" });
     }
@@ -91,6 +93,7 @@ export const ModelFormDialog = ({ open, onOpenChange, model, onSaved, initialCat
       if (data?.error) throw new Error(data.error);
       if (data.vendor && !provider.trim()) setProvider(data.vendor);
       if (data.category && !modality.trim()) setModality(data.category);
+      if (data.link && !link.trim()) setLink(data.link);
       setCatalog({
         best_for: data.best_for || "",
         example_prompts: data.example_prompts || "",
@@ -116,6 +119,7 @@ export const ModelFormDialog = ({ open, onOpenChange, model, onSaved, initialCat
         name: name.trim(),
         provider: provider.trim() || null,
         modality: modality.trim() || null,
+        link: link.trim() || null,
         notes: notes.trim() || null,
       };
 
@@ -174,6 +178,10 @@ export const ModelFormDialog = ({ open, onOpenChange, model, onSaved, initialCat
               <Label className="text-xs">Modalitet</Label>
               <Input value={modality} onChange={(e) => setModality(e.target.value)} placeholder="F.eks. Tekst, Bilde" />
             </div>
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs">Lenke</Label>
+            <Input value={link} onChange={(e) => setLink(e.target.value)} placeholder="https://..." />
           </div>
           <div className="space-y-1.5">
             <Label className="text-xs">Notater</Label>
