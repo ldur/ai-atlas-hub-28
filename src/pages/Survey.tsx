@@ -9,7 +9,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
-import { getAliasId, getNickname } from "@/lib/nickname";
+import { getAliasId } from "@/lib/nickname";
 import { useToast } from "@/hooks/use-toast";
 import { useI18n } from "@/lib/i18n";
 import { CheckCircle2, ArrowRight } from "lucide-react";
@@ -25,6 +25,7 @@ interface SurveyData {
   dataSensitivity: string;
   painPoints: string;
   mustKeepTool: string;
+  customAnswers: Record<string, string>;
 }
 
 const defaultData: SurveyData = {
@@ -36,13 +37,21 @@ const defaultData: SurveyData = {
   dataSensitivity: "",
   painPoints: "",
   mustKeepTool: "",
+  customAnswers: {},
 };
+
+interface CustomQuestion {
+  id: string;
+  label: string;
+}
 
 interface SurveyRecord {
   id: string;
   title: string;
   description: string | null;
   is_active: boolean;
+  enabled_questions: string[];
+  custom_questions: CustomQuestion[];
 }
 
 const Survey = () => {
@@ -80,17 +89,19 @@ const Survey = () => {
     { value: "ja", labelKey: "sensitivity.yes" as const },
   ];
 
-  // Load the survey record
+  const isEnabled = (qId: string) => survey?.enabled_questions?.includes(qId) ?? true;
+
   useEffect(() => {
     setSurveyLoading(true);
     const loadSurvey = async () => {
       if (surveyId) {
         const { data: s } = await supabase.from("surveys").select("*").eq("id", surveyId).single();
-        setSurvey(s as SurveyRecord | null);
+        if (s) setSurvey({ ...s, enabled_questions: s.enabled_questions as any || [], custom_questions: s.custom_questions as any || [] } as SurveyRecord);
+        else setSurvey(null);
       } else {
-        // Find the active survey
         const { data: s } = await supabase.from("surveys").select("*").eq("is_active", true).limit(1).single();
-        setSurvey(s as SurveyRecord | null);
+        if (s) setSurvey({ ...s, enabled_questions: s.enabled_questions as any || [], custom_questions: s.custom_questions as any || [] } as SurveyRecord);
+        else setSurvey(null);
       }
       setSurveyLoading(false);
     };
@@ -115,7 +126,7 @@ const Survey = () => {
     }
     const draft = localStorage.getItem(DRAFT_KEY);
     if (draft) {
-      try { setData(JSON.parse(draft)); } catch { }
+      try { setData({ ...defaultData, ...JSON.parse(draft) }); } catch { }
     }
   }, []);
 
@@ -140,14 +151,15 @@ const Survey = () => {
       const { error } = await supabase.from("submissions").insert({
         alias_id: aliasId,
         survey_id: survey?.id || null,
-        tools_used: data.toolsUsed,
-        tools_freetext: data.toolsFreetext || null,
-        models_used: data.modelsUsed,
-        use_cases: data.useCases,
-        time_saved_range: data.timeSaved || null,
-        data_sensitivity: data.dataSensitivity || null,
-        pain_points: data.painPoints || null,
-        must_keep_tool: data.mustKeepTool || null,
+        tools_used: isEnabled("tools") ? data.toolsUsed : [],
+        tools_freetext: isEnabled("tools") ? (data.toolsFreetext || null) : null,
+        models_used: isEnabled("models") ? data.modelsUsed : [],
+        use_cases: isEnabled("use_cases") ? data.useCases : [],
+        time_saved_range: isEnabled("time_saved") ? (data.timeSaved || null) : null,
+        data_sensitivity: isEnabled("data_sensitivity") ? (data.dataSensitivity || null) : null,
+        pain_points: isEnabled("pain_points") ? (data.painPoints || null) : null,
+        must_keep_tool: isEnabled("must_keep") ? (data.mustKeepTool || null) : null,
+        custom_answers: Object.keys(data.customAnswers).length > 0 ? data.customAnswers : null,
       });
       if (error) throw error;
       localStorage.removeItem(DRAFT_KEY);
@@ -195,129 +207,160 @@ const Survey = () => {
         <p className="text-muted-foreground">{survey.description || t("survey.subtitle")}</p>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">{t("survey.which_tools")}</CardTitle>
-          <CardDescription>{t("survey.select_or_write")}</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <div className="flex flex-wrap gap-2">
-            {knownTools.map((tool) => (
-              <Badge
-                key={tool}
-                variant={data.toolsUsed.includes(tool) ? "default" : "outline"}
-                className="cursor-pointer text-sm py-1 px-3"
-                onClick={() => setData({ ...data, toolsUsed: toggleArray(data.toolsUsed, tool) })}
-              >
-                {tool}
-              </Badge>
-            ))}
-          </div>
-          <Input
-            placeholder={t("survey.other_tools")}
-            value={data.toolsFreetext}
-            onChange={(e) => setData({ ...data, toolsFreetext: e.target.value })}
-          />
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">{t("survey.which_models")}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-wrap gap-2">
-            {knownModels.map((model) => (
-              <Badge
-                key={model}
-                variant={data.modelsUsed.includes(model) ? "default" : "outline"}
-                className="cursor-pointer text-sm py-1 px-3"
-                onClick={() => setData({ ...data, modelsUsed: toggleArray(data.modelsUsed, model) })}
-              >
-                {model}
-              </Badge>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">{t("survey.what_for")}</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {useCaseOptions.map((uc) => (
-            <div key={uc.id} className="flex items-center gap-2">
-              <Checkbox
-                id={uc.id}
-                checked={data.useCases.includes(uc.id)}
-                onCheckedChange={() => setData({ ...data, useCases: toggleArray(data.useCases, uc.id) })}
-              />
-              <Label htmlFor={uc.id}>{t(uc.labelKey)}</Label>
+      {isEnabled("tools") && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">{t("survey.which_tools")}</CardTitle>
+            <CardDescription>{t("survey.select_or_write")}</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="flex flex-wrap gap-2">
+              {knownTools.map((tool) => (
+                <Badge
+                  key={tool}
+                  variant={data.toolsUsed.includes(tool) ? "default" : "outline"}
+                  className="cursor-pointer text-sm py-1 px-3"
+                  onClick={() => setData({ ...data, toolsUsed: toggleArray(data.toolsUsed, tool) })}
+                >
+                  {tool}
+                </Badge>
+              ))}
             </div>
-          ))}
-        </CardContent>
-      </Card>
+            <Input
+              placeholder={t("survey.other_tools")}
+              value={data.toolsFreetext}
+              onChange={(e) => setData({ ...data, toolsFreetext: e.target.value })}
+            />
+          </CardContent>
+        </Card>
+      )}
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">{t("survey.time_saved")}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <RadioGroup value={data.timeSaved} onValueChange={(v) => setData({ ...data, timeSaved: v })}>
-            {timeSavedOptions.map((opt) => (
-              <div key={opt.value} className="flex items-center gap-2">
-                <RadioGroupItem value={opt.value} id={`ts-${opt.value}`} />
-                <Label htmlFor={`ts-${opt.value}`}>{t(opt.labelKey)}</Label>
+      {isEnabled("models") && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">{t("survey.which_models")}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap gap-2">
+              {knownModels.map((model) => (
+                <Badge
+                  key={model}
+                  variant={data.modelsUsed.includes(model) ? "default" : "outline"}
+                  className="cursor-pointer text-sm py-1 px-3"
+                  onClick={() => setData({ ...data, modelsUsed: toggleArray(data.modelsUsed, model) })}
+                >
+                  {model}
+                </Badge>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {isEnabled("use_cases") && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">{t("survey.what_for")}</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {useCaseOptions.map((uc) => (
+              <div key={uc.id} className="flex items-center gap-2">
+                <Checkbox
+                  id={uc.id}
+                  checked={data.useCases.includes(uc.id)}
+                  onCheckedChange={() => setData({ ...data, useCases: toggleArray(data.useCases, uc.id) })}
+                />
+                <Label htmlFor={uc.id}>{t(uc.labelKey)}</Label>
               </div>
             ))}
-          </RadioGroup>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">{t("survey.sensitive_data")}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <RadioGroup value={data.dataSensitivity} onValueChange={(v) => setData({ ...data, dataSensitivity: v })}>
-            {sensitivityOptions.map((opt) => (
-              <div key={opt.value} className="flex items-center gap-2">
-                <RadioGroupItem value={opt.value} id={`ds-${opt.value}`} />
-                <Label htmlFor={`ds-${opt.value}`}>{t(opt.labelKey)}</Label>
-              </div>
-            ))}
-          </RadioGroup>
-        </CardContent>
-      </Card>
+      {isEnabled("time_saved") && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">{t("survey.time_saved")}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <RadioGroup value={data.timeSaved} onValueChange={(v) => setData({ ...data, timeSaved: v })}>
+              {timeSavedOptions.map((opt) => (
+                <div key={opt.value} className="flex items-center gap-2">
+                  <RadioGroupItem value={opt.value} id={`ts-${opt.value}`} />
+                  <Label htmlFor={`ts-${opt.value}`}>{t(opt.labelKey)}</Label>
+                </div>
+              ))}
+            </RadioGroup>
+          </CardContent>
+        </Card>
+      )}
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">{t("survey.pain_points")}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Textarea
-            placeholder={t("survey.pain_placeholder")}
-            value={data.painPoints}
-            onChange={(e) => setData({ ...data, painPoints: e.target.value })}
-            maxLength={1000}
-          />
-        </CardContent>
-      </Card>
+      {isEnabled("data_sensitivity") && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">{t("survey.sensitive_data")}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <RadioGroup value={data.dataSensitivity} onValueChange={(v) => setData({ ...data, dataSensitivity: v })}>
+              {sensitivityOptions.map((opt) => (
+                <div key={opt.value} className="flex items-center gap-2">
+                  <RadioGroupItem value={opt.value} id={`ds-${opt.value}`} />
+                  <Label htmlFor={`ds-${opt.value}`}>{t(opt.labelKey)}</Label>
+                </div>
+              ))}
+            </RadioGroup>
+          </CardContent>
+        </Card>
+      )}
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">{t("survey.must_keep")}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Input
-            placeholder="F.eks. GitHub Copilot"
-            value={data.mustKeepTool}
-            onChange={(e) => setData({ ...data, mustKeepTool: e.target.value })}
-            maxLength={100}
-          />
-        </CardContent>
-      </Card>
+      {isEnabled("pain_points") && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">{t("survey.pain_points")}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Textarea
+              placeholder={t("survey.pain_placeholder")}
+              value={data.painPoints}
+              onChange={(e) => setData({ ...data, painPoints: e.target.value })}
+              maxLength={1000}
+            />
+          </CardContent>
+        </Card>
+      )}
+
+      {isEnabled("must_keep") && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">{t("survey.must_keep")}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Input
+              placeholder="F.eks. GitHub Copilot"
+              value={data.mustKeepTool}
+              onChange={(e) => setData({ ...data, mustKeepTool: e.target.value })}
+              maxLength={100}
+            />
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Custom freetext questions */}
+      {(survey.custom_questions || []).map((cq) => (
+        <Card key={cq.id}>
+          <CardHeader>
+            <CardTitle className="text-lg">{cq.label}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Textarea
+              placeholder={cq.label}
+              value={data.customAnswers[cq.id] || ""}
+              onChange={(e) => setData({ ...data, customAnswers: { ...data.customAnswers, [cq.id]: e.target.value } })}
+              maxLength={1000}
+            />
+          </CardContent>
+        </Card>
+      ))}
 
       <Button className="w-full" size="lg" onClick={handleSubmit} disabled={loading}>
         {loading ? t("survey.submitting") : t("survey.submit_survey")}

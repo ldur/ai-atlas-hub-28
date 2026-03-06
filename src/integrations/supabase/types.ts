@@ -343,6 +343,7 @@ export type Database = {
         Row: {
           alias_id: string | null
           created_at: string
+          custom_answers: Json | null
           data_sensitivity: string | null
           id: string
           models_used: string[] | null
@@ -359,6 +360,7 @@ export type Database = {
         Insert: {
           alias_id?: string | null
           created_at?: string
+          custom_answers?: Json | null
           data_sensitivity?: string | null
           id?: string
           models_used?: string[] | null
@@ -375,6 +377,7 @@ export type Database = {
         Update: {
           alias_id?: string | null
           created_at?: string
+          custom_answers?: Json | null
           data_sensitivity?: string | null
           id?: string
           models_used?: string[] | null
@@ -408,7 +411,9 @@ export type Database = {
       surveys: {
         Row: {
           created_at: string
+          custom_questions: Json
           description: string | null
+          enabled_questions: Json
           id: string
           is_active: boolean
           title: string
@@ -416,7 +421,9 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          custom_questions?: Json
           description?: string | null
+          enabled_questions?: Json
           id?: string
           is_active?: boolean
           title: string
@@ -424,7 +431,9 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          custom_questions?: Json
           description?: string | null
+          enabled_questions?: Json
           id?: string
           is_active?: boolean
           title?: string

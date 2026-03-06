@@ -364,6 +364,9 @@ const translations = {
   "surveys.select": { no: "Velg undersøkelse", en: "Select survey" },
   "surveys.all": { no: "Alle undersøkelser", en: "All surveys" },
   "surveys.filter_by_survey": { no: "Filtrer etter undersøkelse", en: "Filter by survey" },
+  "surveys.standard_questions": { no: "Standardspørsmål", en: "Standard questions" },
+  "surveys.custom_questions": { no: "Egne fritekstspørsmål", en: "Custom freetext questions" },
+  "surveys.custom_question_placeholder": { no: "Skriv spørsmål og trykk Enter...", en: "Type question and press Enter..." },
 
   // 404
   "notfound.title": { no: "Siden ble ikke funnet", en: "Page not found" },
