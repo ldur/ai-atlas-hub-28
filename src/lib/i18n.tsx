@@ -339,6 +339,8 @@ const translations = {
   "pricing.total": { no: "Totalt", en: "Total" },
   "pricing.edit_pricing": { no: "Rediger pris", en: "Edit pricing" },
   "pricing.pricing_type": { no: "Prismodell", en: "Pricing model" },
+  "pricing.display_currency": { no: "Visningsvaluta", en: "Display currency" },
+  "pricing.exchange_note": { no: "Priser lagres i USD og konverteres automatisk", en: "Prices stored in USD and converted automatically" },
 
   // 404
   "notfound.title": { no: "Siden ble ikke funnet", en: "Page not found" },
