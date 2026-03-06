@@ -244,6 +244,37 @@ export default function PriceCalculator() {
         </CardContent>
       </Card>
 
+      {/* Summary */}
+      {(evaluatedTools.length > 0 || evaluatedModels.length > 0) && (
+        <Card className="border-primary/20 bg-primary/5">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <TrendingUp className="h-5 w-5 text-primary" />
+              {t("pricing.summary")}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+              <div className="text-center">
+                <p className="text-sm text-muted-foreground">{t("pricing.tools_cost")}</p>
+                <p className={`text-2xl font-bold ${costColor(totalToolCost)}`}>${totalToolCost.toFixed(2)}</p>
+                <p className="text-xs text-muted-foreground">/mnd</p>
+              </div>
+              <div className="text-center">
+                <p className="text-sm text-muted-foreground">{t("pricing.models_cost")}</p>
+                <p className={`text-2xl font-bold ${costColor(totalModelCost)}`}>${totalModelCost.toFixed(2)}</p>
+                <p className="text-xs text-muted-foreground">/mnd</p>
+              </div>
+              <div className="text-center">
+                <p className="text-sm text-muted-foreground">{t("pricing.total")}</p>
+                <p className={`text-3xl font-bold ${costColor(totalMonthlyCost)}`}>${totalMonthlyCost.toFixed(2)}</p>
+                <p className="text-xs text-muted-foreground">/mnd · ${(totalMonthlyCost * 12).toFixed(0)}/år</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Tools Section */}
       {evaluatedTools.length > 0 && (
         <div className="space-y-3">
@@ -390,36 +421,8 @@ export default function PriceCalculator() {
         </Card>
       )}
 
-      {/* Summary */}
-      {(evaluatedTools.length > 0 || evaluatedModels.length > 0) && (
-        <Card className="border-primary/20 bg-primary/5">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5 text-primary" />
-              {t("pricing.summary")}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-              <div className="text-center">
-                <p className="text-sm text-muted-foreground">{t("pricing.tools_cost")}</p>
-                <p className={`text-2xl font-bold ${costColor(totalToolCost)}`}>${totalToolCost.toFixed(2)}</p>
-                <p className="text-xs text-muted-foreground">/mnd</p>
-              </div>
-              <div className="text-center">
-                <p className="text-sm text-muted-foreground">{t("pricing.models_cost")}</p>
-                <p className={`text-2xl font-bold ${costColor(totalModelCost)}`}>${totalModelCost.toFixed(2)}</p>
-                <p className="text-xs text-muted-foreground">/mnd</p>
-              </div>
-              <div className="text-center">
-                <p className="text-sm text-muted-foreground">{t("pricing.total")}</p>
-                <p className={`text-3xl font-bold ${costColor(totalMonthlyCost)}`}>${totalMonthlyCost.toFixed(2)}</p>
-                <p className="text-xs text-muted-foreground">/mnd · ${(totalMonthlyCost * 12).toFixed(0)}/år</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+
+
 
       {/* Edit Dialog */}
       <Dialog open={editDialog.open} onOpenChange={o => !o && setEditDialog({ open: false })}>
