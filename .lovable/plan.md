@@ -1,86 +1,70 @@
 
 
-# Priskalkulator for Verktøy og Modeller
+## Plan: Multi-Survey System
 
-## Summary
+### Overview
+Transform the current single hardcoded survey into a dynamic, multi-survey system where admins can create, manage, and view statistics for each survey independently.
 
-Build a dedicated **Priskalkulator** page that uses AI to research vendor pricing strategies, stores pricing data per tool/model, and lets admins input organization parameters (seats, token usage, etc.) to calculate estimated monthly costs.
+### Database Changes
 
-## Architecture
+**New table: `surveys`**
+- `id` (uuid, PK)
+- `title` (text, required)
+- `description` (text, nullable)
+- `is_active` (boolean, default true) -- controls which survey is currently accepting responses
+- `created_at`, `updated_at` (timestamps)
+
+**Modify table: `submissions`**
+- Add `survey_id` (uuid, nullable, FK to surveys) -- nullable so existing submissions still work
+- Existing submissions will be associated with a migrated "first survey" record
+
+**Migration data**: Insert the current hardcoded survey as the first record in `surveys`, then update all existing submissions to reference it.
+
+### Code Changes
+
+**1. Survey page (`src/pages/Survey.tsx`)**
+- Accept a `surveyId` route param (e.g., `/kartlegging/:surveyId`)
+- Keep default route `/kartlegging` redirecting to the active survey
+- On submit, include `survey_id` in the submission insert
+- Show the survey title/description from the database
+
+**2. Insights page (`src/pages/Insights.tsx`)**
+- Add a survey selector dropdown at the top
+- Filter submissions by selected `survey_id`
+- Default to the active survey
+
+**3. Admin panel (`src/pages/Admin.tsx`)**
+- Add a new "Surveys" tab with:
+  - List of all surveys (title, status, submission count)
+  - Create new survey dialog (title + description)
+  - Toggle active/inactive status
+  - Delete survey (with confirmation)
+- In the Submissions tab, add a survey filter dropdown
+
+**4. Routing (`src/App.tsx`)**
+- Add route `/kartlegging/:surveyId`
+
+**5. Sidebar (`src/components/AppSidebar.tsx`)**
+- No change needed -- the `/kartlegging` route stays as the entry point
+
+**6. i18n (`src/lib/i18n.tsx`)**
+- Add translation keys for survey management (create survey, active, inactive, etc.)
+
+**7. Edge function (`supabase/functions/admin-action/index.ts`)**
+- Add `"surveys"` to the `allowedTables` array
+
+### Data Flow
 
 ```text
-┌─────────────────────────────────────────────────┐
-│  New DB table: pricing_configs                  │
-│  tool_id / model_id, pricing_type, tiers (json),│
-│  ai_generated (bool), last_fetched              │
-├─────────────────────────────────────────────────┤
-│  New DB table: org_usage_params                 │
-│  num_seats, monthly_tokens, monthly_hours, etc. │
-├─────────────────────────────────────────────────┤
-│  Edge function: fetch-pricing                   │
-│  Uses Lovable AI to research vendor pricing     │
-│  Returns structured pricing (tiers, per-unit)   │
-├─────────────────────────────────────────────────┤
-│  New page: /priskalkulator                      │
-│  - Org params editor (seats, usage, etc.)       │
-│  - Per-item cost cards with calculated totals   │
-│  - "Fetch pricing with AI" per item             │
-│  - Summary: total monthly/yearly cost           │
-└─────────────────────────────────────────────────┘
+Admin creates survey → surveys table
+User visits /kartlegging → loads active survey → submits to submissions (with survey_id)
+Insights page → filter by survey_id → shows per-survey statistics
+Admin panel → manage surveys, view submissions filtered by survey
 ```
 
-## Database Changes
-
-**1. `pricing_configs` table** -- stores pricing data per tool/model:
-- `id`, `tool_id` (nullable), `model_id` (nullable)
-- `pricing_type`: enum-like text (`per_seat`, `per_token`, `flat`, `tiered`, `usage_based`, `free`)
-- `currency`: text, default `USD`
-- `tiers`: jsonb -- flexible structure for pricing tiers, e.g. `[{name: "Pro", price: 20, unit: "seat/month", features: [...]}]`
-- `input_token_price`, `output_token_price`: numeric (for per-token models)
-- `notes`: text (admin override notes)
-- `ai_generated`: boolean
-- `last_fetched`: timestamp
-- Open RLS (matches existing pattern)
-
-**2. `org_usage_params` table** -- single-row org config:
-- `id`, `num_seats` (int), `monthly_api_calls` (int), `monthly_input_tokens` (bigint), `monthly_output_tokens` (bigint), `notes` (text), `updated_at`
-
-## Edge Function: `fetch-pricing`
-
-Uses Lovable AI (gemini-3-flash-preview) with tool calling to research a given tool/model's pricing:
-- Input: `{name, type, vendor/provider, link}`
-- System prompt asks AI to return structured pricing data based on its knowledge of the vendor
-- Returns: `pricing_type`, `tiers` array, token prices if applicable, `currency`
-- Stores result in `pricing_configs`
-
-## Frontend: `/priskalkulator` Page
-
-**Top section -- Organization Parameters:**
-- Editable card: number of seats, estimated monthly tokens, API calls
-- Saved to `org_usage_params` via admin action
-- These values feed into all cost calculations
-
-**Main section -- Cost Overview:**
-- Lists all tools and models that have evaluations (from Anbefalt Stack)
-- Each card shows: name, pricing type badge, tier details, calculated monthly cost
-- "Fetch pricing" button per item triggers AI lookup
-- "Edit pricing" dialog for manual admin adjustments
-- Color-coded: free (green), cheap (blue), expensive (amber), very expensive (red)
-
-**Bottom section -- Summary:**
-- Total estimated monthly and yearly cost
-- Breakdown by category (tools vs models)
-- Breakdown by pricing type
-
-## Navigation
-
-- Add `/priskalkulator` route and sidebar entry with `Calculator` icon
-- Add i18n keys for Norwegian labels
-
-## Implementation Steps
-
-1. Create `pricing_configs` and `org_usage_params` tables with RLS
-2. Create `fetch-pricing` edge function
-3. Build the Priskalkulator page component with org params editor, cost cards, and summary
-4. Add route, sidebar nav, and i18n strings
+### Migration Strategy
+1. Create `surveys` table
+2. Add `survey_id` column to `submissions`
+3. Insert the existing hardcoded survey as the first row
+4. Update existing submissions to point to it
 
