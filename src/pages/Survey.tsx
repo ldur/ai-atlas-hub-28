@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
@@ -62,6 +63,7 @@ const Survey = () => {
   const [knownTools, setKnownTools] = useState<string[]>([]);
   const [knownModels, setKnownModels] = useState<string[]>([]);
   const [survey, setSurvey] = useState<SurveyRecord | null>(null);
+  const [allSurveys, setAllSurveys] = useState<SurveyRecord[]>([]);
   const [surveyLoading, setSurveyLoading] = useState(true);
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -94,14 +96,21 @@ const Survey = () => {
   useEffect(() => {
     setSurveyLoading(true);
     const loadSurvey = async () => {
+      // Load all surveys for the selector
+      const { data: allData } = await supabase.from("surveys").select("*").order("created_at");
+      const allParsed = (allData || []).map((s: any) => ({
+        ...s,
+        enabled_questions: s.enabled_questions as any || [],
+        custom_questions: s.custom_questions as any || [],
+      })) as SurveyRecord[];
+      setAllSurveys(allParsed);
+
       if (surveyId) {
-        const { data: s } = await supabase.from("surveys").select("*").eq("id", surveyId).single();
-        if (s) setSurvey({ ...s, enabled_questions: s.enabled_questions as any || [], custom_questions: s.custom_questions as any || [] } as SurveyRecord);
-        else setSurvey(null);
+        const found = allParsed.find(s => s.id === surveyId) || null;
+        setSurvey(found);
       } else {
-        const { data: s } = await supabase.from("surveys").select("*").eq("is_active", true).limit(1).single();
-        if (s) setSurvey({ ...s, enabled_questions: s.enabled_questions as any || [], custom_questions: s.custom_questions as any || [] } as SurveyRecord);
-        else setSurvey(null);
+        const active = allParsed.find(s => s.is_active) || null;
+        setSurvey(active);
       }
       setSurveyLoading(false);
     };
@@ -202,9 +211,26 @@ const Survey = () => {
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">{survey.title}</h1>
-        <p className="text-muted-foreground">{survey.description || t("survey.subtitle")}</p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">{survey.title}</h1>
+          <p className="text-muted-foreground">{survey.description || t("survey.subtitle")}</p>
+        </div>
+        {allSurveys.length > 1 && (
+          <Select
+            value={survey.id}
+            onValueChange={(id) => navigate(`/kartlegging/${id}`)}
+          >
+            <SelectTrigger className="w-[220px] shrink-0"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {allSurveys.map(s => (
+                <SelectItem key={s.id} value={s.id}>
+                  {s.title} {s.is_active ? `(${t("surveys.active")})` : ""}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
       </div>
 
       {isEnabled("tools") && (
