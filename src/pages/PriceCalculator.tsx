@@ -49,6 +49,7 @@ interface PricingConfig {
   ai_generated: boolean;
   last_fetched: string | null;
   user_count: number;
+  selected_tier_index: number;
 }
 
 interface OrgParams {
@@ -121,7 +122,7 @@ export default function PriceCalculator() {
   const [fetchingId, setFetchingId] = useState<string | null>(null);
   const [displayCurrency, setDisplayCurrency] = useState<DisplayCurrency>("USD");
   const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [selectedTiers, setSelectedTiers] = useState<Record<string, number>>({});
+  const [selectedTiers, setSelectedTiers] = useState<Record<string, number | undefined>>({});
   const [editDialog, setEditDialog] = useState<{ open: boolean; config?: PricingConfig; toolId?: string; modelId?: string; itemName?: string }>({ open: false });
   const [editForm, setEditForm] = useState({ pricing_type: "flat", currency: "USD", tiers: "[]", input_token_price: "", output_token_price: "", notes: "", user_count: "0" });
 
@@ -151,8 +152,21 @@ export default function PriceCalculator() {
   // Get unique statuses for filter
   const allStatuses = [...new Set(evaluations?.map(e => e.decided_status) || [])];
 
-  const getSelectedTier = (id: string) => selectedTiers[id] ?? 0;
-  const setTierForItem = (id: string, tierIdx: number) => setSelectedTiers(prev => ({ ...prev, [id]: tierIdx }));
+  const getSelectedTier = (id: string) => {
+    if (selectedTiers[id] !== undefined) return selectedTiers[id]!;
+    const config = getPricing(id) || getPricing(undefined, id);
+    return config?.selected_tier_index ?? 0;
+  };
+  const setTierForItem = async (id: string, tierIdx: number) => {
+    setSelectedTiers(prev => ({ ...prev, [id]: tierIdx }));
+    const config = getPricing(id) || getPricing(undefined, id);
+    if (config?.id) {
+      try {
+        await adminAction({ action: "update", table: "pricing_configs", id: config.id, payload: { selected_tier_index: tierIdx, updated_at: new Date().toISOString() } });
+        refetchPricing();
+      } catch (e) { /* silent */ }
+    }
+  };
 
   const getPricing = (toolId?: string, modelId?: string) => pricingConfigs?.find(p => (toolId && p.tool_id === toolId) || (modelId && p.model_id === modelId));
 
@@ -237,8 +251,13 @@ export default function PriceCalculator() {
   };
 
   // Calculate totals
-  const toolCosts = evaluatedTools.map(t => ({ ...t, cost: calculateMonthlyCost(getPricing(t.id), org, getSelectedTier(t.id)) }));
-  const modelCosts = evaluatedModels.map(m => ({ ...m, cost: calculateMonthlyCost(getPricing(undefined, m.id), org, getSelectedTier(m.id)) }));
+  const getEffectiveTier = (id: string) => {
+    if (selectedTiers[id] !== undefined) return selectedTiers[id]!;
+    const config = getPricing(id) || getPricing(undefined, id);
+    return config?.selected_tier_index ?? 0;
+  };
+  const toolCosts = evaluatedTools.map(t => ({ ...t, cost: calculateMonthlyCost(getPricing(t.id), org, getEffectiveTier(t.id)) }));
+  const modelCosts = evaluatedModels.map(m => ({ ...m, cost: calculateMonthlyCost(getPricing(undefined, m.id), org, getEffectiveTier(m.id)) }));
   const totalToolCost = toolCosts.reduce((s, t) => s + t.cost, 0);
   const totalModelCost = modelCosts.reduce((s, m) => s + m.cost, 0);
   const totalMonthlyCost = totalToolCost + totalModelCost;

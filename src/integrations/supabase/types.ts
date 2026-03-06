@@ -244,6 +244,7 @@ export type Database = {
           notes: string | null
           output_token_price: number | null
           pricing_type: string
+          selected_tier_index: number
           tiers: Json | null
           tool_id: string | null
           updated_at: string
@@ -260,6 +261,7 @@ export type Database = {
           notes?: string | null
           output_token_price?: number | null
           pricing_type?: string
+          selected_tier_index?: number
           tiers?: Json | null
           tool_id?: string | null
           updated_at?: string
@@ -276,6 +278,7 @@ export type Database = {
           notes?: string | null
           output_token_price?: number | null
           pricing_type?: string
+          selected_tier_index?: number
           tiers?: Json | null
           tool_id?: string | null
           updated_at?: string
