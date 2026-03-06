@@ -24,10 +24,16 @@ const EXCHANGE_RATES: Record<DisplayCurrency, number> = {
   EUR: 0.92,
 };
 
-const CURRENCY_SYMBOLS: Record<DisplayCurrency, string> = {
-  USD: "$",
-  NOK: "kr ",
-  EUR: "€",
+const CURRENCY_FORMATTERS: Record<DisplayCurrency, Intl.NumberFormat> = {
+  USD: new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }),
+  NOK: new Intl.NumberFormat("nb-NO", { style: "currency", currency: "NOK" }),
+  EUR: new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR" }),
+};
+
+const CURRENCY_INT_FORMATTERS: Record<DisplayCurrency, Intl.NumberFormat> = {
+  USD: new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }),
+  NOK: new Intl.NumberFormat("nb-NO", { style: "currency", currency: "NOK", maximumFractionDigits: 0 }),
+  EUR: new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }),
 };
 
 interface PricingConfig {
@@ -116,8 +122,9 @@ export default function PriceCalculator() {
   const [editForm, setEditForm] = useState({ pricing_type: "flat", currency: "USD", tiers: "[]", input_token_price: "", output_token_price: "", notes: "" });
 
   const cx = (usdAmount: number) => usdAmount * EXCHANGE_RATES[displayCurrency];
-  const sym = CURRENCY_SYMBOLS[displayCurrency];
-  const fmtCost = (usdAmount: number) => `${sym}${cx(usdAmount).toFixed(2)}`;
+  const fmtCost = (usdAmount: number) => CURRENCY_FORMATTERS[displayCurrency].format(cx(usdAmount));
+  const fmtCostInt = (usdAmount: number) => CURRENCY_INT_FORMATTERS[displayCurrency].format(cx(usdAmount));
+  const fmtUnit = (price: number, unit: string) => `${CURRENCY_FORMATTERS[displayCurrency].format(cx(price))}/${unit}`;
 
   // Fetch data
   const { data: tools } = useQuery({ queryKey: ["tools"], queryFn: async () => { const { data } = await supabase.from("tools").select("id, name, vendor, link, category"); return (data || []) as ToolRow[]; } });
@@ -306,7 +313,7 @@ export default function PriceCalculator() {
               <div className="text-center">
                 <p className="text-sm text-muted-foreground">{t("pricing.total")}</p>
                 <p className={`text-3xl font-bold ${costColor(totalMonthlyCost)}`}>{fmtCost(totalMonthlyCost)}</p>
-                <p className="text-xs text-muted-foreground">/mnd · {sym}{cx(totalMonthlyCost * 12).toFixed(0)}/år</p>
+                <p className="text-xs text-muted-foreground">/mnd · {fmtCostInt(totalMonthlyCost * 12)}/år</p>
               </div>
             </div>
           </CardContent>
@@ -342,7 +349,7 @@ export default function PriceCalculator() {
                             {config.tiers.map((tier: any, i: number) => (
                               <div key={i} className="flex justify-between text-muted-foreground">
                                 <span>{tier.name}</span>
-                                <span>{sym}{cx(tier.price || 0).toFixed(2)}/{tier.unit}</span>
+                                <span>{fmtUnit(tier.price || 0, tier.unit)}</span>
                               </div>
                             ))}
                           </div>
@@ -411,7 +418,7 @@ export default function PriceCalculator() {
                             {config.tiers.map((tier: any, i: number) => (
                               <div key={i} className="flex justify-between text-muted-foreground">
                                 <span>{tier.name}</span>
-                                <span>{sym}{cx(tier.price || 0).toFixed(2)}/{tier.unit}</span>
+                                <span>{fmtUnit(tier.price || 0, tier.unit)}</span>
                               </div>
                             ))}
                           </div>
