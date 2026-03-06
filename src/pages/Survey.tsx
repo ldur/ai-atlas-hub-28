@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -38,12 +38,22 @@ const defaultData: SurveyData = {
   mustKeepTool: "",
 };
 
+interface SurveyRecord {
+  id: string;
+  title: string;
+  description: string | null;
+  is_active: boolean;
+}
+
 const Survey = () => {
+  const { surveyId } = useParams<{ surveyId?: string }>();
   const [data, setData] = useState<SurveyData>(defaultData);
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [knownTools, setKnownTools] = useState<string[]>([]);
   const [knownModels, setKnownModels] = useState<string[]>([]);
+  const [survey, setSurvey] = useState<SurveyRecord | null>(null);
+  const [surveyLoading, setSurveyLoading] = useState(true);
   const { toast } = useToast();
   const navigate = useNavigate();
   const { t } = useI18n();
@@ -69,6 +79,23 @@ const Survey = () => {
     { value: "usikker", labelKey: "sensitivity.unsure" as const },
     { value: "ja", labelKey: "sensitivity.yes" as const },
   ];
+
+  // Load the survey record
+  useEffect(() => {
+    setSurveyLoading(true);
+    const loadSurvey = async () => {
+      if (surveyId) {
+        const { data: s } = await supabase.from("surveys").select("*").eq("id", surveyId).single();
+        setSurvey(s as SurveyRecord | null);
+      } else {
+        // Find the active survey
+        const { data: s } = await supabase.from("surveys").select("*").eq("is_active", true).limit(1).single();
+        setSurvey(s as SurveyRecord | null);
+      }
+      setSurveyLoading(false);
+    };
+    loadSurvey();
+  }, [surveyId]);
 
   useEffect(() => {
     Promise.all([
@@ -112,6 +139,7 @@ const Survey = () => {
     try {
       const { error } = await supabase.from("submissions").insert({
         alias_id: aliasId,
+        survey_id: survey?.id || null,
         tools_used: data.toolsUsed,
         tools_freetext: data.toolsFreetext || null,
         models_used: data.modelsUsed,
@@ -130,6 +158,19 @@ const Survey = () => {
       setLoading(false);
     }
   };
+
+  if (surveyLoading) {
+    return <p className="text-muted-foreground text-center mt-12">{t("common.loading")}</p>;
+  }
+
+  if (!survey) {
+    return (
+      <div className="max-w-lg mx-auto mt-12 text-center space-y-4">
+        <h1 className="text-2xl font-bold">{t("surveys.not_found")}</h1>
+        <Button variant="outline" onClick={() => navigate("/")}>{t("common.back")}</Button>
+      </div>
+    );
+  }
 
   if (submitted) {
     return (
@@ -150,8 +191,8 @@ const Survey = () => {
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">{t("survey.title")}</h1>
-        <p className="text-muted-foreground">{t("survey.subtitle")}</p>
+        <h1 className="text-2xl font-bold tracking-tight">{survey.title}</h1>
+        <p className="text-muted-foreground">{survey.description || t("survey.subtitle")}</p>
       </div>
 
       <Card>

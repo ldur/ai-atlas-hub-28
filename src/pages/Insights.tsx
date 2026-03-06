@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend, CartesianGrid } from "recharts";
 import { useI18n } from "@/lib/i18n";
@@ -66,17 +67,40 @@ function countField(submissions: any[], field: string): { name: string; value: n
   return Object.entries(counts).map(([name, value]) => ({ name, value }));
 }
 
+interface SurveyOption {
+  id: string;
+  title: string;
+  is_active: boolean;
+}
+
 const Insights = () => {
   const [submissions, setSubmissions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [surveys, setSurveys] = useState<SurveyOption[]>([]);
+  const [selectedSurveyId, setSelectedSurveyId] = useState<string>("all");
   const { t } = useI18n();
 
   useEffect(() => {
-    supabase.from("submissions").select("*").then(({ data }) => {
+    supabase.from("surveys").select("id, title, is_active").order("created_at").then(({ data }) => {
+      const list = (data || []) as SurveyOption[];
+      setSurveys(list);
+      // Default to active survey if exists
+      const active = list.find(s => s.is_active);
+      if (active) setSelectedSurveyId(active.id);
+    });
+  }, []);
+
+  useEffect(() => {
+    setLoading(true);
+    let query = supabase.from("submissions").select("*");
+    if (selectedSurveyId !== "all") {
+      query = query.eq("survey_id", selectedSurveyId);
+    }
+    query.then(({ data }) => {
       setSubmissions(data || []);
       setLoading(false);
     });
-  }, []);
+  }, [selectedSurveyId]);
 
   if (loading) return <p className="text-muted-foreground">{t("common.loading")}</p>;
 
@@ -88,9 +112,24 @@ const Insights = () => {
 
   return (
     <div className="space-y-8 max-w-5xl mx-auto">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">{t("insights.title")}</h1>
-        <p className="text-muted-foreground">{t("insights.subtitle", { count: submissions.length })}</p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">{t("insights.title")}</h1>
+          <p className="text-muted-foreground">{t("insights.subtitle", { count: submissions.length })}</p>
+        </div>
+        {surveys.length > 1 && (
+          <Select value={selectedSurveyId} onValueChange={setSelectedSurveyId}>
+            <SelectTrigger className="w-[220px]"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t("surveys.all")}</SelectItem>
+              {surveys.map(s => (
+                <SelectItem key={s.id} value={s.id}>
+                  {s.title} {s.is_active ? `(${t("surveys.active")})` : ""}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">

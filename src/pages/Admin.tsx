@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { SubmissionAnalytics } from "@/components/admin/SubmissionAnalytics";
 import { EvaluationDashboard } from "@/components/admin/EvaluationDashboard";
+import { SurveysTab } from "@/components/admin/SurveysTab";
 
 const ADMIN_CODE = "atlas-admin-2024";
 
@@ -145,13 +146,15 @@ const Admin = () => {
       <h1 className="text-2xl font-bold tracking-tight">{t("admin.title")}</h1>
       <BulkGenerateSection />
       <Tabs defaultValue="evaluations">
-        <TabsList className="grid grid-cols-3 w-full">
+        <TabsList className="grid grid-cols-4 w-full">
           <TabsTrigger value="evaluations">{t("admin.evaluations")}</TabsTrigger>
           <TabsTrigger value="submissions">{t("admin.submissions")}</TabsTrigger>
+          <TabsTrigger value="surveys">{t("surveys.title")}</TabsTrigger>
           <TabsTrigger value="shared-links">{t("admin.shared_links")}</TabsTrigger>
         </TabsList>
         <TabsContent value="evaluations"><EvaluationsTab /></TabsContent>
         <TabsContent value="submissions"><SubmissionsTab /></TabsContent>
+        <TabsContent value="surveys"><SurveysTab /></TabsContent>
         <TabsContent value="shared-links"><SharedLinksTab /></TabsContent>
       </Tabs>
     </div>
@@ -165,6 +168,8 @@ function SubmissionsTab() {
   const [evaluations, setEvaluations] = useState<any[]>([]);
   const [search, setSearch] = useState("");
   const [selectedSubmission, setSelectedSubmission] = useState<any | null>(null);
+  const [surveys, setSurveys] = useState<any[]>([]);
+  const [surveyFilter, setSurveyFilter] = useState<string>("all");
   const [showEvalForm, setShowEvalForm] = useState(false);
   const [evalEntityType, setEvalEntityType] = useState<"tool" | "model">("tool");
   const [evalEntityId, setEvalEntityId] = useState("");
@@ -179,11 +184,13 @@ function SubmissionsTab() {
       supabase.from("tools").select("id, name").order("name"),
       supabase.from("models").select("id, name").order("name"),
       supabase.from("evaluations").select("id, tool_id, model_id, decided_status"),
-    ]).then(([sRes, tRes, mRes, eRes]) => {
+      supabase.from("surveys").select("id, title, is_active").order("created_at"),
+    ]).then(([sRes, tRes, mRes, eRes, survRes]) => {
       setSubmissions(sRes.data || []);
       setTools(tRes.data || []);
       setModels(mRes.data || []);
       setEvaluations(eRes.data || []);
+      setSurveys(survRes.data || []);
     });
   };
   useEffect(() => { fetchAll(); }, []);
@@ -218,7 +225,8 @@ function SubmissionsTab() {
     toast({ title: t("admin.csv_exported") });
   };
 
-  const filtered = submissions.filter(s => {
+  const surveyFiltered = surveyFilter === "all" ? submissions : submissions.filter(s => s.survey_id === surveyFilter);
+  const filtered = surveyFiltered.filter(s => {
     if (!search) return true;
     const q = search.toLowerCase();
     return [
@@ -302,6 +310,17 @@ function SubmissionsTab() {
       </Dialog>
 
       <div className="flex gap-2 items-center flex-wrap">
+        {surveys.length > 0 && (
+          <Select value={surveyFilter} onValueChange={setSurveyFilter}>
+            <SelectTrigger className="w-[200px]"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t("surveys.all")}</SelectItem>
+              {surveys.map((s: any) => (
+                <SelectItem key={s.id} value={s.id}>{s.title}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
         <Input placeholder={t("admin.search_submissions")} value={search} onChange={e => setSearch(e.target.value)} className="flex-1 min-w-[200px]" />
         <Button variant="outline" size="sm" onClick={exportCsv} disabled={submissions.length === 0} className="gap-1.5">
           <Download className="h-3.5 w-3.5" /> {t("admin.export_csv")}
