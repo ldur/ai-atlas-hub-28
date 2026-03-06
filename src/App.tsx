@@ -15,6 +15,7 @@ import Learning from "./pages/Learning";
 import Admin from "./pages/Admin";
 import ToolDetail from "./pages/ToolDetail";
 import ModelDetail from "./pages/ModelDetail";
+import PriceCalculator from "./pages/PriceCalculator";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -37,6 +38,7 @@ const App = () => (
               <Route path="/katalog/:toolId" element={<ToolDetail />} />
               <Route path="/katalog/modell/:modelId" element={<ModelDetail />} />
               <Route path="/laering" element={<Learning />} />
+              <Route path="/priskalkulator" element={<PriceCalculator />} />
               <Route path="/admin" element={<Admin />} />
               <Route path="*" element={<NotFound />} />
             </Routes>

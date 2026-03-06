@@ -199,6 +199,102 @@ export type Database = {
         }
         Relationships: []
       }
+      org_usage_params: {
+        Row: {
+          created_at: string
+          id: string
+          monthly_api_calls: number
+          monthly_input_tokens: number
+          monthly_output_tokens: number
+          notes: string | null
+          num_seats: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          monthly_api_calls?: number
+          monthly_input_tokens?: number
+          monthly_output_tokens?: number
+          notes?: string | null
+          num_seats?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          monthly_api_calls?: number
+          monthly_input_tokens?: number
+          monthly_output_tokens?: number
+          notes?: string | null
+          num_seats?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      pricing_configs: {
+        Row: {
+          ai_generated: boolean | null
+          created_at: string
+          currency: string
+          id: string
+          input_token_price: number | null
+          last_fetched: string | null
+          model_id: string | null
+          notes: string | null
+          output_token_price: number | null
+          pricing_type: string
+          tiers: Json | null
+          tool_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          ai_generated?: boolean | null
+          created_at?: string
+          currency?: string
+          id?: string
+          input_token_price?: number | null
+          last_fetched?: string | null
+          model_id?: string | null
+          notes?: string | null
+          output_token_price?: number | null
+          pricing_type?: string
+          tiers?: Json | null
+          tool_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          ai_generated?: boolean | null
+          created_at?: string
+          currency?: string
+          id?: string
+          input_token_price?: number | null
+          last_fetched?: string | null
+          model_id?: string | null
+          notes?: string | null
+          output_token_price?: number | null
+          pricing_type?: string
+          tiers?: Json | null
+          tool_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pricing_configs_model_id_fkey"
+            columns: ["model_id"]
+            isOneToOne: false
+            referencedRelation: "models"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pricing_configs_tool_id_fkey"
+            columns: ["tool_id"]
+            isOneToOne: false
+            referencedRelation: "tools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       shared_links: {
         Row: {
           created_at: string
