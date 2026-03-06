@@ -118,6 +118,7 @@ export default function PriceCalculator() {
   const admin = isAdmin();
   const [fetchingId, setFetchingId] = useState<string | null>(null);
   const [displayCurrency, setDisplayCurrency] = useState<DisplayCurrency>("USD");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
   const [editDialog, setEditDialog] = useState<{ open: boolean; config?: PricingConfig; toolId?: string; modelId?: string; itemName?: string }>({ open: false });
   const [editForm, setEditForm] = useState({ pricing_type: "flat", currency: "USD", tiers: "[]", input_token_price: "", output_token_price: "", notes: "" });
 
@@ -131,15 +132,21 @@ export default function PriceCalculator() {
   const { data: models } = useQuery({ queryKey: ["models"], queryFn: async () => { const { data } = await supabase.from("models").select("id, name, provider, link"); return (data || []) as ModelRow[]; } });
   const { data: pricingConfigs, refetch: refetchPricing } = useQuery({ queryKey: ["pricing_configs"], queryFn: async () => { const { data } = await supabase.from("pricing_configs").select("*"); return (data || []) as PricingConfig[]; } });
   const { data: orgParams, refetch: refetchOrg } = useQuery({ queryKey: ["org_usage_params"], queryFn: async () => { const { data } = await supabase.from("org_usage_params").select("*").limit(1).single(); return data as OrgParams | null; } });
-  const { data: evaluations } = useQuery({ queryKey: ["evaluations"], queryFn: async () => { const { data } = await supabase.from("evaluations").select("tool_id, model_id"); return data || []; } });
+  const { data: evaluations } = useQuery({ queryKey: ["evaluations"], queryFn: async () => { const { data } = await supabase.from("evaluations").select("tool_id, model_id, decided_status"); return data || []; } });
 
   const org: OrgParams = orgParams || { id: "", num_seats: 10, monthly_api_calls: 1000, monthly_input_tokens: 1000000, monthly_output_tokens: 500000, notes: "" };
 
-  // Get evaluated items
-  const evaluatedToolIds = new Set(evaluations?.filter(e => e.tool_id).map(e => e.tool_id!));
-  const evaluatedModelIds = new Set(evaluations?.filter(e => e.model_id).map(e => e.model_id!));
+  // Get evaluated items, filtered by status
+  const filteredEvaluations = statusFilter === "all" 
+    ? evaluations 
+    : evaluations?.filter(e => e.decided_status === statusFilter);
+  const evaluatedToolIds = new Set(filteredEvaluations?.filter(e => e.tool_id).map(e => e.tool_id!));
+  const evaluatedModelIds = new Set(filteredEvaluations?.filter(e => e.model_id).map(e => e.model_id!));
   const evaluatedTools = tools?.filter(t => evaluatedToolIds.has(t.id)) || [];
   const evaluatedModels = models?.filter(m => evaluatedModelIds.has(m.id)) || [];
+
+  // Get unique statuses for filter
+  const allStatuses = [...new Set(evaluations?.map(e => e.decided_status) || [])];
 
   const getPricing = (toolId?: string, modelId?: string) => pricingConfigs?.find(p => (toolId && p.tool_id === toolId) || (modelId && p.model_id === modelId));
 
@@ -293,10 +300,25 @@ export default function PriceCalculator() {
       {(evaluatedTools.length > 0 || evaluatedModels.length > 0) && (
         <Card className="border-primary/20 bg-primary/5">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5 text-primary" />
-              {t("pricing.summary")}
-            </CardTitle>
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <CardTitle className="flex items-center gap-2">
+                <TrendingUp className="h-5 w-5 text-primary" />
+                {t("pricing.summary")}
+              </CardTitle>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{t("status.all_statuses")}</SelectItem>
+                  {allStatuses.map(s => (
+                    <SelectItem key={s} value={s}>
+                      {s === "ALLOWED" ? t("status.allowed") : s === "NOT_ALLOWED" ? t("status.not_allowed") : s === "TRIAL" ? t("status.trial") : s}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
