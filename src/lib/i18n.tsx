@@ -319,6 +319,27 @@ const translations = {
   "form.model_created": { no: "Modell opprettet", en: "Model created" },
   "form.model_updated": { no: "Modell oppdatert", en: "Model updated" },
 
+  // Pricing calculator
+  "nav.pricing": { no: "Priskalkulator", en: "Price Calculator" },
+  "pricing.title": { no: "Priskalkulator", en: "Price Calculator" },
+  "pricing.subtitle": { no: "Estimert kostnad for verktøy og modeller basert på organisasjonens bruk", en: "Estimated cost for tools and models based on organization usage" },
+  "pricing.org_params": { no: "Organisasjonsparametere", en: "Organization Parameters" },
+  "pricing.org_params_desc": { no: "Disse verdiene brukes til å beregne estimerte kostnader", en: "These values are used to calculate estimated costs" },
+  "pricing.seats": { no: "Antall brukere", en: "Number of seats" },
+  "pricing.api_calls": { no: "API-kall/mnd", en: "API calls/mo" },
+  "pricing.input_tokens": { no: "Input tokens/mnd", en: "Input tokens/mo" },
+  "pricing.output_tokens": { no: "Output tokens/mnd", en: "Output tokens/mo" },
+  "pricing.monthly_cost": { no: "Månedlig kostnad", en: "Monthly cost" },
+  "pricing.no_pricing": { no: "Ingen prisinformasjon ennå", en: "No pricing info yet" },
+  "pricing.fetch_ai": { no: "Hent pris med AI", en: "Fetch pricing with AI" },
+  "pricing.no_items": { no: "Ingen evaluerte verktøy eller modeller ennå.", en: "No evaluated tools or models yet." },
+  "pricing.summary": { no: "Kostnadssammendrag", en: "Cost Summary" },
+  "pricing.tools_cost": { no: "Verktøykostnad", en: "Tools cost" },
+  "pricing.models_cost": { no: "Modellkostnad", en: "Models cost" },
+  "pricing.total": { no: "Totalt", en: "Total" },
+  "pricing.edit_pricing": { no: "Rediger pris", en: "Edit pricing" },
+  "pricing.pricing_type": { no: "Prismodell", en: "Pricing model" },
+
   // 404
   "notfound.title": { no: "Siden ble ikke funnet", en: "Page not found" },
   "notfound.go_home": { no: "Gå til forsiden", en: "Return to Home" },

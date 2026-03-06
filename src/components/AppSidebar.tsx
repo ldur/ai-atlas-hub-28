@@ -1,6 +1,6 @@
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
-import { Home, ClipboardList, BarChart3, CheckSquare, BookOpen, GraduationCap, Lock } from "lucide-react";
+import { Home, ClipboardList, BarChart3, CheckSquare, BookOpen, GraduationCap, Calculator, Lock } from "lucide-react";
 import logo from "@/assets/logo.png";
 import {
   Sidebar,
@@ -21,6 +21,7 @@ const navKeys = [
   { key: "nav.stack" as const, url: "/stack", icon: CheckSquare },
   { key: "nav.catalog" as const, url: "/katalog", icon: BookOpen },
   { key: "nav.learning" as const, url: "/laering", icon: GraduationCap },
+  { key: "nav.pricing" as const, url: "/priskalkulator", icon: Calculator },
   { key: "nav.admin" as const, url: "/admin", icon: Lock },
 ];
 

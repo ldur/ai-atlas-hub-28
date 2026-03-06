@@ -1,1 +1,4 @@
 project_id = "npvcqxjvgrlismynrdrn"
+
+[functions.fetch-pricing]
+verify_jwt = false
