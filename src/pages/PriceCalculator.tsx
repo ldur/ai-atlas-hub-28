@@ -86,7 +86,7 @@ function calculateMonthlyCost(config: PricingConfig | undefined, org: OrgParams,
     case "tiered": {
       const tier = config.tiers?.[tierIdx];
       if (!tier) return 0;
-      if (tier.unit?.includes("seat")) return (tier.price || 0) * seats;
+      if (tier.unit?.match(/seat|user|bruker|lisens/i)) return (tier.price || 0) * seats;
       return tier.price || 0;
     }
     case "usage_based": {
