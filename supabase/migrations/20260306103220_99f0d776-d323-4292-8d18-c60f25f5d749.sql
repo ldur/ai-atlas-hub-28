@@ -1,0 +1,1 @@
+ALTER TABLE public.pricing_configs ADD COLUMN selected_tier_index integer NOT NULL DEFAULT 0;
