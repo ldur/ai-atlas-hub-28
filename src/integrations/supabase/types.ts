@@ -349,6 +349,7 @@ export type Database = {
           must_keep_tool: string | null
           pain_points: string | null
           role: string | null
+          survey_id: string | null
           team: string | null
           time_saved_range: string | null
           tools_freetext: string | null
@@ -364,6 +365,7 @@ export type Database = {
           must_keep_tool?: string | null
           pain_points?: string | null
           role?: string | null
+          survey_id?: string | null
           team?: string | null
           time_saved_range?: string | null
           tools_freetext?: string | null
@@ -379,6 +381,7 @@ export type Database = {
           must_keep_tool?: string | null
           pain_points?: string | null
           role?: string | null
+          survey_id?: string | null
           team?: string | null
           time_saved_range?: string | null
           tools_freetext?: string | null
@@ -393,7 +396,41 @@ export type Database = {
             referencedRelation: "user_aliases"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "submissions_survey_id_fkey"
+            columns: ["survey_id"]
+            isOneToOne: false
+            referencedRelation: "surveys"
+            referencedColumns: ["id"]
+          },
         ]
+      }
+      surveys: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       tools: {
         Row: {

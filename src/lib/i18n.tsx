@@ -343,6 +343,28 @@ const translations = {
   "pricing.exchange_note": { no: "Priser lagres i USD og konverteres automatisk", en: "Prices stored in USD and converted automatically" },
   "pricing.select_plan": { no: "Velg plan", en: "Select plan" },
 
+  // Surveys
+  "surveys.title": { no: "Undersøkelser", en: "Surveys" },
+  "surveys.create": { no: "Opprett undersøkelse", en: "Create survey" },
+  "surveys.new": { no: "Ny undersøkelse", en: "New survey" },
+  "surveys.edit": { no: "Rediger undersøkelse", en: "Edit survey" },
+  "surveys.name": { no: "Tittel", en: "Title" },
+  "surveys.description": { no: "Beskrivelse", en: "Description" },
+  "surveys.active": { no: "Aktiv", en: "Active" },
+  "surveys.inactive": { no: "Inaktiv", en: "Inactive" },
+  "surveys.toggle_active": { no: "Endre aktiv-status", en: "Toggle active status" },
+  "surveys.submissions_count": { no: "innleveringer", en: "submissions" },
+  "surveys.created": { no: "Undersøkelse opprettet", en: "Survey created" },
+  "surveys.updated": { no: "Undersøkelse oppdatert", en: "Survey updated" },
+  "surveys.deleted": { no: "Undersøkelse slettet", en: "Survey deleted" },
+  "surveys.delete_confirm": { no: "Vil du slette denne undersøkelsen?", en: "Delete this survey?" },
+  "surveys.no_surveys": { no: "Ingen undersøkelser funnet.", en: "No surveys found." },
+  "surveys.not_found": { no: "Undersøkelsen ble ikke funnet.", en: "Survey not found." },
+  "surveys.no_active": { no: "Ingen aktiv undersøkelse.", en: "No active survey." },
+  "surveys.select": { no: "Velg undersøkelse", en: "Select survey" },
+  "surveys.all": { no: "Alle undersøkelser", en: "All surveys" },
+  "surveys.filter_by_survey": { no: "Filtrer etter undersøkelse", en: "Filter by survey" },
+
   // 404
   "notfound.title": { no: "Siden ble ikke funnet", en: "Page not found" },
   "notfound.go_home": { no: "Gå til forsiden", en: "Return to Home" },
