@@ -216,14 +216,14 @@ const Survey = () => {
           <h1 className="text-2xl font-bold tracking-tight">{survey.title}</h1>
           <p className="text-muted-foreground">{survey.description || t("survey.subtitle")}</p>
         </div>
-        {allSurveys.length > 1 && (
+        {allSurveys.filter(s => s.is_active).length > 1 && (
           <Select
             value={survey.id}
             onValueChange={(id) => navigate(`/kartlegging/${id}`)}
           >
             <SelectTrigger className="w-[220px] shrink-0"><SelectValue /></SelectTrigger>
             <SelectContent>
-              {allSurveys.map(s => (
+              {allSurveys.filter(s => s.is_active).map(s => (
                 <SelectItem key={s.id} value={s.id}>
                   {s.title} {s.is_active ? `(${t("surveys.active")})` : ""}
                 </SelectItem>
