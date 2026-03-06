@@ -13,8 +13,22 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Calculator, Sparkles, Users, Coins, TrendingUp, Edit2, Loader2, DollarSign, Zap, Package } from "lucide-react";
+import { Calculator, Sparkles, Users, Coins, TrendingUp, Edit2, Loader2, DollarSign, Zap, Package, RefreshCw } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+
+type DisplayCurrency = "USD" | "NOK" | "EUR";
+
+const EXCHANGE_RATES: Record<DisplayCurrency, number> = {
+  USD: 1,
+  NOK: 10.85,
+  EUR: 0.92,
+};
+
+const CURRENCY_SYMBOLS: Record<DisplayCurrency, string> = {
+  USD: "$",
+  NOK: "kr ",
+  EUR: "€",
+};
 
 interface PricingConfig {
   id: string;
@@ -97,8 +111,13 @@ export default function PriceCalculator() {
   const queryClient = useQueryClient();
   const admin = isAdmin();
   const [fetchingId, setFetchingId] = useState<string | null>(null);
+  const [displayCurrency, setDisplayCurrency] = useState<DisplayCurrency>("USD");
   const [editDialog, setEditDialog] = useState<{ open: boolean; config?: PricingConfig; toolId?: string; modelId?: string; itemName?: string }>({ open: false });
   const [editForm, setEditForm] = useState({ pricing_type: "flat", currency: "USD", tiers: "[]", input_token_price: "", output_token_price: "", notes: "" });
+
+  const cx = (usdAmount: number) => usdAmount * EXCHANGE_RATES[displayCurrency];
+  const sym = CURRENCY_SYMBOLS[displayCurrency];
+  const fmtCost = (usdAmount: number) => `${sym}${cx(usdAmount).toFixed(2)}`;
 
   // Fetch data
   const { data: tools } = useQuery({ queryKey: ["tools"], queryFn: async () => { const { data } = await supabase.from("tools").select("id, name, vendor, link, category"); return (data || []) as ToolRow[]; } });
@@ -223,7 +242,7 @@ export default function PriceCalculator() {
           <CardDescription>{t("pricing.org_params_desc")}</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
             <div className="space-y-1.5">
               <Label className="text-xs text-muted-foreground">{t("pricing.seats")}</Label>
               <Input type="number" value={org.num_seats} onChange={e => admin && saveOrgParams({ num_seats: parseInt(e.target.value) || 0 })} disabled={!admin} />
@@ -240,7 +259,26 @@ export default function PriceCalculator() {
               <Label className="text-xs text-muted-foreground">{t("pricing.output_tokens")}</Label>
               <Input type="number" value={org.monthly_output_tokens} onChange={e => admin && saveOrgParams({ monthly_output_tokens: parseInt(e.target.value) || 0 })} disabled={!admin} />
             </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs text-muted-foreground">{t("pricing.display_currency")}</Label>
+              <Select value={displayCurrency} onValueChange={v => setDisplayCurrency(v as DisplayCurrency)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="USD">USD ($)</SelectItem>
+                  <SelectItem value="NOK">NOK (kr)</SelectItem>
+                  <SelectItem value="EUR">EUR (€)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
+          {displayCurrency !== "USD" && (
+            <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
+              <RefreshCw className="h-3 w-3" />
+              {t("pricing.exchange_note")} (1 USD = {EXCHANGE_RATES[displayCurrency]} {displayCurrency})
+            </p>
+          )}
         </CardContent>
       </Card>
 
@@ -257,18 +295,18 @@ export default function PriceCalculator() {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
               <div className="text-center">
                 <p className="text-sm text-muted-foreground">{t("pricing.tools_cost")}</p>
-                <p className={`text-2xl font-bold ${costColor(totalToolCost)}`}>${totalToolCost.toFixed(2)}</p>
+                <p className={`text-2xl font-bold ${costColor(totalToolCost)}`}>{fmtCost(totalToolCost)}</p>
                 <p className="text-xs text-muted-foreground">/mnd</p>
               </div>
               <div className="text-center">
                 <p className="text-sm text-muted-foreground">{t("pricing.models_cost")}</p>
-                <p className={`text-2xl font-bold ${costColor(totalModelCost)}`}>${totalModelCost.toFixed(2)}</p>
+                <p className={`text-2xl font-bold ${costColor(totalModelCost)}`}>{fmtCost(totalModelCost)}</p>
                 <p className="text-xs text-muted-foreground">/mnd</p>
               </div>
               <div className="text-center">
                 <p className="text-sm text-muted-foreground">{t("pricing.total")}</p>
-                <p className={`text-3xl font-bold ${costColor(totalMonthlyCost)}`}>${totalMonthlyCost.toFixed(2)}</p>
-                <p className="text-xs text-muted-foreground">/mnd · ${(totalMonthlyCost * 12).toFixed(0)}/år</p>
+                <p className={`text-3xl font-bold ${costColor(totalMonthlyCost)}`}>{fmtCost(totalMonthlyCost)}</p>
+                <p className="text-xs text-muted-foreground">/mnd · {sym}{cx(totalMonthlyCost * 12).toFixed(0)}/år</p>
               </div>
             </div>
           </CardContent>
@@ -304,7 +342,7 @@ export default function PriceCalculator() {
                             {config.tiers.map((tier: any, i: number) => (
                               <div key={i} className="flex justify-between text-muted-foreground">
                                 <span>{tier.name}</span>
-                                <span>${tier.price}/{tier.unit}</span>
+                                <span>{sym}{cx(tier.price || 0).toFixed(2)}/{tier.unit}</span>
                               </div>
                             ))}
                           </div>
@@ -318,7 +356,7 @@ export default function PriceCalculator() {
                         <Separator />
                         <div className="flex items-center justify-between">
                           <span className="text-sm text-muted-foreground">{t("pricing.monthly_cost")}</span>
-                          <span className={`text-lg font-bold ${costColor(cost)}`}>${cost.toFixed(2)}</span>
+                          <span className={`text-lg font-bold ${costColor(cost)}`}>{fmtCost(cost)}</span>
                         </div>
                         {config.notes && <p className="text-xs text-muted-foreground italic">{config.notes}</p>}
                       </>
@@ -373,7 +411,7 @@ export default function PriceCalculator() {
                             {config.tiers.map((tier: any, i: number) => (
                               <div key={i} className="flex justify-between text-muted-foreground">
                                 <span>{tier.name}</span>
-                                <span>${tier.price}/{tier.unit}</span>
+                                <span>{sym}{cx(tier.price || 0).toFixed(2)}/{tier.unit}</span>
                               </div>
                             ))}
                           </div>
@@ -387,7 +425,7 @@ export default function PriceCalculator() {
                         <Separator />
                         <div className="flex items-center justify-between">
                           <span className="text-sm text-muted-foreground">{t("pricing.monthly_cost")}</span>
-                          <span className={`text-lg font-bold ${costColor(cost)}`}>${cost.toFixed(2)}</span>
+                          <span className={`text-lg font-bold ${costColor(cost)}`}>{fmtCost(cost)}</span>
                         </div>
                         {config.notes && <p className="text-xs text-muted-foreground italic">{config.notes}</p>}
                       </>
