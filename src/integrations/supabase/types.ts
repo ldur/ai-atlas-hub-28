@@ -247,6 +247,7 @@ export type Database = {
           tiers: Json | null
           tool_id: string | null
           updated_at: string
+          user_count: number
         }
         Insert: {
           ai_generated?: boolean | null
@@ -262,6 +263,7 @@ export type Database = {
           tiers?: Json | null
           tool_id?: string | null
           updated_at?: string
+          user_count?: number
         }
         Update: {
           ai_generated?: boolean | null
@@ -277,6 +279,7 @@ export type Database = {
           tiers?: Json | null
           tool_id?: string | null
           updated_at?: string
+          user_count?: number
         }
         Relationships: [
           {

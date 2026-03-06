@@ -48,6 +48,7 @@ interface PricingConfig {
   notes: string | null;
   ai_generated: boolean;
   last_fetched: string | null;
+  user_count: number;
 }
 
 interface OrgParams {
@@ -65,12 +66,13 @@ type ModelRow = { id: string; name: string; provider: string | null; link: strin
 function calculateMonthlyCost(config: PricingConfig | undefined, org: OrgParams, selectedTierIndex: number = 0): number {
   if (!config) return 0;
   const tierIdx = Math.min(selectedTierIndex, Math.max((config.tiers?.length || 1) - 1, 0));
+  const seats = config.user_count > 0 ? config.user_count : org.num_seats;
   switch (config.pricing_type) {
     case "free":
       return 0;
     case "per_seat": {
       const tier = config.tiers?.[tierIdx];
-      return tier ? (tier.price || 0) * org.num_seats : 0;
+      return tier ? (tier.price || 0) * seats : 0;
     }
     case "per_token": {
       const inputCost = ((org.monthly_input_tokens / 1_000_000) * (config.input_token_price || 0));
@@ -84,7 +86,7 @@ function calculateMonthlyCost(config: PricingConfig | undefined, org: OrgParams,
     case "tiered": {
       const tier = config.tiers?.[tierIdx];
       if (!tier) return 0;
-      if (tier.unit?.includes("seat")) return (tier.price || 0) * org.num_seats;
+      if (tier.unit?.includes("seat")) return (tier.price || 0) * seats;
       return tier.price || 0;
     }
     case "usage_based": {
@@ -121,7 +123,7 @@ export default function PriceCalculator() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [selectedTiers, setSelectedTiers] = useState<Record<string, number>>({});
   const [editDialog, setEditDialog] = useState<{ open: boolean; config?: PricingConfig; toolId?: string; modelId?: string; itemName?: string }>({ open: false });
-  const [editForm, setEditForm] = useState({ pricing_type: "flat", currency: "USD", tiers: "[]", input_token_price: "", output_token_price: "", notes: "" });
+  const [editForm, setEditForm] = useState({ pricing_type: "flat", currency: "USD", tiers: "[]", input_token_price: "", output_token_price: "", notes: "", user_count: "0" });
 
   const cx = (usdAmount: number) => usdAmount * EXCHANGE_RATES[displayCurrency];
   const fmtCost = (usdAmount: number) => CURRENCY_FORMATTERS[displayCurrency].format(cx(usdAmount));
@@ -201,6 +203,7 @@ export default function PriceCalculator() {
         input_token_price: editForm.input_token_price ? parseFloat(editForm.input_token_price) : null,
         output_token_price: editForm.output_token_price ? parseFloat(editForm.output_token_price) : null,
         notes: editForm.notes || null,
+        user_count: parseInt(editForm.user_count) || 0,
         ai_generated: false,
         tool_id: editDialog.toolId || null,
         model_id: editDialog.modelId || null,
@@ -228,6 +231,7 @@ export default function PriceCalculator() {
       input_token_price: config?.input_token_price?.toString() || "",
       output_token_price: config?.output_token_price?.toString() || "",
       notes: config?.notes || "",
+      user_count: config?.user_count?.toString() || "0",
     });
     setEditDialog({ open: true, config, toolId, modelId, itemName });
   };
@@ -401,6 +405,12 @@ export default function PriceCalculator() {
                             <div>Output: ${config.output_token_price}/1M tokens</div>
                           </div>
                         )}
+                        {config.user_count > 0 && (
+                          <div className="text-xs text-muted-foreground flex items-center gap-1">
+                            <Users className="h-3 w-3" />
+                            {config.user_count} brukere (overstyrt)
+                          </div>
+                        )}
                         <Separator />
                         <div className="flex items-center justify-between">
                           <span className="text-sm text-muted-foreground">{t("pricing.monthly_cost")}</span>
@@ -485,6 +495,12 @@ export default function PriceCalculator() {
                             <div>Output: ${config.output_token_price}/1M tokens</div>
                           </div>
                         )}
+                        {config.user_count > 0 && (
+                          <div className="text-xs text-muted-foreground flex items-center gap-1">
+                            <Users className="h-3 w-3" />
+                            {config.user_count} brukere (overstyrt)
+                          </div>
+                        )}
                         <Separator />
                         <div className="flex items-center justify-between">
                           <span className="text-sm text-muted-foreground">{t("pricing.monthly_cost")}</span>
@@ -559,6 +575,10 @@ export default function PriceCalculator() {
             <div className="space-y-1.5">
               <Label>Tiers (JSON)</Label>
               <Textarea rows={4} value={editForm.tiers} onChange={e => setEditForm(f => ({ ...f, tiers: e.target.value }))} className="font-mono text-xs" />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Antall brukere (0 = bruk org. parameter)</Label>
+              <Input type="number" min="0" value={editForm.user_count} onChange={e => setEditForm(f => ({ ...f, user_count: e.target.value }))} />
             </div>
             <div className="space-y-1.5">
               <Label>{t("form.notes")}</Label>

@@ -1,0 +1,1 @@
+ALTER TABLE public.pricing_configs ADD COLUMN user_count integer NOT NULL DEFAULT 0;
