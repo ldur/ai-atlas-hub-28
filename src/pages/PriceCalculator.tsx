@@ -62,13 +62,14 @@ interface OrgParams {
 type ToolRow = { id: string; name: string; vendor: string | null; link: string | null; category: string | null };
 type ModelRow = { id: string; name: string; provider: string | null; link: string | null };
 
-function calculateMonthlyCost(config: PricingConfig | undefined, org: OrgParams): number {
+function calculateMonthlyCost(config: PricingConfig | undefined, org: OrgParams, selectedTierIndex: number = 0): number {
   if (!config) return 0;
+  const tierIdx = Math.min(selectedTierIndex, Math.max((config.tiers?.length || 1) - 1, 0));
   switch (config.pricing_type) {
     case "free":
       return 0;
     case "per_seat": {
-      const tier = config.tiers?.[0];
+      const tier = config.tiers?.[tierIdx];
       return tier ? (tier.price || 0) * org.num_seats : 0;
     }
     case "per_token": {
@@ -77,18 +78,17 @@ function calculateMonthlyCost(config: PricingConfig | undefined, org: OrgParams)
       return inputCost + outputCost;
     }
     case "flat": {
-      const tier = config.tiers?.[0];
+      const tier = config.tiers?.[tierIdx];
       return tier?.price || 0;
     }
     case "tiered": {
-      // Use the first tier that matches or the most relevant one
-      const tier = config.tiers?.[0];
+      const tier = config.tiers?.[tierIdx];
       if (!tier) return 0;
       if (tier.unit?.includes("seat")) return (tier.price || 0) * org.num_seats;
       return tier.price || 0;
     }
     case "usage_based": {
-      const tier = config.tiers?.[0];
+      const tier = config.tiers?.[tierIdx];
       return tier?.price || 0;
     }
     default:
@@ -119,6 +119,7 @@ export default function PriceCalculator() {
   const [fetchingId, setFetchingId] = useState<string | null>(null);
   const [displayCurrency, setDisplayCurrency] = useState<DisplayCurrency>("USD");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [selectedTiers, setSelectedTiers] = useState<Record<string, number>>({});
   const [editDialog, setEditDialog] = useState<{ open: boolean; config?: PricingConfig; toolId?: string; modelId?: string; itemName?: string }>({ open: false });
   const [editForm, setEditForm] = useState({ pricing_type: "flat", currency: "USD", tiers: "[]", input_token_price: "", output_token_price: "", notes: "" });
 
@@ -147,6 +148,9 @@ export default function PriceCalculator() {
 
   // Get unique statuses for filter
   const allStatuses = [...new Set(evaluations?.map(e => e.decided_status) || [])];
+
+  const getSelectedTier = (id: string) => selectedTiers[id] ?? 0;
+  const setTierForItem = (id: string, tierIdx: number) => setSelectedTiers(prev => ({ ...prev, [id]: tierIdx }));
 
   const getPricing = (toolId?: string, modelId?: string) => pricingConfigs?.find(p => (toolId && p.tool_id === toolId) || (modelId && p.model_id === modelId));
 
@@ -229,8 +233,8 @@ export default function PriceCalculator() {
   };
 
   // Calculate totals
-  const toolCosts = evaluatedTools.map(t => ({ ...t, cost: calculateMonthlyCost(getPricing(t.id), org) }));
-  const modelCosts = evaluatedModels.map(m => ({ ...m, cost: calculateMonthlyCost(getPricing(undefined, m.id), org) }));
+  const toolCosts = evaluatedTools.map(t => ({ ...t, cost: calculateMonthlyCost(getPricing(t.id), org, getSelectedTier(t.id)) }));
+  const modelCosts = evaluatedModels.map(m => ({ ...m, cost: calculateMonthlyCost(getPricing(undefined, m.id), org, getSelectedTier(m.id)) }));
   const totalToolCost = toolCosts.reduce((s, t) => s + t.cost, 0);
   const totalModelCost = modelCosts.reduce((s, m) => s + m.cost, 0);
   const totalMonthlyCost = totalToolCost + totalModelCost;
@@ -351,7 +355,9 @@ export default function PriceCalculator() {
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
             {evaluatedTools.map(tool => {
               const config = getPricing(tool.id);
-              const cost = calculateMonthlyCost(config, org);
+              const tierIdx = getSelectedTier(tool.id);
+              const cost = calculateMonthlyCost(config, org, tierIdx);
+              const hasTiers = config && config.tiers?.length > 1;
               return (
                 <Card key={tool.id} className="relative">
                   <CardHeader className="pb-2">
@@ -366,14 +372,27 @@ export default function PriceCalculator() {
                   <CardContent className="space-y-3">
                     {config ? (
                       <>
-                        {config.tiers?.length > 0 && (
-                          <div className="text-xs space-y-1">
-                            {config.tiers.map((tier: any, i: number) => (
-                              <div key={i} className="flex justify-between text-muted-foreground">
-                                <span>{tier.name}</span>
-                                <span>{fmtUnit(tier.price || 0, tier.unit)}</span>
-                              </div>
-                            ))}
+                        {hasTiers && (
+                          <div className="space-y-1.5">
+                            <Label className="text-xs text-muted-foreground">{t("pricing.select_plan")}</Label>
+                            <Select value={String(tierIdx)} onValueChange={v => setTierForItem(tool.id, parseInt(v))}>
+                              <SelectTrigger className="h-8 text-xs">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {config.tiers.map((tier: any, i: number) => (
+                                  <SelectItem key={i} value={String(i)}>
+                                    {tier.name} – {fmtUnit(tier.price || 0, tier.unit)}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        )}
+                        {!hasTiers && config.tiers?.length === 1 && (
+                          <div className="text-xs text-muted-foreground flex justify-between">
+                            <span>{config.tiers[0].name}</span>
+                            <span>{fmtUnit(config.tiers[0].price || 0, config.tiers[0].unit)}</span>
                           </div>
                         )}
                         {config.pricing_type === "per_token" && (
@@ -420,7 +439,9 @@ export default function PriceCalculator() {
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
             {evaluatedModels.map(model => {
               const config = getPricing(undefined, model.id);
-              const cost = calculateMonthlyCost(config, org);
+              const tierIdx = getSelectedTier(model.id);
+              const cost = calculateMonthlyCost(config, org, tierIdx);
+              const hasTiers = config && config.tiers?.length > 1;
               return (
                 <Card key={model.id} className="relative">
                   <CardHeader className="pb-2">
@@ -435,14 +456,27 @@ export default function PriceCalculator() {
                   <CardContent className="space-y-3">
                     {config ? (
                       <>
-                        {config.tiers?.length > 0 && (
-                          <div className="text-xs space-y-1">
-                            {config.tiers.map((tier: any, i: number) => (
-                              <div key={i} className="flex justify-between text-muted-foreground">
-                                <span>{tier.name}</span>
-                                <span>{fmtUnit(tier.price || 0, tier.unit)}</span>
-                              </div>
-                            ))}
+                        {hasTiers && (
+                          <div className="space-y-1.5">
+                            <Label className="text-xs text-muted-foreground">{t("pricing.select_plan")}</Label>
+                            <Select value={String(tierIdx)} onValueChange={v => setTierForItem(model.id, parseInt(v))}>
+                              <SelectTrigger className="h-8 text-xs">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {config.tiers.map((tier: any, i: number) => (
+                                  <SelectItem key={i} value={String(i)}>
+                                    {tier.name} – {fmtUnit(tier.price || 0, tier.unit)}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        )}
+                        {!hasTiers && config.tiers?.length === 1 && (
+                          <div className="text-xs text-muted-foreground flex justify-between">
+                            <span>{config.tiers[0].name}</span>
+                            <span>{fmtUnit(config.tiers[0].price || 0, config.tiers[0].unit)}</span>
                           </div>
                         )}
                         {config.pricing_type === "per_token" && (

@@ -341,6 +341,7 @@ const translations = {
   "pricing.pricing_type": { no: "Prismodell", en: "Pricing model" },
   "pricing.display_currency": { no: "Visningsvaluta", en: "Display currency" },
   "pricing.exchange_note": { no: "Priser lagres i USD og konverteres automatisk", en: "Prices stored in USD and converted automatically" },
+  "pricing.select_plan": { no: "Velg plan", en: "Select plan" },
 
   // 404
   "notfound.title": { no: "Siden ble ikke funnet", en: "Page not found" },
