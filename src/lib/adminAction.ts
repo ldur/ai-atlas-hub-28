@@ -24,6 +24,10 @@ export async function adminAction({ action, table, payload, id }: AdminActionPar
   return data;
 }
 
+export function isAdmin(): boolean {
+  return !!getAdminToken();
+}
+
 export async function verifyAdmin(token?: string | null): Promise<boolean> {
   const adminToken = token ?? getAdminToken();
   if (!adminToken) return false;
