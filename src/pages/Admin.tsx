@@ -11,6 +11,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { adminAction, verifyAdmin } from "@/lib/adminAction";
 import { getAdminToken, setAdminToken } from "@/lib/nickname";
+import { useToast } from "@/hooks/use-toast";
+import { useI18n } from "@/lib/i18n";
+import {
+  Lock, Sparkles, Loader2, Wrench, Brain, Download, Trash2, Pencil, Plus,
+  CircleCheck, CircleMinus, CircleX, FlaskConical, ClipboardList, History,
+  Link2, ExternalLink, Check, X
+} from "lucide-react";
+import { SubmissionAnalytics } from "@/components/admin/SubmissionAnalytics";
+import { EvaluationDashboard } from "@/components/admin/EvaluationDashboard";
+import { SurveysTab } from "@/components/admin/SurveysTab";
 
 function BulkGenerateSection() {
   const [running, setRunning] = useState(false);
