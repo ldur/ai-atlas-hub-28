@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
-import { adminAction } from "@/lib/adminAction";
+import { adminAction, verifyAdmin } from "@/lib/adminAction";
 import { getAdminToken, setAdminToken } from "@/lib/nickname";
 import { useToast } from "@/hooks/use-toast";
 import { useI18n } from "@/lib/i18n";
@@ -21,8 +21,6 @@ import {
 import { SubmissionAnalytics } from "@/components/admin/SubmissionAnalytics";
 import { EvaluationDashboard } from "@/components/admin/EvaluationDashboard";
 import { SurveysTab } from "@/components/admin/SurveysTab";
-
-const ADMIN_CODE = "atlas-admin-2024";
 
 function BulkGenerateSection() {
   const [running, setRunning] = useState(false);
@@ -104,22 +102,41 @@ function BulkGenerateSection() {
 const Admin = () => {
   const [authenticated, setAuthenticated] = useState(false);
   const [code, setCode] = useState("");
+  const [checking, setChecking] = useState(true);
   const { toast } = useToast();
   const { t } = useI18n();
 
   useEffect(() => {
     const saved = getAdminToken();
-    if (saved === ADMIN_CODE) setAuthenticated(true);
+    if (saved) {
+      verifyAdmin(saved).then(valid => {
+        if (valid) setAuthenticated(true);
+        setChecking(false);
+      });
+    } else {
+      setChecking(false);
+    }
   }, []);
 
-  const handleLogin = () => {
-    if (code === ADMIN_CODE) {
+  const handleLogin = async () => {
+    setChecking(true);
+    const valid = await verifyAdmin(code);
+    if (valid) {
       setAdminToken(code);
       setAuthenticated(true);
     } else {
       toast({ title: t("admin.wrong_code"), variant: "destructive" });
     }
+    setChecking(false);
   };
+
+  if (checking) {
+    return (
+      <div className="max-w-sm mx-auto mt-12 text-center">
+        <Loader2 className="h-8 w-8 animate-spin mx-auto text-muted-foreground" />
+      </div>
+    );
+  }
 
   if (!authenticated) {
     return (

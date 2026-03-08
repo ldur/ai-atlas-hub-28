@@ -25,5 +25,20 @@ export async function adminAction({ action, table, payload, id }: AdminActionPar
 }
 
 export function isAdmin(): boolean {
-  return getAdminToken() === "atlas-admin-2024";
+  return !!getAdminToken();
+}
+
+export async function verifyAdmin(token?: string | null): Promise<boolean> {
+  const adminToken = token ?? getAdminToken();
+  if (!adminToken) return false;
+
+  try {
+    const { data, error } = await supabase.functions.invoke("verify-admin", {
+      headers: { "x-admin-token": adminToken },
+    });
+    if (error) return false;
+    return data?.valid === true;
+  } catch {
+    return false;
+  }
 }
