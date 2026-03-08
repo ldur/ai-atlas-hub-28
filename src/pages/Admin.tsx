@@ -102,22 +102,41 @@ function BulkGenerateSection() {
 const Admin = () => {
   const [authenticated, setAuthenticated] = useState(false);
   const [code, setCode] = useState("");
+  const [checking, setChecking] = useState(true);
   const { toast } = useToast();
   const { t } = useI18n();
 
   useEffect(() => {
     const saved = getAdminToken();
-    if (saved === ADMIN_CODE) setAuthenticated(true);
+    if (saved) {
+      verifyAdmin(saved).then(valid => {
+        if (valid) setAuthenticated(true);
+        setChecking(false);
+      });
+    } else {
+      setChecking(false);
+    }
   }, []);
 
-  const handleLogin = () => {
-    if (code === ADMIN_CODE) {
+  const handleLogin = async () => {
+    setChecking(true);
+    const valid = await verifyAdmin(code);
+    if (valid) {
       setAdminToken(code);
       setAuthenticated(true);
     } else {
       toast({ title: t("admin.wrong_code"), variant: "destructive" });
     }
+    setChecking(false);
   };
+
+  if (checking) {
+    return (
+      <div className="max-w-sm mx-auto mt-12 text-center">
+        <Loader2 className="h-8 w-8 animate-spin mx-auto text-muted-foreground" />
+      </div>
+    );
+  }
 
   if (!authenticated) {
     return (
