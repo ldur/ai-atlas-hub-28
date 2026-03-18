@@ -85,15 +85,20 @@ export const ModelFormDialog = ({ open, onOpenChange, model, onSaved, initialCat
   const handleGenerate = async () => {
     if (!name.trim()) { toast.error("Fyll inn navn først"); return; }
     setGenerating(true);
+    // Clear previously generated content before regenerating
+    setProvider("");
+    setModality("");
+    setLink("");
+    setCatalog({ best_for: "", example_prompts: "", do_this: "", avoid_this: "", security_guidance: "" });
     try {
       const { data, error } = await supabase.functions.invoke("generate-catalog-info", {
-        body: { name: name.trim(), type: "model", provider: provider.trim(), modality: modality.trim() },
+        body: { name: name.trim(), type: "model" },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
-      if (data.vendor && !provider.trim()) setProvider(data.vendor);
-      if (data.category && !modality.trim()) setModality(data.category);
-      if (data.link && !link.trim()) setLink(data.link);
+      if (data.vendor) setProvider(data.vendor);
+      if (data.category) setModality(data.category);
+      if (data.link) setLink(data.link);
       setCatalog({
         best_for: data.best_for || "",
         example_prompts: data.example_prompts || "",
