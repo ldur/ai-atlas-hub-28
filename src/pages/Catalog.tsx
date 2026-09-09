@@ -126,7 +126,9 @@ const Catalog = () => {
       (m.name.toLowerCase().includes(search.toLowerCase()) ||
       (m.provider || "").toLowerCase().includes(search.toLowerCase()) ||
       (m.modality || "").toLowerCase().includes(search.toLowerCase())) &&
-      matchesStatusFilter(m.id, "model")
+      matchesStatusFilter(m.id, "model") &&
+      (deploymentFilter === "ALL" ||
+        (deploymentFilter === "NONE" ? !m.deployment : m.deployment === deploymentFilter))
   );
 
   const renderStatusLabel = (cfg: typeof statusConfig[string]) => {
