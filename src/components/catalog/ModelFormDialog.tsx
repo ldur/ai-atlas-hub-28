@@ -193,6 +193,17 @@ export const ModelFormDialog = ({ open, onOpenChange, model, onSaved, initialCat
             <Input value={link} onChange={(e) => setLink(e.target.value)} placeholder="https://..." />
           </div>
           <div className="space-y-1.5">
+            <Label className="text-xs">Drift</Label>
+            <Select value={deployment} onValueChange={setDeployment}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent className="bg-popover z-50">
+                <SelectItem value="none">Ikke satt</SelectItem>
+                <SelectItem value="LOCAL">Lokal</SelectItem>
+                <SelectItem value="CLOUD">Cloud</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
             <Label className="text-xs">Notater</Label>
             <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} placeholder="Valgfrie notater..." />
           </div>
