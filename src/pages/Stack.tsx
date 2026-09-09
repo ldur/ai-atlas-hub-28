@@ -15,12 +15,13 @@ interface StackSectionProps {
   getExtra?: (id: string) => string | null;
   getLink?: (id: string) => string | null;
   getLinkLabel?: (id: string) => string | null;
+  getScope?: (id: string) => string | null;
   onClickItem?: (id: string) => void;
   statusLabels: Record<string, { label: string; icon: React.ComponentType<{ className?: string }>; color: string }>;
   noItemsText: string;
 }
 
-const StackSection = ({ evaluations, getName, getExtra, getLink, getLinkLabel, onClickItem, statusLabels, noItemsText }: StackSectionProps) => {
+const StackSection = ({ evaluations, getName, getExtra, getLink, getLinkLabel, getScope, onClickItem, statusLabels, noItemsText }: StackSectionProps) => {
   if (evaluations.length === 0) {
     return <p className="text-muted-foreground text-center py-12">{noItemsText}</p>;
   }
@@ -50,6 +51,9 @@ const StackSection = ({ evaluations, getName, getExtra, getLink, getLinkLabel, o
                       <div className="flex items-center justify-between">
                         <span className="font-medium">{getName(itemId)}</span>
                         <div className="flex items-center gap-2">
+                          {getScope && getScope(itemId) && (
+                            <Badge variant="secondary">{getScope(itemId)}</Badge>
+                          )}
                           <Badge className={cfg.color}>{cfg.label}</Badge>
                           {onClickItem && <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />}
                         </div>
@@ -122,6 +126,11 @@ const Stack = () => {
   const getModelProvider = (id: string) => models.find((m) => m.id === id)?.provider || null;
   const getToolLink = (id: string) => tools.find((t) => t.id === id)?.link || null;
   const getToolVendor = (id: string) => tools.find((t) => t.id === id)?.vendor || null;
+  const getToolScope = (id: string) => {
+    const scope = tools.find((t) => t.id === id)?.usage_scope;
+    if (!scope) return null;
+    return scope === "INTERNAL" ? t("usage.internal") : scope === "CUSTOMER" ? t("usage.customer") : t("usage.both");
+  };
   const getModelLink = (id: string) => models.find((m) => m.id === id)?.link || null;
   const getToolExtra = (id: string) => {
     const tool = tools.find((t) => t.id === id);
@@ -164,6 +173,7 @@ const Stack = () => {
             getExtra={getToolExtra}
             getLink={getToolLink}
             getLinkLabel={getToolVendor}
+            getScope={getToolScope}
             onClickItem={(id) => navigate(`/katalog/${id}`)}
             statusLabels={statusLabels}
             noItemsText={t("stack.no_items")}
