@@ -24,42 +24,54 @@ serve(async (req) => {
 
     const systemPrompt = `Du er en AI-rådgiver for en norsk organisasjon som kartlegger AI-verktøy og modellfamilier.
 
+ARBEIDSMÅTE:
+- Bruk ALLTID web_search-verktøyet først for å finne oppdatert informasjon om det eksakte navnet. Din interne kunnskap kan være utdatert; nye modeller og verktøy lanseres hele tiden.
+- Søk gjerne flere ganger (navnet alene, navnet + leverandør, navnet + "documentation"/"pricing"/"release").
+- Bygg svaret på det du faktisk finner i søkeresultatene, og bruk leverandørens offisielle side som lenke når du finner den.
+
 KRITISKE REGLER:
-1. Du skriver KUN om det eksakte navnet brukeren oppgir. Du skal ALDRI erstatte det med, eller beskrive, en annen modell/verktøy med lignende navn (f.eks. ikke svar om "Claude 3.5 Sonnet" hvis navnet er "Claude Fable").
-${isModel ? `2. Navnet er en MODELLFAMILIE (f.eks. GPT-5, Claude, Gemini, Llama), ikke én enkelt versjon. Beskriv familien som helhet: hva den brukes til, hvilke typer varianter den vanligvis har (f.eks. lette/raske vs. store/resonnerende), og styrker/svakheter på familienivå. Ikke lås innholdet til én bestemt versjon, og ikke oppgi presise versjonsnumre, ytelsestall eller priser du ikke er sikker på.
-` : ""}3. Hvis du ikke sikkert kjenner dette navnet, sett "uncertain": true og "uncertainty_note" til en kort forklaring på norsk. Ikke dikt opp fakta, versjonsnumre, priser eller lenker. La "link" og "vendor" stå tomme hvis du ikke er sikker.
-4. Når du er usikker: skriv generisk, forsiktig veiledning basert på navnet/leverandøren og typen (${isModel ? "modellfamilie" : "verktøy"}), og gjør det tydelig i teksten at det må verifiseres mot leverandørens dokumentasjon.
-5. Eksempelprompter skal være konkrete og relevante for bruksområdet, formatert som markdown-liste.
-6. Alt innhold på norsk.
+1. Du skriver KUN om det eksakte navnet brukeren oppgir. Erstatt det ALDRI med en annen modell/verktøy med lignende navn.
+${isModel ? `2. Navnet er en MODELLFAMILIE (f.eks. GPT-5, Claude, Gemini, Llama), ikke én enkelt versjon. Beskriv familien som helhet: bruksområder, typiske varianter (lette/raske vs. store/resonnerende) og styrker/svakheter på familienivå.
+` : ""}3. Sett "uncertain": true KUN hvis søk heller ikke gir troverdig informasjon om navnet. Da: ikke dikt opp fakta, versjonsnumre, priser eller lenker, og la "link" og "vendor" stå tomme.
+4. Ikke oppgi presise ytelsestall eller priser du ikke har dekning for i søkeresultatene.
+5. Alt innhold på norsk, kort og konkret.`;
 
-Svar KUN med ett gyldig JSON-objekt, uten kodeblokk eller annen tekst:
-{
-  "category": "${isModel ? "Kort modalitet/kategori for familien (f.eks. Tekst, Tekst og bilde, Kode)" : "Kort kategori (f.eks. Kodehjelp, Chatbot, Bildegenerering, Skriveassistent)"}",
-  "vendor": "Leverandørens offisielle navn, eller tom streng hvis usikker",
-  "link": "Offisiell URL (https://...), eller tom streng hvis usikker",
-  "best_for": "Hva ${isModel ? "denne modellfamilien" : "dette"} er best egnet for (1-2 setninger)",
-  "example_prompts": "3-5 eksempelprompter som markdown-liste",
-  "do_this": "2-3 konkrete tips for god bruk",
-  "avoid_this": "2-3 ting man bør unngå",
-  "security_guidance": "Kort sikkerhetsveiledning for enterprise-bruk (1-2 setninger)",
-  "uncertain": true eller false,
-  "uncertainty_note": "Kort merknad hvis usikker, ellers tom streng"
-}`;
+    const schema = {
+      type: "object",
+      additionalProperties: false,
+      properties: {
+        category: { type: "string", description: isModel ? "Kort modalitet/kategori for familien (f.eks. Tekst, Tekst og bilde, Kode)" : "Kort kategori (f.eks. Kodehjelp, Chatbot, Bildegenerering)" },
+        vendor: { type: "string", description: "Leverandørens offisielle navn, eller tom streng hvis usikker" },
+        link: { type: "string", description: "Offisiell URL (https://...), eller tom streng hvis usikker" },
+        best_for: { type: "string", description: `Hva ${isModel ? "denne modellfamilien" : "dette verktøyet"} er best egnet for (1-3 setninger)` },
+        uncertain: { type: "boolean" },
+        uncertainty_note: { type: "string", description: "Kort merknad hvis usikker, ellers tom streng" },
+      },
+      required: ["category", "vendor", "link", "best_for", "uncertain", "uncertainty_note"],
+    };
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const response = await fetch("https://ai.gateway.lovable.dev/v1/responses", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
         "Content-Type": "application/json",
+        "Lovable-API-Key": LOVABLE_API_KEY,
+        "X-Lovable-AIG-SDK": "fetch",
       },
       body: JSON.stringify({
-        model: "openai/gpt-6-astra",
-        reasoning_effort: "low",
-        messages: [
-          { role: "system", content: systemPrompt },
+        model: "openai/gpt-5.5",
+        stream: true,
+        store: false,
+        reasoning: { effort: "low" },
+        tools: [{ type: "web_search" }],
+        text: { format: { type: "json_schema", name: "catalog_entry", strict: true, schema } },
+        input: [
+          { role: "system", content: [{ type: "input_text", text: systemPrompt }] },
           {
             role: "user",
-            content: `Generer katalogoppføring for nøyaktig ${isModel ? "denne modellfamilien" : "dette navnet"} (ikke bytt til en annen ${isModel ? "modellfamilie" : "modell/verktøy"}):\n${contextParts.join("\n")}`,
+            content: [{
+              type: "input_text",
+              text: `Søk på nett og generer katalogoppføring (json) for nøyaktig ${isModel ? "denne modellfamilien" : "dette navnet"} (ikke bytt til noe annet):\n${contextParts.join("\n")}`,
+            }],
           },
         ],
       }),
@@ -81,8 +93,32 @@ Svar KUN med ett gyldig JSON-objekt, uten kodeblokk eller annen tekst:
       throw new Error("AI gateway error");
     }
 
-    const data = await response.json();
-    const content = data.choices?.[0]?.message?.content || "";
+    // Read the SSE stream and accumulate the output text.
+    const reader = response.body!.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
+    let content = "";
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split("\n");
+      buffer = lines.pop() || "";
+      for (const line of lines) {
+        if (!line.startsWith("data:")) continue;
+        const payload = line.slice(5).trim();
+        if (!payload || payload === "[DONE]") continue;
+        try {
+          const evt = JSON.parse(payload);
+          if (evt.type === "response.output_text.delta" && typeof evt.delta === "string") {
+            content += evt.delta;
+          } else if (evt.type === "response.completed" && !content) {
+            content = evt.response?.output_text || "";
+          }
+        } catch (_) { /* ignore non-JSON keepalives */ }
+      }
+    }
+
     const jsonMatch = content.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
       console.error("Unparsable AI content:", content.slice(0, 500));
