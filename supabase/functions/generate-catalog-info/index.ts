@@ -84,13 +84,25 @@ ${isModel ? `2. Navnet er en MODELLFAMILIE (f.eks. GPT-5, Claude, Gemini, Llama)
         });
       }
       if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "AI-kreditter oppbrukt." }), {
+        return new Response(JSON.stringify({ error: "AI-kreditter er oppbrukt. Legg til kreditter i Lovable for å bruke AI-generering." }), {
           status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      if (response.status === 403) {
+        const raw = await response.text();
+        console.error("AI gateway 403:", raw);
+        let message = "AI-generering er blokkert av arbeidsområdets innstillinger.";
+        try {
+          const parsed = JSON.parse(raw);
+          if (parsed?.details || parsed?.message) message = parsed.details || parsed.message;
+        } catch (_) { /* keep default */ }
+        return new Response(JSON.stringify({ error: message }), {
+          status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
       const t = await response.text();
       console.error("AI gateway error:", response.status, t);
-      throw new Error("AI gateway error");
+      throw new Error(`AI gateway error (${response.status})`);
     }
 
     // Read the SSE stream and accumulate the output text.
