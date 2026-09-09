@@ -13,10 +13,34 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
-    const contextParts = [`Navn: ${name}`, `Type: ${type === "model" ? "AI-modell" : "AI-verktøy"}`];
+    const isModel = type === "model";
+    const contextParts = [`Navn: ${name}`, `Type: ${isModel ? "AI-modell" : "AI-verktøy"}`];
     if (provider) contextParts.push(`Leverandør: ${provider}`);
     if (category) contextParts.push(`Kategori: ${category}`);
     if (modality) contextParts.push(`Modalitet: ${modality}`);
+
+    const systemPrompt = `Du er en AI-rådgiver for en norsk organisasjon som kartlegger AI-verktøy og modeller.
+
+KRITISKE REGLER:
+1. Du skriver KUN om det eksakte navnet brukeren oppgir. Du skal ALDRI erstatte det med, eller beskrive, en annen modell/verktøy med lignende navn (f.eks. ikke svar om "Claude 3.5 Sonnet" hvis navnet er "Claude Fable").
+2. Hvis du ikke sikkert kjenner akkurat dette navnet, sett "uncertain": true og "uncertainty_note" til en kort forklaring på norsk. Ikke dikt opp fakta, versjonsnumre, priser eller lenker. La "link" og "vendor" stå tomme hvis du ikke er sikker.
+3. Når du er usikker: skriv generisk, forsiktig veiledning basert på navnet/leverandøren og typen (${isModel ? "modell" : "verktøy"}), og gjør det tydelig i teksten at det må verifiseres mot leverandørens dokumentasjon.
+4. Eksempelprompter skal være konkrete og relevante for bruksområdet, formatert som markdown-liste.
+5. Alt innhold på norsk.
+
+Svar KUN med ett gyldig JSON-objekt, uten kodeblokk eller annen tekst:
+{
+  "category": "Kort kategori (f.eks. Kodehjelp, Chatbot, Bildegenerering, Skriveassistent)",
+  "vendor": "Leverandørens offisielle navn, eller tom streng hvis usikker",
+  "link": "Offisiell URL (https://...), eller tom streng hvis usikker",
+  "best_for": "Hva dette er best egnet for (1-2 setninger)",
+  "example_prompts": "3-5 eksempelprompter som markdown-liste",
+  "do_this": "2-3 konkrete tips for god bruk",
+  "avoid_this": "2-3 ting man bør unngå",
+  "security_guidance": "Kort sikkerhetsveiledning for enterprise-bruk (1-2 setninger)",
+  "uncertain": true eller false,
+  "uncertainty_note": "Kort merknad hvis usikker, ellers tom streng"
+}`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -25,54 +49,15 @@ serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
+        model: "openai/gpt-6-astra",
+        reasoning_effort: "low",
         messages: [
-          {
-            role: "system",
-            content: `Du er en AI-rådgiver for en norsk organisasjon som kartlegger og evaluerer AI-verktøy og modeller.
-Gi praktisk, konkret veiledning på norsk. Svar ALLTID som gyldig JSON med disse nøklene:
-{
-  "category": "Kort kategori for verktøyet/modellen (f.eks. Kodehjelp, Chatbot, Bildegenerering, Skriveassistent, Produktivitet)",
-  "vendor": "Leverandørens/selskapets offisielle navn",
-  "link": "Offisiell URL til verktøyet/modellen (https://...)",
-  "best_for": "Kort beskrivelse av hva verktøyet/modellen er best egnet for (1-2 setninger)",
-  "example_prompts": "3-5 eksempelprompter i markdown-liste format som viser god bruk",
-  "do_this": "2-3 konkrete tips for god bruk (kort tekst)",
-  "avoid_this": "2-3 ting man bør unngå (kort tekst)",
-  "security_guidance": "Kort sikkerhetsveiledning relevant for enterprise-bruk (1-2 setninger)"
-}
-Ingen annen tekst utenfor JSON-objektet.`,
-          },
+          { role: "system", content: systemPrompt },
           {
             role: "user",
-            content: `Generer katalogoppføring for:\n${contextParts.join("\n")}`,
+            content: `Generer katalogoppføring for nøyaktig dette navnet (ikke bytt til en annen modell/verktøy):\n${contextParts.join("\n")}`,
           },
         ],
-        tools: [
-          {
-            type: "function",
-            function: {
-              name: "catalog_entry",
-              description: "Return structured catalog entry info",
-              parameters: {
-                type: "object",
-                properties: {
-                  category: { type: "string" },
-                  vendor: { type: "string" },
-                  link: { type: "string" },
-                  best_for: { type: "string" },
-                  example_prompts: { type: "string" },
-                  do_this: { type: "string" },
-                  avoid_this: { type: "string" },
-                  security_guidance: { type: "string" },
-                },
-                required: ["category", "vendor", "link", "best_for", "example_prompts", "do_this", "avoid_this", "security_guidance"],
-                additionalProperties: false,
-              },
-            },
-          },
-        ],
-        tool_choice: { type: "function", function: { name: "catalog_entry" } },
       }),
     });
 
@@ -93,21 +78,13 @@ Ingen annen tekst utenfor JSON-objektet.`,
     }
 
     const data = await response.json();
-    const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
-    
-    let result;
-    if (toolCall) {
-      result = JSON.parse(toolCall.function.arguments);
-    } else {
-      // Fallback: try parsing content as JSON
-      const content = data.choices?.[0]?.message?.content || "";
-      const jsonMatch = content.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        result = JSON.parse(jsonMatch[0]);
-      } else {
-        throw new Error("Could not parse AI response");
-      }
+    const content = data.choices?.[0]?.message?.content || "";
+    const jsonMatch = content.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      console.error("Unparsable AI content:", content.slice(0, 500));
+      throw new Error("Could not parse AI response");
     }
+    const result = JSON.parse(jsonMatch[0]);
 
     return new Response(JSON.stringify(result), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
