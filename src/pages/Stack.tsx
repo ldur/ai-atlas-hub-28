@@ -126,6 +126,11 @@ const Stack = () => {
   const getModelProvider = (id: string) => models.find((m) => m.id === id)?.provider || null;
   const getToolLink = (id: string) => tools.find((t) => t.id === id)?.link || null;
   const getToolVendor = (id: string) => tools.find((t) => t.id === id)?.vendor || null;
+  const getToolScope = (id: string) => {
+    const scope = tools.find((t) => t.id === id)?.usage_scope;
+    if (!scope) return null;
+    return scope === "INTERNAL" ? t("usage.internal") : scope === "CUSTOMER" ? t("usage.customer") : t("usage.both");
+  };
   const getModelLink = (id: string) => models.find((m) => m.id === id)?.link || null;
   const getToolExtra = (id: string) => {
     const tool = tools.find((t) => t.id === id);
@@ -168,6 +173,7 @@ const Stack = () => {
             getExtra={getToolExtra}
             getLink={getToolLink}
             getLinkLabel={getToolVendor}
+            getScope={getToolScope}
             onClickItem={(id) => navigate(`/katalog/${id}`)}
             statusLabels={statusLabels}
             noItemsText={t("stack.no_items")}
