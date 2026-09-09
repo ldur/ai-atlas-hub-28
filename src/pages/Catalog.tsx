@@ -165,6 +165,17 @@ const Catalog = () => {
             <SelectItem value="NONE">{t("status.not_classified")}</SelectItem>
           </SelectContent>
         </Select>
+        <Select value={deploymentFilter} onValueChange={setDeploymentFilter}>
+          <SelectTrigger className="w-[150px]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent className="bg-popover z-50">
+            <SelectItem value="ALL">{t("deployment.all")}</SelectItem>
+            <SelectItem value="LOCAL">{t("deployment.local")}</SelectItem>
+            <SelectItem value="CLOUD">{t("deployment.cloud")}</SelectItem>
+            <SelectItem value="NONE">{t("deployment.none")}</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       <Tabs defaultValue="tools" className="w-full">
