@@ -52,7 +52,7 @@ const translations = {
   "nav.survey": { no: "Kartlegging", en: "Survey" },
   "nav.insights": { no: "Innsikt", en: "Insights" },
   "nav.stack": { no: "Anbefalt Stack", en: "Recommended Stack" },
-  "nav.catalog": { no: "Anbefalt Stack", en: "Recommended Stack" },
+  "nav.catalog": { no: "Katalog", en: "Catalog" },
   "nav.learning": { no: "Læring", en: "Learning" },
   "nav.admin": { no: "Admin", en: "Admin" },
 
@@ -131,7 +131,7 @@ const translations = {
   "stack.see_details": { no: "Se detaljer og veiledning →", en: "See details and guidance →" },
 
   // Catalog page
-  "catalog.title": { no: "Anbefalt Stack", en: "Recommended Stack" },
+  "catalog.title": { no: "Katalog", en: "Catalog" },
   "catalog.subtitle": { no: "Komplett oversikt over alle AI-verktøy og modeller", en: "Complete overview of all AI tools and models" },
   "catalog.search": { no: "Søk i katalogen...", en: "Search the catalog..." },
   "catalog.filter_status": { no: "Filtrer status", en: "Filter status" },
