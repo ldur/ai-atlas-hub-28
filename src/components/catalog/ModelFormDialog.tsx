@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { adminAction } from "@/lib/adminAction";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, Sparkles, Target, MessageSquare, CheckCircle2, XCircle, Shield } from "lucide-react";
+import { Loader2, Sparkles, Target } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
@@ -20,11 +20,7 @@ interface ModelFormDialogProps {
 }
 
 const catalogFields = [
-  { key: "best_for", label: "Best for", icon: Target, rows: 2 },
-  { key: "example_prompts", label: "Eksempelprompter", icon: MessageSquare, rows: 4 },
-  { key: "do_this", label: "Gjør dette", icon: CheckCircle2, rows: 2 },
-  { key: "avoid_this", label: "Unngå dette", icon: XCircle, rows: 2 },
-  { key: "security_guidance", label: "Sikkerhetsveiledning", icon: Shield, rows: 2 },
+  { key: "best_for", label: "Best for", icon: Target, rows: 3 },
 ] as const;
 
 export const ModelFormDialog = ({ open, onOpenChange, model, onSaved, initialCatalogEntry }: ModelFormDialogProps) => {
@@ -33,18 +29,11 @@ export const ModelFormDialog = ({ open, onOpenChange, model, onSaved, initialCat
   const [modality, setModality] = useState("");
   const [link, setLink] = useState("");
   const [deployment, setDeployment] = useState("none");
-  const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
   const [generating, setGenerating] = useState(false);
 
   const [catalogEntryId, setCatalogEntryId] = useState<string | null>(null);
-  const [catalog, setCatalog] = useState({
-    best_for: "",
-    example_prompts: "",
-    do_this: "",
-    avoid_this: "",
-    security_guidance: "",
-  });
+  const [catalog, setCatalog] = useState({ best_for: "" });
 
   useEffect(() => {
     if (!open) return;
@@ -53,17 +42,12 @@ export const ModelFormDialog = ({ open, onOpenChange, model, onSaved, initialCat
       setProvider(model.provider || "");
       setModality(model.modality || "");
       setLink(model.link || "");
-      setNotes(model.notes || "");
       setDeployment(model.deployment || "none");
       if (initialCatalogEntry !== undefined) {
         const data = initialCatalogEntry;
         setCatalogEntryId(data?.id || null);
         setCatalog({
           best_for: data?.best_for || "",
-          example_prompts: data?.example_prompts || "",
-          do_this: data?.do_this || "",
-          avoid_this: data?.avoid_this || "",
-          security_guidance: data?.security_guidance || "",
         });
       } else {
         supabase.from("catalog_entries").select("*").eq("model_id", model.id).maybeSingle().then(({ data, error }) => {
@@ -71,17 +55,13 @@ export const ModelFormDialog = ({ open, onOpenChange, model, onSaved, initialCat
           setCatalogEntryId(data?.id || null);
           setCatalog({
             best_for: data?.best_for || "",
-            example_prompts: data?.example_prompts || "",
-            do_this: data?.do_this || "",
-            avoid_this: data?.avoid_this || "",
-            security_guidance: data?.security_guidance || "",
           });
         });
       }
     } else {
-      setName(""); setProvider(""); setModality(""); setLink(""); setNotes(""); setDeployment("none");
+      setName(""); setProvider(""); setModality(""); setLink(""); setDeployment("none");
       setCatalogEntryId(null);
-      setCatalog({ best_for: "", example_prompts: "", do_this: "", avoid_this: "", security_guidance: "" });
+      setCatalog({ best_for: "" });
     }
   }, [model, open, initialCatalogEntry]);
 
@@ -100,10 +80,6 @@ export const ModelFormDialog = ({ open, onOpenChange, model, onSaved, initialCat
       setLink(data.link || "");
       setCatalog({
         best_for: data.best_for || "",
-        example_prompts: data.example_prompts || "",
-        do_this: data.do_this || "",
-        avoid_this: data.avoid_this || "",
-        security_guidance: data.security_guidance || "",
       });
       if (data.uncertain) {
         toast.warning(data.uncertainty_note || "AI er usikker på denne modellen – verifiser innholdet mot leverandøren.");
@@ -128,7 +104,6 @@ export const ModelFormDialog = ({ open, onOpenChange, model, onSaved, initialCat
         provider: provider.trim() || null,
         modality: modality.trim() || null,
         link: link.trim() || null,
-        notes: notes.trim() || null,
         deployment: deployment === "none" ? null : deployment,
       };
 
@@ -203,11 +178,6 @@ export const ModelFormDialog = ({ open, onOpenChange, model, onSaved, initialCat
               </SelectContent>
             </Select>
           </div>
-          <div className="space-y-1.5">
-            <Label className="text-xs">Notater</Label>
-            <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} placeholder="Valgfrie notater..." />
-          </div>
-
           <Separator />
 
           <Label className="text-sm font-semibold">Katalogoppføring</Label>
