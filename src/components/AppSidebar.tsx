@@ -18,7 +18,7 @@ const navKeys = [
   { key: "nav.home" as const, url: "/", icon: Home },
   { key: "nav.survey" as const, url: "/kartlegging", icon: ClipboardList },
   { key: "nav.insights" as const, url: "/innsikt", icon: BarChart3 },
-  { key: "nav.stack" as const, url: "/stack", icon: CheckSquare },
+  
   { key: "nav.catalog" as const, url: "/katalog", icon: BookOpen },
   { key: "nav.learning" as const, url: "/laering", icon: GraduationCap },
   { key: "nav.pricing" as const, url: "/priskalkulator", icon: Calculator },

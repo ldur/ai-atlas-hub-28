@@ -7,6 +7,7 @@ import { getNickname, setNickname, setAliasId, getAliasId, generateNickname } fr
 import { supabase } from "@/integrations/supabase/client";
 import { Brain, ClipboardList, BarChart3, CheckSquare, BookOpen, GraduationCap, Lock, RefreshCw } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
+import Stack from "@/pages/Stack";
 
 const Index = () => {
   const [nickname, setNicknameState] = useState("");

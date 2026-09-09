@@ -34,7 +34,7 @@ const App = () => (
               <Route path="/kartlegging" element={<Survey />} />
               <Route path="/kartlegging/:surveyId" element={<Survey />} />
               <Route path="/innsikt" element={<Insights />} />
-              <Route path="/stack" element={<Stack />} />
+              <Route path="/stack" element={<Navigate to="/" replace />} />
               <Route path="/katalog" element={<Catalog />} />
               <Route path="/katalog/:toolId" element={<ToolDetail />} />
               <Route path="/katalog/modell/:modelId" element={<ModelDetail />} />
