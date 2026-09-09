@@ -110,7 +110,11 @@ export const ToolFormDialog = ({ open, onOpenChange, tool, onSaved, initialCatal
         avoid_this: data.avoid_this || "",
         security_guidance: data.security_guidance || "",
       });
-      toast.success("AI-generert innhold klart!");
+      if (data.uncertain) {
+        toast.warning(data.uncertainty_note || "AI er usikker på dette verktøyet – verifiser innholdet mot leverandøren.");
+      } else {
+        toast.success("AI-generert innhold klart!");
+      }
     } catch (e: any) {
       toast.error(e.message || "Kunne ikke generere innhold");
     } finally {
