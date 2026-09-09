@@ -94,6 +94,18 @@ const Catalog = () => {
     }
   };
 
+  const handleDeploymentChange = async (value: string, modelId: string) => {
+    if (!admin) { toast.error(t("status.only_admin")); return; }
+    try {
+      const payload = { deployment: value === "NONE" ? null : value };
+      const data = await adminAction({ action: "update", table: "models", id: modelId, payload });
+      setModels((prev) => prev.map((m) => (m.id === modelId ? { ...m, ...data } : m)));
+      toast.success(t("status.updated"));
+    } catch (e: any) {
+      toast.error(e.message || t("common.error"));
+    }
+  };
+
   const matchesStatusFilter = (itemId: string, type: "tool" | "model") => {
     if (statusFilter === "ALL") return true;
     const ev = type === "tool" ? getToolEval(itemId) : getModelEval(itemId);
