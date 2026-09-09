@@ -40,6 +40,12 @@ const translations = {
   "deployment.cloud": { no: "Cloud", en: "Cloud" },
   "deployment.all": { no: "All drift", en: "All deployments" },
   "deployment.none": { no: "Ikke satt", en: "Not set" },
+  "usage.label": { no: "Bruksområde", en: "Usage scope" },
+  "usage.internal": { no: "Intern", en: "Internal" },
+  "usage.customer": { no: "Kunde", en: "Customer" },
+  "usage.both": { no: "Begge", en: "Both" },
+  "usage.all": { no: "Alle bruksområder", en: "All usage scopes" },
+  "usage.none": { no: "Ikke satt", en: "Not set" },
 
   // Nav
   "nav.home": { no: "Hjem", en: "Home" },
