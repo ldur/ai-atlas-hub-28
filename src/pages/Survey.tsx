@@ -67,6 +67,8 @@ const Survey = () => {
   const [survey, setSurvey] = useState<SurveyRecord | null>(null);
   const [allSurveys, setAllSurveys] = useState<SurveyRecord[]>([]);
   const [surveyLoading, setSurveyLoading] = useState(true);
+  const [hasAlias, setHasAlias] = useState(true);
+
   const { toast } = useToast();
   const navigate = useNavigate();
   const { t } = useI18n();
