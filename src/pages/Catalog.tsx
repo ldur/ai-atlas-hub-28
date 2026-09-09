@@ -199,6 +199,18 @@ const Catalog = () => {
             <SelectItem value="NONE">{t("deployment.none")}</SelectItem>
           </SelectContent>
         </Select>
+        <Select value={usageFilter} onValueChange={setUsageFilter}>
+          <SelectTrigger className="w-[170px]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent className="bg-popover z-50">
+            <SelectItem value="ALL">{t("usage.all")}</SelectItem>
+            <SelectItem value="INTERNAL">{t("usage.internal")}</SelectItem>
+            <SelectItem value="CUSTOMER">{t("usage.customer")}</SelectItem>
+            <SelectItem value="BOTH">{t("usage.both")}</SelectItem>
+            <SelectItem value="NONE">{t("usage.none")}</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       <Tabs defaultValue="tools" className="w-full">
