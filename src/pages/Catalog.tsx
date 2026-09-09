@@ -23,6 +23,7 @@ const Catalog = () => {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [deploymentFilter, setDeploymentFilter] = useState("ALL");
+  const [usageFilter, setUsageFilter] = useState("ALL");
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const admin = isAdmin();
