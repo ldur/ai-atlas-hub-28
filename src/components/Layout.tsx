@@ -4,6 +4,7 @@ import { AppSidebar } from "@/components/AppSidebar";
 import { UserMenu } from "@/components/UserMenu";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { RequestEvaluation } from "@/components/RequestEvaluation";
 import { getNickname } from "@/lib/nickname";
 import { isAdmin } from "@/lib/adminAction";
 
