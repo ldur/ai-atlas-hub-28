@@ -159,6 +159,11 @@ const Stack = () => {
     return scope === "INTERNAL" ? t("usage.internal") : scope === "CUSTOMER" ? t("usage.customer") : t("usage.both");
   };
   const getModelLink = (id: string) => models.find((m) => m.id === id)?.link || null;
+  const getModelDeployment = (id: string) => {
+    const dep = models.find((m) => m.id === id)?.deployment;
+    if (!dep) return null;
+    return dep === "LOCAL" ? t("deployment.local") : t("deployment.cloud");
+  };
   const getToolExtra = (id: string) => {
     const tool = tools.find((t) => t.id === id);
     const cat = catalogEntries.find((c) => c.tool_id === id);
@@ -249,6 +254,7 @@ const Stack = () => {
             getExtra={getModelExtra}
             getLink={getModelLink}
             getLinkLabel={getModelProvider}
+            getScope={getModelDeployment}
             onClickItem={(id) => navigate(`/katalog/modell/${id}`)}
             statusLabels={statusLabels}
             noItemsText={t("stack.no_items")}
