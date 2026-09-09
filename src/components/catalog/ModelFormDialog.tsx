@@ -86,7 +86,7 @@ export const ModelFormDialog = ({ open, onOpenChange, model, onSaved, initialCat
   }, [model, open, initialCatalogEntry]);
 
   const handleGenerate = async () => {
-    if (!name.trim()) { toast.error("Fyll inn navn først"); return; }
+    if (!name.trim()) { toast.error("Fyll inn modellfamilie først"); return; }
     setGenerating(true);
     // Clear previously generated content before regenerating
     setProvider("");
@@ -173,9 +173,9 @@ export const ModelFormDialog = ({ open, onOpenChange, model, onSaved, initialCat
         </DialogHeader>
         <div className="space-y-3">
           <div className="space-y-1.5">
-            <Label className="text-xs">Navn *</Label>
+            <Label className="text-xs">Modellfamilie *</Label>
             <div className="flex gap-2">
-              <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="F.eks. GPT-4o" className="flex-1" />
+              <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="F.eks. GPT-5, Claude, Gemini" className="flex-1" />
               <Button variant="outline" size="sm" onClick={handleGenerate} disabled={generating} className="gap-1.5 shrink-0">
                 {generating ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
                 {generating ? "Genererer..." : "Fyll med AI"}
