@@ -379,6 +379,25 @@ const translations = {
   "surveys.custom_questions": { no: "Egne fritekstspørsmål", en: "Custom freetext questions" },
   "surveys.custom_question_placeholder": { no: "Skriv spørsmål og trykk Enter...", en: "Type question and press Enter..." },
 
+  // Requests
+  "request.button": { no: "Foreslå vurdering", en: "Request evaluation" },
+  "request.title": { no: "Foreslå nytt verktøy eller modellfamilie", en: "Request a new tool or model family" },
+  "request.desc": { no: "Forslaget legges inn med status Prøveperiode slik at det kan vurderes.", en: "The request is added with Trial status so it can be evaluated." },
+  "request.type": { no: "Type", en: "Type" },
+  "request.tool": { no: "Verktøy", en: "Tool" },
+  "request.model": { no: "Modellfamilie", en: "Model family" },
+  "request.name": { no: "Navn", en: "Name" },
+  "request.name_placeholder": { no: "F.eks. Cursor eller Claude", en: "E.g. Cursor or Claude" },
+  "request.vendor": { no: "Leverandør (valgfritt)", en: "Vendor (optional)" },
+  "request.link": { no: "Lenke (valgfritt)", en: "Link (optional)" },
+  "request.reason": { no: "Hvorfor bør dette vurderes?", en: "Why should this be evaluated?" },
+  "request.submit": { no: "Send forespørsel", en: "Send request" },
+  "request.sent": { no: "Forespørselen er sendt!", en: "Request sent!" },
+  "request.error": { no: "Kunne ikke sende forespørselen", en: "Could not send the request" },
+  "request.list_title": { no: "Forespørsler", en: "Requests" },
+  "request.empty": { no: "Ingen forespørsler ennå", en: "No requests yet" },
+
+
   // 404
   "notfound.title": { no: "Siden ble ikke funnet", en: "Page not found" },
   "notfound.go_home": { no: "Gå til forsiden", en: "Return to Home" },
