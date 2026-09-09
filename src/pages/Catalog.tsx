@@ -327,8 +327,27 @@ const Catalog = () => {
                           ) : null}
                         </div>
                       </div>
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
                         {model.modality && <span>{model.modality}</span>}
+                        {admin ? (
+                          <Select
+                            value={model.deployment || "NONE"}
+                            onValueChange={(val) => handleDeploymentChange(val, model.id)}
+                          >
+                            <SelectTrigger className="w-auto h-6 text-xs px-2 gap-1" onClick={(e) => e.stopPropagation()}>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent className="bg-popover z-50">
+                              <SelectItem value="NONE">{t("deployment.none")}</SelectItem>
+                              <SelectItem value="LOCAL">{t("deployment.local")}</SelectItem>
+                              <SelectItem value="CLOUD">{t("deployment.cloud")}</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        ) : model.deployment ? (
+                          <Badge variant="secondary">
+                            {model.deployment === "LOCAL" ? t("deployment.local") : t("deployment.cloud")}
+                          </Badge>
+                        ) : null}
                       </div>
                       {model.link && (
                         <a
