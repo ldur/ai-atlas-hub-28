@@ -3,8 +3,10 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
-import { CircleCheck, CircleX, FlaskConical, Wrench, Brain, ChevronRight } from "lucide-react";
+import { CircleCheck, CircleX, FlaskConical, Wrench, Brain, ChevronRight, Search } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 
 const groups = ["ALLOWED", "NOT_ALLOWED", "TRIAL"] as const;
@@ -91,6 +93,10 @@ const Stack = () => {
   const [tools, setTools] = useState<any[]>([]);
   const [models, setModels] = useState<any[]>([]);
   const [catalogEntries, setCatalogEntries] = useState<any[]>([]);
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("ALL");
+  const [deploymentFilter, setDeploymentFilter] = useState("ALL");
+  const [usageFilter, setUsageFilter] = useState("ALL");
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const { t } = useI18n();
@@ -118,8 +124,29 @@ const Stack = () => {
     TRIAL: { label: t("status.trial"), icon: FlaskConical, color: "bg-accent text-accent-foreground" },
   };
 
-  const toolEvals = evaluations.filter((e) => e.tool_id);
-  const modelEvals = evaluations.filter((e) => e.model_id && !e.tool_id);
+  const q = search.trim().toLowerCase();
+  const matchesText = (...values: (string | null | undefined)[]) =>
+    !q || values.some((v) => (v || "").toLowerCase().includes(q));
+
+  const toolEvals = evaluations.filter((e) => {
+    if (!e.tool_id) return false;
+    if (statusFilter !== "ALL" && e.decided_status !== statusFilter) return false;
+    const tool = tools.find((tl) => tl.id === e.tool_id);
+    if (usageFilter !== "ALL") {
+      if (usageFilter === "NONE" ? !!tool?.usage_scope : !(tool?.usage_scope === usageFilter || tool?.usage_scope === "BOTH")) return false;
+    }
+    return matchesText(tool?.name, tool?.category, tool?.vendor);
+  });
+
+  const modelEvals = evaluations.filter((e) => {
+    if (!e.model_id || e.tool_id) return false;
+    if (statusFilter !== "ALL" && e.decided_status !== statusFilter) return false;
+    const model = models.find((m) => m.id === e.model_id);
+    if (deploymentFilter !== "ALL") {
+      if (deploymentFilter === "NONE" ? !!model?.deployment : model?.deployment !== deploymentFilter) return false;
+    }
+    return matchesText(model?.name, model?.provider, model?.modality);
+  });
 
   const getToolName = (id: string) => tools.find((t) => t.id === id)?.name || t("common.unknown");
   const getModelName = (id: string) => models.find((m) => m.id === id)?.name || t("common.unknown");
