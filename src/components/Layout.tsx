@@ -31,6 +31,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           <header className="h-14 flex items-center justify-between border-b border-border px-4 bg-card shrink-0">
             {loggedIn ? <SidebarTrigger /> : <div />}
             <div className="flex items-center gap-1">
+              <RequestEvaluation />
               <LanguageSwitcher />
               <ThemeToggle />
               <UserMenu />
