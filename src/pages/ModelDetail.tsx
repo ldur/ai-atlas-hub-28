@@ -4,8 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import ReactMarkdown from "react-markdown";
-import { ArrowLeft, Target, MessageSquare, CheckCircle2, XCircle, Shield, CircleCheck, CircleX, FlaskConical } from "lucide-react";
+import { ArrowLeft, Target, CircleCheck, CircleX, FlaskConical } from "lucide-react";
+
 import { useI18n } from "@/lib/i18n";
 
 const ModelDetail = () => {
@@ -67,12 +67,6 @@ const ModelDetail = () => {
         </div>
       </div>
 
-      {model.notes && (
-        <Card>
-          <CardHeader><CardTitle className="text-base">{t("detail.notes")}</CardTitle></CardHeader>
-          <CardContent className="text-sm text-muted-foreground">{model.notes}</CardContent>
-        </Card>
-      )}
 
       {catalogEntry && (
         <div className="space-y-4">
@@ -80,32 +74,6 @@ const ModelDetail = () => {
             <Card>
               <CardHeader><CardTitle className="text-base flex items-center gap-1.5"><Target className="h-4 w-4" /> {t("detail.best_for")}</CardTitle></CardHeader>
               <CardContent className="text-sm text-muted-foreground">{catalogEntry.best_for}</CardContent>
-            </Card>
-          )}
-          {catalogEntry.example_prompts && (
-            <Card>
-              <CardHeader><CardTitle className="text-base flex items-center gap-1.5"><MessageSquare className="h-4 w-4" /> {t("detail.example_prompts")}</CardTitle></CardHeader>
-              <CardContent className="prose-catalog text-sm text-muted-foreground">
-                <ReactMarkdown>{catalogEntry.example_prompts}</ReactMarkdown>
-              </CardContent>
-            </Card>
-          )}
-          {catalogEntry.do_this && (
-            <Card>
-              <CardHeader><CardTitle className="text-base text-success flex items-center gap-1.5"><CheckCircle2 className="h-4 w-4" /> {t("detail.do_this")}</CardTitle></CardHeader>
-              <CardContent className="text-sm text-muted-foreground">{catalogEntry.do_this}</CardContent>
-            </Card>
-          )}
-          {catalogEntry.avoid_this && (
-            <Card>
-              <CardHeader><CardTitle className="text-base text-destructive flex items-center gap-1.5"><XCircle className="h-4 w-4" /> {t("detail.avoid_this")}</CardTitle></CardHeader>
-              <CardContent className="text-sm text-muted-foreground">{catalogEntry.avoid_this}</CardContent>
-            </Card>
-          )}
-          {catalogEntry.security_guidance && (
-            <Card>
-              <CardHeader><CardTitle className="text-base flex items-center gap-1.5"><Shield className="h-4 w-4" /> {t("detail.security")}</CardTitle></CardHeader>
-              <CardContent className="text-sm text-muted-foreground">{catalogEntry.security_guidance}</CardContent>
             </Card>
           )}
         </div>
