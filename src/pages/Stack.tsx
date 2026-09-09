@@ -188,42 +188,15 @@ const Stack = () => {
         <p className="text-muted-foreground">{t("stack.subtitle")}</p>
       </div>
 
-      <div className="flex flex-wrap gap-3">
-        <div className="relative flex-1 min-w-[200px]">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input placeholder={t("catalog.search")} className="pl-9" value={search} onChange={(e) => setSearch(e.target.value)} />
-        </div>
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-[180px]"><SelectValue /></SelectTrigger>
-          <SelectContent className="bg-popover z-50">
-            <SelectItem value="ALL">{t("status.all_statuses")}</SelectItem>
-            <SelectItem value="ALLOWED">{t("status.allowed")}</SelectItem>
-            <SelectItem value="NOT_ALLOWED">{t("status.not_allowed")}</SelectItem>
-            <SelectItem value="TRIAL">{t("status.trial")}</SelectItem>
-          </SelectContent>
-        </Select>
-        <Select value={deploymentFilter} onValueChange={setDeploymentFilter}>
-          <SelectTrigger className="w-[150px]"><SelectValue /></SelectTrigger>
-          <SelectContent className="bg-popover z-50">
-            <SelectItem value="ALL">{t("deployment.all")}</SelectItem>
-            <SelectItem value="LOCAL">{t("deployment.local")}</SelectItem>
-            <SelectItem value="CLOUD">{t("deployment.cloud")}</SelectItem>
-            <SelectItem value="NONE">{t("deployment.none")}</SelectItem>
-          </SelectContent>
-        </Select>
-        <Select value={usageFilter} onValueChange={setUsageFilter}>
-          <SelectTrigger className="w-[170px]"><SelectValue /></SelectTrigger>
-          <SelectContent className="bg-popover z-50">
-            <SelectItem value="ALL">{t("usage.all")}</SelectItem>
-            <SelectItem value="INTERNAL">{t("usage.internal")}</SelectItem>
-            <SelectItem value="CUSTOMER">{t("usage.customer")}</SelectItem>
-            <SelectItem value="BOTH">{t("usage.both")}</SelectItem>
-            <SelectItem value="NONE">{t("usage.none")}</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      <Tabs defaultValue="tools" className="w-full">
+      <Tabs
+        value={tab}
+        onValueChange={(v) => {
+          setTab(v);
+          setUsageFilter("ALL");
+          setDeploymentFilter("ALL");
+        }}
+        className="w-full"
+      >
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="tools" className="flex items-center gap-1.5">
             <Wrench className="h-4 w-4" /> {t("common.tools")} ({toolEvals.length})
@@ -232,6 +205,44 @@ const Stack = () => {
             <Brain className="h-4 w-4" /> {t("common.models")} ({modelEvals.length})
           </TabsTrigger>
         </TabsList>
+
+        <div className="flex flex-wrap gap-3 mt-6">
+          <div className="relative flex-1 min-w-[200px]">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input placeholder={t("catalog.search")} className="pl-9" value={search} onChange={(e) => setSearch(e.target.value)} />
+          </div>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-[180px]"><SelectValue /></SelectTrigger>
+            <SelectContent className="bg-popover z-50">
+              <SelectItem value="ALL">{t("status.all_statuses")}</SelectItem>
+              <SelectItem value="ALLOWED">{t("status.allowed")}</SelectItem>
+              <SelectItem value="NOT_ALLOWED">{t("status.not_allowed")}</SelectItem>
+              <SelectItem value="TRIAL">{t("status.trial")}</SelectItem>
+            </SelectContent>
+          </Select>
+          {tab === "tools" ? (
+            <Select value={usageFilter} onValueChange={setUsageFilter}>
+              <SelectTrigger className="w-[170px]"><SelectValue /></SelectTrigger>
+              <SelectContent className="bg-popover z-50">
+                <SelectItem value="ALL">{t("usage.all")}</SelectItem>
+                <SelectItem value="INTERNAL">{t("usage.internal")}</SelectItem>
+                <SelectItem value="CUSTOMER">{t("usage.customer")}</SelectItem>
+                <SelectItem value="BOTH">{t("usage.both")}</SelectItem>
+                <SelectItem value="NONE">{t("usage.none")}</SelectItem>
+              </SelectContent>
+            </Select>
+          ) : (
+            <Select value={deploymentFilter} onValueChange={setDeploymentFilter}>
+              <SelectTrigger className="w-[150px]"><SelectValue /></SelectTrigger>
+              <SelectContent className="bg-popover z-50">
+                <SelectItem value="ALL">{t("deployment.all")}</SelectItem>
+                <SelectItem value="LOCAL">{t("deployment.local")}</SelectItem>
+                <SelectItem value="CLOUD">{t("deployment.cloud")}</SelectItem>
+                <SelectItem value="NONE">{t("deployment.none")}</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
+        </div>
 
         <TabsContent value="tools" className="mt-6">
           <StackSection
