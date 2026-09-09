@@ -14,26 +14,30 @@ serve(async (req) => {
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
     const isModel = type === "model";
-    const contextParts = [`Navn: ${name}`, `Type: ${isModel ? "AI-modell" : "AI-verktøy"}`];
+    const contextParts = [
+      isModel ? `Modellfamilie: ${name}` : `Navn: ${name}`,
+      `Type: ${isModel ? "AI-modellfamilie" : "AI-verktøy"}`,
+    ];
     if (provider) contextParts.push(`Leverandør: ${provider}`);
     if (category) contextParts.push(`Kategori: ${category}`);
     if (modality) contextParts.push(`Modalitet: ${modality}`);
 
-    const systemPrompt = `Du er en AI-rådgiver for en norsk organisasjon som kartlegger AI-verktøy og modeller.
+    const systemPrompt = `Du er en AI-rådgiver for en norsk organisasjon som kartlegger AI-verktøy og modellfamilier.
 
 KRITISKE REGLER:
 1. Du skriver KUN om det eksakte navnet brukeren oppgir. Du skal ALDRI erstatte det med, eller beskrive, en annen modell/verktøy med lignende navn (f.eks. ikke svar om "Claude 3.5 Sonnet" hvis navnet er "Claude Fable").
-2. Hvis du ikke sikkert kjenner akkurat dette navnet, sett "uncertain": true og "uncertainty_note" til en kort forklaring på norsk. Ikke dikt opp fakta, versjonsnumre, priser eller lenker. La "link" og "vendor" stå tomme hvis du ikke er sikker.
-3. Når du er usikker: skriv generisk, forsiktig veiledning basert på navnet/leverandøren og typen (${isModel ? "modell" : "verktøy"}), og gjør det tydelig i teksten at det må verifiseres mot leverandørens dokumentasjon.
-4. Eksempelprompter skal være konkrete og relevante for bruksområdet, formatert som markdown-liste.
-5. Alt innhold på norsk.
+${isModel ? `2. Navnet er en MODELLFAMILIE (f.eks. GPT-5, Claude, Gemini, Llama), ikke én enkelt versjon. Beskriv familien som helhet: hva den brukes til, hvilke typer varianter den vanligvis har (f.eks. lette/raske vs. store/resonnerende), og styrker/svakheter på familienivå. Ikke lås innholdet til én bestemt versjon, og ikke oppgi presise versjonsnumre, ytelsestall eller priser du ikke er sikker på.
+` : ""}3. Hvis du ikke sikkert kjenner dette navnet, sett "uncertain": true og "uncertainty_note" til en kort forklaring på norsk. Ikke dikt opp fakta, versjonsnumre, priser eller lenker. La "link" og "vendor" stå tomme hvis du ikke er sikker.
+4. Når du er usikker: skriv generisk, forsiktig veiledning basert på navnet/leverandøren og typen (${isModel ? "modellfamilie" : "verktøy"}), og gjør det tydelig i teksten at det må verifiseres mot leverandørens dokumentasjon.
+5. Eksempelprompter skal være konkrete og relevante for bruksområdet, formatert som markdown-liste.
+6. Alt innhold på norsk.
 
 Svar KUN med ett gyldig JSON-objekt, uten kodeblokk eller annen tekst:
 {
-  "category": "Kort kategori (f.eks. Kodehjelp, Chatbot, Bildegenerering, Skriveassistent)",
+  "category": "${isModel ? "Kort modalitet/kategori for familien (f.eks. Tekst, Tekst og bilde, Kode)" : "Kort kategori (f.eks. Kodehjelp, Chatbot, Bildegenerering, Skriveassistent)"}",
   "vendor": "Leverandørens offisielle navn, eller tom streng hvis usikker",
   "link": "Offisiell URL (https://...), eller tom streng hvis usikker",
-  "best_for": "Hva dette er best egnet for (1-2 setninger)",
+  "best_for": "Hva ${isModel ? "denne modellfamilien" : "dette"} er best egnet for (1-2 setninger)",
   "example_prompts": "3-5 eksempelprompter som markdown-liste",
   "do_this": "2-3 konkrete tips for god bruk",
   "avoid_this": "2-3 ting man bør unngå",
