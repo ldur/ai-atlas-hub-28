@@ -95,6 +95,7 @@ const Stack = () => {
   const [catalogEntries, setCatalogEntries] = useState<any[]>([]);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
+  const [tab, setTab] = useState("tools");
   const [deploymentFilter, setDeploymentFilter] = useState("ALL");
   const [usageFilter, setUsageFilter] = useState("ALL");
   const [loading, setLoading] = useState(true);
