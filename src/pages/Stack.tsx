@@ -254,6 +254,7 @@ const Stack = () => {
             getExtra={getModelExtra}
             getLink={getModelLink}
             getLinkLabel={getModelProvider}
+            getScope={getModelDeployment}
             onClickItem={(id) => navigate(`/katalog/modell/${id}`)}
             statusLabels={statusLabels}
             noItemsText={t("stack.no_items")}
