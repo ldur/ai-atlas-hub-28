@@ -57,6 +57,18 @@ serve(async (req) => {
       }
       case "delete": {
         if (!id) throw new Error("ID er påkrevd for sletting");
+
+        // Remove dependent rows first to avoid foreign key violations
+        if (table === "tools") {
+          await supabase.from("evaluations").delete().eq("tool_id", id);
+          await supabase.from("catalog_entries").delete().eq("tool_id", id);
+          await supabase.from("pricing_configs").delete().eq("tool_id", id);
+        } else if (table === "models") {
+          await supabase.from("evaluations").delete().eq("model_id", id);
+          await supabase.from("catalog_entries").delete().eq("model_id", id);
+          await supabase.from("pricing_configs").delete().eq("model_id", id);
+        }
+
         const { error } = await supabase.from(table).delete().eq("id", id);
         if (error) throw error;
         result = { deleted: true };
@@ -72,9 +84,10 @@ serve(async (req) => {
     return new Response(JSON.stringify(result), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
-  } catch (e) {
+  } catch (e: any) {
     console.error("admin-action error:", e);
-    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }), {
+    const msg = e?.message || e?.details || e?.hint || (typeof e === "string" ? e : JSON.stringify(e));
+    return new Response(JSON.stringify({ error: msg || "Unknown error" }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
