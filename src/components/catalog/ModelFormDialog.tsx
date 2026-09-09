@@ -129,6 +129,7 @@ export const ModelFormDialog = ({ open, onOpenChange, model, onSaved, initialCat
         modality: modality.trim() || null,
         link: link.trim() || null,
         notes: notes.trim() || null,
+        deployment: deployment === "none" ? null : deployment,
       };
 
       let modelId = model?.id;
