@@ -140,7 +140,8 @@ const Catalog = () => {
       (t.name.toLowerCase().includes(search.toLowerCase()) ||
       (t.category || "").toLowerCase().includes(search.toLowerCase()) ||
       (t.vendor || "").toLowerCase().includes(search.toLowerCase())) &&
-      matchesStatusFilter(t.id, "tool")
+      matchesStatusFilter(t.id, "tool") &&
+      matchesUsageFilter(t)
   );
 
   const filteredModels = models.filter(
