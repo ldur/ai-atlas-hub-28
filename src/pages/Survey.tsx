@@ -181,9 +181,14 @@ const Survey = () => {
     }
   };
 
+  if (!hasAlias) {
+    return <NicknameGate onDone={() => setHasAlias(true)} />;
+  }
+
   if (surveyLoading) {
     return <p className="text-muted-foreground text-center mt-12">{t("common.loading")}</p>;
   }
+
 
   if (!survey) {
     return (
