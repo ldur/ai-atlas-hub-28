@@ -59,6 +59,11 @@ const ModelDetail = () => {
         <div className="flex items-center gap-2 text-muted-foreground">
           {model.provider && <span>{model.provider}</span>}
           {model.modality && <span>· {model.modality}</span>}
+          {model.deployment && (
+            <Badge variant="secondary">
+              {model.deployment === "LOCAL" ? t("deployment.local") : t("deployment.cloud")}
+            </Badge>
+          )}
         </div>
       </div>
 
