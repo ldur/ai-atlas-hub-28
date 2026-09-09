@@ -14,6 +14,8 @@ import { getAliasId } from "@/lib/nickname";
 import { useToast } from "@/hooks/use-toast";
 import { useI18n } from "@/lib/i18n";
 import { CheckCircle2, ArrowRight } from "lucide-react";
+import { NicknameGate } from "@/components/NicknameGate";
+
 
 const DRAFT_KEY = "ai-tool-atlas-survey-draft";
 
@@ -65,6 +67,8 @@ const Survey = () => {
   const [survey, setSurvey] = useState<SurveyRecord | null>(null);
   const [allSurveys, setAllSurveys] = useState<SurveyRecord[]>([]);
   const [surveyLoading, setSurveyLoading] = useState(true);
+  const [hasAlias, setHasAlias] = useState(true);
+
   const { toast } = useToast();
   const navigate = useNavigate();
   const { t } = useI18n();
@@ -128,16 +132,13 @@ const Survey = () => {
   }, []);
 
   useEffect(() => {
-    if (!getAliasId()) {
-      toast({ title: t("survey.need_nickname"), variant: "destructive" });
-      navigate("/");
-      return;
-    }
+    setHasAlias(!!getAliasId());
     const draft = localStorage.getItem(DRAFT_KEY);
     if (draft) {
       try { setData({ ...defaultData, ...JSON.parse(draft) }); } catch { }
     }
   }, []);
+
 
   useEffect(() => {
     if (!submitted) {
@@ -180,9 +181,14 @@ const Survey = () => {
     }
   };
 
+  if (!hasAlias) {
+    return <NicknameGate onDone={() => setHasAlias(true)} />;
+  }
+
   if (surveyLoading) {
     return <p className="text-muted-foreground text-center mt-12">{t("common.loading")}</p>;
   }
+
 
   if (!survey) {
     return (
