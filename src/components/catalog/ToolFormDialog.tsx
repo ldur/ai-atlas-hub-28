@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { adminAction } from "@/lib/adminAction";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, Sparkles, Target, MessageSquare, CheckCircle2, XCircle, Shield } from "lucide-react";
+import { Loader2, Sparkles, Target } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
@@ -20,11 +20,7 @@ interface ToolFormDialogProps {
 }
 
 const catalogFields = [
-  { key: "best_for", label: "Best for", icon: Target, rows: 2 },
-  { key: "example_prompts", label: "Eksempelprompter", icon: MessageSquare, rows: 4 },
-  { key: "do_this", label: "Gjør dette", icon: CheckCircle2, rows: 2 },
-  { key: "avoid_this", label: "Unngå dette", icon: XCircle, rows: 2 },
-  { key: "security_guidance", label: "Sikkerhetsveiledning", icon: Shield, rows: 2 },
+  { key: "best_for", label: "Best for", icon: Target, rows: 3 },
 ] as const;
 
 export const ToolFormDialog = ({ open, onOpenChange, tool, onSaved, initialCatalogEntry }: ToolFormDialogProps) => {
@@ -32,19 +28,12 @@ export const ToolFormDialog = ({ open, onOpenChange, tool, onSaved, initialCatal
   const [category, setCategory] = useState("");
   const [vendor, setVendor] = useState("");
   const [link, setLink] = useState("");
-  const [notes, setNotes] = useState("");
   const [usageScope, setUsageScope] = useState("none");
   const [saving, setSaving] = useState(false);
   const [generating, setGenerating] = useState(false);
 
   const [catalogEntryId, setCatalogEntryId] = useState<string | null>(null);
-  const [catalog, setCatalog] = useState({
-    best_for: "",
-    example_prompts: "",
-    do_this: "",
-    avoid_this: "",
-    security_guidance: "",
-  });
+  const [catalog, setCatalog] = useState({ best_for: "" });
 
   useEffect(() => {
     if (!open) return;
@@ -53,7 +42,6 @@ export const ToolFormDialog = ({ open, onOpenChange, tool, onSaved, initialCatal
       setCategory(tool.category || "");
       setVendor(tool.vendor || "");
       setLink(tool.link || "");
-      setNotes(tool.notes || "");
       setUsageScope(tool.usage_scope || "none");
       // Use pre-loaded catalog entry if available, otherwise fetch
       if (initialCatalogEntry !== undefined) {
@@ -61,10 +49,6 @@ export const ToolFormDialog = ({ open, onOpenChange, tool, onSaved, initialCatal
         setCatalogEntryId(data?.id || null);
         setCatalog({
           best_for: data?.best_for || "",
-          example_prompts: data?.example_prompts || "",
-          do_this: data?.do_this || "",
-          avoid_this: data?.avoid_this || "",
-          security_guidance: data?.security_guidance || "",
         });
       } else {
         supabase.from("catalog_entries").select("*").eq("tool_id", tool.id).maybeSingle().then(({ data, error }) => {
@@ -72,17 +56,13 @@ export const ToolFormDialog = ({ open, onOpenChange, tool, onSaved, initialCatal
           setCatalogEntryId(data?.id || null);
           setCatalog({
             best_for: data?.best_for || "",
-            example_prompts: data?.example_prompts || "",
-            do_this: data?.do_this || "",
-            avoid_this: data?.avoid_this || "",
-            security_guidance: data?.security_guidance || "",
           });
         });
       }
     } else {
-      setName(""); setCategory(""); setVendor(""); setLink(""); setNotes(""); setUsageScope("none");
+      setName(""); setCategory(""); setVendor(""); setLink(""); setUsageScope("none");
       setCatalogEntryId(null);
-      setCatalog({ best_for: "", example_prompts: "", do_this: "", avoid_this: "", security_guidance: "" });
+      setCatalog({ best_for: "" });
     }
   }, [tool, open, initialCatalogEntry]);
 
@@ -101,10 +81,6 @@ export const ToolFormDialog = ({ open, onOpenChange, tool, onSaved, initialCatal
       setLink(data.link || "");
       setCatalog({
         best_for: data.best_for || "",
-        example_prompts: data.example_prompts || "",
-        do_this: data.do_this || "",
-        avoid_this: data.avoid_this || "",
-        security_guidance: data.security_guidance || "",
       });
       if (data.uncertain) {
         toast.warning(data.uncertainty_note || "AI er usikker på dette verktøyet – verifiser innholdet mot leverandøren.");
@@ -129,7 +105,6 @@ export const ToolFormDialog = ({ open, onOpenChange, tool, onSaved, initialCatal
         category: category.trim() || null,
         vendor: vendor.trim() || null,
         link: link.trim() || null,
-        notes: notes.trim() || null,
         usage_scope: usageScope === "none" ? null : usageScope,
       };
 
@@ -206,10 +181,6 @@ export const ToolFormDialog = ({ open, onOpenChange, tool, onSaved, initialCatal
                 <SelectItem value="BOTH">Begge</SelectItem>
               </SelectContent>
             </Select>
-          </div>
-          <div className="space-y-1.5">
-            <Label className="text-xs">Notater</Label>
-            <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} placeholder="Valgfrie notater..." />
           </div>
 
           <Separator />
