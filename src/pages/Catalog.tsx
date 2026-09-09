@@ -280,8 +280,26 @@ const Catalog = () => {
                           ) : null}
                         </div>
                       </div>
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
                         {tool.category && <span>{tool.category}</span>}
+                        {admin ? (
+                          <Select
+                            value={tool.usage_scope || "NONE"}
+                            onValueChange={(val) => handleUsageScopeChange(val, tool.id)}
+                          >
+                            <SelectTrigger className="w-auto h-6 text-xs px-2 gap-1" onClick={(e) => e.stopPropagation()}>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent className="bg-popover z-50">
+                              <SelectItem value="NONE">{t("usage.none")}</SelectItem>
+                              <SelectItem value="INTERNAL">{t("usage.internal")}</SelectItem>
+                              <SelectItem value="CUSTOMER">{t("usage.customer")}</SelectItem>
+                              <SelectItem value="BOTH">{t("usage.both")}</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        ) : tool.usage_scope ? (
+                          <Badge variant="secondary">{usageLabel(tool.usage_scope)}</Badge>
+                        ) : null}
                       </div>
                       {tool.link && (
                         <a
