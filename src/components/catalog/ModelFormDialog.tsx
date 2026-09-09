@@ -88,11 +88,6 @@ export const ModelFormDialog = ({ open, onOpenChange, model, onSaved, initialCat
   const handleGenerate = async () => {
     if (!name.trim()) { toast.error("Fyll inn modellfamilie først"); return; }
     setGenerating(true);
-    // Clear previously generated content before regenerating
-    setProvider("");
-    setModality("");
-    setLink("");
-    setCatalog({ best_for: "", example_prompts: "", do_this: "", avoid_this: "", security_guidance: "" });
     try {
       const { data, error } = await supabase.functions.invoke("generate-catalog-info", {
         body: { name: name.trim(), type: "model" },
