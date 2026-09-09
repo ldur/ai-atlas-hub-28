@@ -107,6 +107,27 @@ const Catalog = () => {
     }
   };
 
+  const handleUsageScopeChange = async (value: string, toolId: string) => {
+    if (!admin) { toast.error(t("status.only_admin")); return; }
+    try {
+      const payload = { usage_scope: value === "NONE" ? null : value };
+      const data = await adminAction({ action: "update", table: "tools", id: toolId, payload });
+      setTools((prev) => prev.map((tl) => (tl.id === toolId ? { ...tl, ...data } : tl)));
+      toast.success(t("status.updated"));
+    } catch (e: any) {
+      toast.error(e.message || t("common.error"));
+    }
+  };
+
+  const usageLabel = (scope: string) =>
+    scope === "INTERNAL" ? t("usage.internal") : scope === "CUSTOMER" ? t("usage.customer") : t("usage.both");
+
+  const matchesUsageFilter = (tool: any) => {
+    if (usageFilter === "ALL") return true;
+    if (usageFilter === "NONE") return !tool.usage_scope;
+    return tool.usage_scope === usageFilter || tool.usage_scope === "BOTH";
+  };
+
   const matchesStatusFilter = (itemId: string, type: "tool" | "model") => {
     if (statusFilter === "ALL") return true;
     const ev = type === "tool" ? getToolEval(itemId) : getModelEval(itemId);
