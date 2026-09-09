@@ -59,7 +59,7 @@ Svar KUN med ett gyldig JSON-objekt, uten kodeblokk eller annen tekst:
           { role: "system", content: systemPrompt },
           {
             role: "user",
-            content: `Generer katalogoppføring for nøyaktig dette navnet (ikke bytt til en annen modell/verktøy):\n${contextParts.join("\n")}`,
+            content: `Generer katalogoppføring for nøyaktig ${isModel ? "denne modellfamilien" : "dette navnet"} (ikke bytt til en annen ${isModel ? "modellfamilie" : "modell/verktøy"}):\n${contextParts.join("\n")}`,
           },
         ],
       }),
