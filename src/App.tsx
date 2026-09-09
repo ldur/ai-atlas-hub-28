@@ -2,14 +2,14 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { I18nProvider } from "@/lib/i18n";
 import { Layout } from "@/components/Layout";
 import Index from "./pages/Index";
 import Survey from "./pages/Survey";
 import Insights from "./pages/Insights";
-import Stack from "./pages/Stack";
+
 import Catalog from "./pages/Catalog";
 import Learning from "./pages/Learning";
 import Admin from "./pages/Admin";
@@ -34,7 +34,7 @@ const App = () => (
               <Route path="/kartlegging" element={<Survey />} />
               <Route path="/kartlegging/:surveyId" element={<Survey />} />
               <Route path="/innsikt" element={<Insights />} />
-              <Route path="/stack" element={<Stack />} />
+              <Route path="/stack" element={<Navigate to="/" replace />} />
               <Route path="/katalog" element={<Catalog />} />
               <Route path="/katalog/:toolId" element={<ToolDetail />} />
               <Route path="/katalog/modell/:modelId" element={<ModelDetail />} />

@@ -7,6 +7,7 @@ import { getNickname, setNickname, setAliasId, getAliasId, generateNickname } fr
 import { supabase } from "@/integrations/supabase/client";
 import { Brain, ClipboardList, BarChart3, CheckSquare, BookOpen, GraduationCap, Lock, RefreshCw } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
+import Stack from "@/pages/Stack";
 
 const Index = () => {
   const [nickname, setNicknameState] = useState("");
@@ -50,7 +51,7 @@ const Index = () => {
 
   if (existingNickname) {
     return (
-      <div className="max-w-3xl mx-auto space-y-8">
+      <div className="max-w-4xl mx-auto space-y-8">
         <div className="space-y-2">
           <h1 className="text-3xl font-bold tracking-tight">
             {t("index.welcome_back")} <span className="text-primary">{existingNickname}</span>
@@ -61,10 +62,11 @@ const Index = () => {
         <div className="grid gap-4 sm:grid-cols-2">
           <QuickLink icon={ClipboardList} title={t("nav.survey")} desc={t("index.survey_desc")} to="/kartlegging" />
           <QuickLink icon={BarChart3} title={t("nav.insights")} desc={t("index.insights_desc")} to="/innsikt" />
-          <QuickLink icon={CheckSquare} title={t("nav.stack")} desc={t("index.stack_desc")} to="/stack" />
           <QuickLink icon={BookOpen} title={t("nav.catalog")} desc={t("index.catalog_desc")} to="/katalog" />
           <QuickLink icon={GraduationCap} title={t("nav.learning")} desc={t("index.learning_desc")} to="/laering" />
         </div>
+
+        <Stack />
 
         <p className="text-sm text-muted-foreground flex items-center gap-1.5">
           <Lock className="h-3.5 w-3.5" /> {t("index.no_tracking")}
