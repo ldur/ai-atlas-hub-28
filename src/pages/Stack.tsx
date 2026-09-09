@@ -15,12 +15,13 @@ interface StackSectionProps {
   getExtra?: (id: string) => string | null;
   getLink?: (id: string) => string | null;
   getLinkLabel?: (id: string) => string | null;
+  getScope?: (id: string) => string | null;
   onClickItem?: (id: string) => void;
   statusLabels: Record<string, { label: string; icon: React.ComponentType<{ className?: string }>; color: string }>;
   noItemsText: string;
 }
 
-const StackSection = ({ evaluations, getName, getExtra, getLink, getLinkLabel, onClickItem, statusLabels, noItemsText }: StackSectionProps) => {
+const StackSection = ({ evaluations, getName, getExtra, getLink, getLinkLabel, getScope, onClickItem, statusLabels, noItemsText }: StackSectionProps) => {
   if (evaluations.length === 0) {
     return <p className="text-muted-foreground text-center py-12">{noItemsText}</p>;
   }
@@ -50,6 +51,9 @@ const StackSection = ({ evaluations, getName, getExtra, getLink, getLinkLabel, o
                       <div className="flex items-center justify-between">
                         <span className="font-medium">{getName(itemId)}</span>
                         <div className="flex items-center gap-2">
+                          {getScope && getScope(itemId) && (
+                            <Badge variant="secondary">{getScope(itemId)}</Badge>
+                          )}
                           <Badge className={cfg.color}>{cfg.label}</Badge>
                           {onClickItem && <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />}
                         </div>
