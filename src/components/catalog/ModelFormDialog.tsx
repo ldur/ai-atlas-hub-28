@@ -86,7 +86,7 @@ export const ModelFormDialog = ({ open, onOpenChange, model, onSaved, initialCat
   }, [model, open, initialCatalogEntry]);
 
   const handleGenerate = async () => {
-    if (!name.trim()) { toast.error("Fyll inn navn først"); return; }
+    if (!name.trim()) { toast.error("Fyll inn modellfamilie først"); return; }
     setGenerating(true);
     // Clear previously generated content before regenerating
     setProvider("");
