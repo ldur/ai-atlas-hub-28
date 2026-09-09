@@ -52,6 +52,11 @@ const ToolDetail = () => {
         <div className="flex items-center gap-3">
           <h1 className="text-2xl font-bold tracking-tight">{tool.name}</h1>
           {tool.category && <Badge variant="secondary">{tool.category}</Badge>}
+          {tool.usage_scope && (
+            <Badge variant="secondary">
+              {tool.usage_scope === "INTERNAL" ? t("usage.internal") : tool.usage_scope === "CUSTOMER" ? t("usage.customer") : t("usage.both")}
+            </Badge>
+          )}
           {statusCfg && (() => {
             const Icon = statusCfg.icon;
             return <Badge className={statusCfg.color}><Icon className="h-3.5 w-3.5 mr-1" />{statusCfg.label}</Badge>;

@@ -23,6 +23,7 @@ const Catalog = () => {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [deploymentFilter, setDeploymentFilter] = useState("ALL");
+  const [usageFilter, setUsageFilter] = useState("ALL");
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const admin = isAdmin();
@@ -106,6 +107,27 @@ const Catalog = () => {
     }
   };
 
+  const handleUsageScopeChange = async (value: string, toolId: string) => {
+    if (!admin) { toast.error(t("status.only_admin")); return; }
+    try {
+      const payload = { usage_scope: value === "NONE" ? null : value };
+      const data = await adminAction({ action: "update", table: "tools", id: toolId, payload });
+      setTools((prev) => prev.map((tl) => (tl.id === toolId ? { ...tl, ...data } : tl)));
+      toast.success(t("status.updated"));
+    } catch (e: any) {
+      toast.error(e.message || t("common.error"));
+    }
+  };
+
+  const usageLabel = (scope: string) =>
+    scope === "INTERNAL" ? t("usage.internal") : scope === "CUSTOMER" ? t("usage.customer") : t("usage.both");
+
+  const matchesUsageFilter = (tool: any) => {
+    if (usageFilter === "ALL") return true;
+    if (usageFilter === "NONE") return !tool.usage_scope;
+    return tool.usage_scope === usageFilter || tool.usage_scope === "BOTH";
+  };
+
   const matchesStatusFilter = (itemId: string, type: "tool" | "model") => {
     if (statusFilter === "ALL") return true;
     const ev = type === "tool" ? getToolEval(itemId) : getModelEval(itemId);
@@ -118,7 +140,8 @@ const Catalog = () => {
       (t.name.toLowerCase().includes(search.toLowerCase()) ||
       (t.category || "").toLowerCase().includes(search.toLowerCase()) ||
       (t.vendor || "").toLowerCase().includes(search.toLowerCase())) &&
-      matchesStatusFilter(t.id, "tool")
+      matchesStatusFilter(t.id, "tool") &&
+      matchesUsageFilter(t)
   );
 
   const filteredModels = models.filter(
@@ -174,6 +197,18 @@ const Catalog = () => {
             <SelectItem value="LOCAL">{t("deployment.local")}</SelectItem>
             <SelectItem value="CLOUD">{t("deployment.cloud")}</SelectItem>
             <SelectItem value="NONE">{t("deployment.none")}</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={usageFilter} onValueChange={setUsageFilter}>
+          <SelectTrigger className="w-[170px]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent className="bg-popover z-50">
+            <SelectItem value="ALL">{t("usage.all")}</SelectItem>
+            <SelectItem value="INTERNAL">{t("usage.internal")}</SelectItem>
+            <SelectItem value="CUSTOMER">{t("usage.customer")}</SelectItem>
+            <SelectItem value="BOTH">{t("usage.both")}</SelectItem>
+            <SelectItem value="NONE">{t("usage.none")}</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -245,8 +280,26 @@ const Catalog = () => {
                           ) : null}
                         </div>
                       </div>
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
                         {tool.category && <span>{tool.category}</span>}
+                        {admin ? (
+                          <Select
+                            value={tool.usage_scope || "NONE"}
+                            onValueChange={(val) => handleUsageScopeChange(val, tool.id)}
+                          >
+                            <SelectTrigger className="w-auto h-6 text-xs px-2 gap-1" onClick={(e) => e.stopPropagation()}>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent className="bg-popover z-50">
+                              <SelectItem value="NONE">{t("usage.none")}</SelectItem>
+                              <SelectItem value="INTERNAL">{t("usage.internal")}</SelectItem>
+                              <SelectItem value="CUSTOMER">{t("usage.customer")}</SelectItem>
+                              <SelectItem value="BOTH">{t("usage.both")}</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        ) : tool.usage_scope ? (
+                          <Badge variant="secondary">{usageLabel(tool.usage_scope)}</Badge>
+                        ) : null}
                       </div>
                       {tool.link && (
                         <a
