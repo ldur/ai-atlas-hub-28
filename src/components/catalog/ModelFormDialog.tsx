@@ -94,9 +94,10 @@ export const ModelFormDialog = ({ open, onOpenChange, model, onSaved, initialCat
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
-      if (data.vendor) setProvider(data.vendor);
-      if (data.category) setModality(data.category);
-      if (data.link) setLink(data.link);
+      // Replace previous content only when generation succeeded
+      setProvider(data.vendor || "");
+      setModality(data.category || "");
+      setLink(data.link || "");
       setCatalog({
         best_for: data.best_for || "",
         example_prompts: data.example_prompts || "",
