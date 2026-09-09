@@ -35,6 +35,11 @@ const translations = {
   "status.not_classified": { no: "Ikke klassifisert", en: "Not classified" },
   "status.updated": { no: "Status oppdatert", en: "Status updated" },
   "status.only_admin": { no: "Kun admin kan endre status", en: "Only admin can change status" },
+  "deployment.label": { no: "Drift", en: "Deployment" },
+  "deployment.local": { no: "Lokal", en: "Local" },
+  "deployment.cloud": { no: "Cloud", en: "Cloud" },
+  "deployment.all": { no: "All drift", en: "All deployments" },
+  "deployment.none": { no: "Ikke satt", en: "Not set" },
 
   // Nav
   "nav.home": { no: "Hjem", en: "Home" },

@@ -172,6 +172,7 @@ export type Database = {
       models: {
         Row: {
           created_at: string
+          deployment: string | null
           id: string
           link: string | null
           modality: string | null
@@ -181,6 +182,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          deployment?: string | null
           id?: string
           link?: string | null
           modality?: string | null
@@ -190,6 +192,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          deployment?: string | null
           id?: string
           link?: string | null
           modality?: string | null

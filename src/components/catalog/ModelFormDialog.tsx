@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Loader2, Sparkles, Target, MessageSquare, CheckCircle2, XCircle, Shield } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface ModelFormDialogProps {
   open: boolean;
@@ -31,6 +32,7 @@ export const ModelFormDialog = ({ open, onOpenChange, model, onSaved, initialCat
   const [provider, setProvider] = useState("");
   const [modality, setModality] = useState("");
   const [link, setLink] = useState("");
+  const [deployment, setDeployment] = useState("none");
   const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
   const [generating, setGenerating] = useState(false);
@@ -52,6 +54,7 @@ export const ModelFormDialog = ({ open, onOpenChange, model, onSaved, initialCat
       setModality(model.modality || "");
       setLink(model.link || "");
       setNotes(model.notes || "");
+      setDeployment(model.deployment || "none");
       if (initialCatalogEntry !== undefined) {
         const data = initialCatalogEntry;
         setCatalogEntryId(data?.id || null);
@@ -76,7 +79,7 @@ export const ModelFormDialog = ({ open, onOpenChange, model, onSaved, initialCat
         });
       }
     } else {
-      setName(""); setProvider(""); setModality(""); setLink(""); setNotes("");
+      setName(""); setProvider(""); setModality(""); setLink(""); setNotes(""); setDeployment("none");
       setCatalogEntryId(null);
       setCatalog({ best_for: "", example_prompts: "", do_this: "", avoid_this: "", security_guidance: "" });
     }
@@ -126,6 +129,7 @@ export const ModelFormDialog = ({ open, onOpenChange, model, onSaved, initialCat
         modality: modality.trim() || null,
         link: link.trim() || null,
         notes: notes.trim() || null,
+        deployment: deployment === "none" ? null : deployment,
       };
 
       let modelId = model?.id;
@@ -187,6 +191,17 @@ export const ModelFormDialog = ({ open, onOpenChange, model, onSaved, initialCat
           <div className="space-y-1.5">
             <Label className="text-xs">Lenke</Label>
             <Input value={link} onChange={(e) => setLink(e.target.value)} placeholder="https://..." />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs">Drift</Label>
+            <Select value={deployment} onValueChange={setDeployment}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent className="bg-popover z-50">
+                <SelectItem value="none">Ikke satt</SelectItem>
+                <SelectItem value="LOCAL">Lokal</SelectItem>
+                <SelectItem value="CLOUD">Cloud</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <div className="space-y-1.5">
             <Label className="text-xs">Notater</Label>

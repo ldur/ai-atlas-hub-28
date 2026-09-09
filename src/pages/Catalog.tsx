@@ -22,6 +22,7 @@ const Catalog = () => {
   const [catalogEntries, setCatalogEntries] = useState<any[]>([]);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
+  const [deploymentFilter, setDeploymentFilter] = useState("ALL");
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const admin = isAdmin();
@@ -93,6 +94,18 @@ const Catalog = () => {
     }
   };
 
+  const handleDeploymentChange = async (value: string, modelId: string) => {
+    if (!admin) { toast.error(t("status.only_admin")); return; }
+    try {
+      const payload = { deployment: value === "NONE" ? null : value };
+      const data = await adminAction({ action: "update", table: "models", id: modelId, payload });
+      setModels((prev) => prev.map((m) => (m.id === modelId ? { ...m, ...data } : m)));
+      toast.success(t("status.updated"));
+    } catch (e: any) {
+      toast.error(e.message || t("common.error"));
+    }
+  };
+
   const matchesStatusFilter = (itemId: string, type: "tool" | "model") => {
     if (statusFilter === "ALL") return true;
     const ev = type === "tool" ? getToolEval(itemId) : getModelEval(itemId);
@@ -113,7 +126,9 @@ const Catalog = () => {
       (m.name.toLowerCase().includes(search.toLowerCase()) ||
       (m.provider || "").toLowerCase().includes(search.toLowerCase()) ||
       (m.modality || "").toLowerCase().includes(search.toLowerCase())) &&
-      matchesStatusFilter(m.id, "model")
+      matchesStatusFilter(m.id, "model") &&
+      (deploymentFilter === "ALL" ||
+        (deploymentFilter === "NONE" ? !m.deployment : m.deployment === deploymentFilter))
   );
 
   const renderStatusLabel = (cfg: typeof statusConfig[string]) => {
@@ -148,6 +163,17 @@ const Catalog = () => {
               );
             })}
             <SelectItem value="NONE">{t("status.not_classified")}</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={deploymentFilter} onValueChange={setDeploymentFilter}>
+          <SelectTrigger className="w-[150px]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent className="bg-popover z-50">
+            <SelectItem value="ALL">{t("deployment.all")}</SelectItem>
+            <SelectItem value="LOCAL">{t("deployment.local")}</SelectItem>
+            <SelectItem value="CLOUD">{t("deployment.cloud")}</SelectItem>
+            <SelectItem value="NONE">{t("deployment.none")}</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -301,8 +327,27 @@ const Catalog = () => {
                           ) : null}
                         </div>
                       </div>
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
                         {model.modality && <span>{model.modality}</span>}
+                        {admin ? (
+                          <Select
+                            value={model.deployment || "NONE"}
+                            onValueChange={(val) => handleDeploymentChange(val, model.id)}
+                          >
+                            <SelectTrigger className="w-auto h-6 text-xs px-2 gap-1" onClick={(e) => e.stopPropagation()}>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent className="bg-popover z-50">
+                              <SelectItem value="NONE">{t("deployment.none")}</SelectItem>
+                              <SelectItem value="LOCAL">{t("deployment.local")}</SelectItem>
+                              <SelectItem value="CLOUD">{t("deployment.cloud")}</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        ) : model.deployment ? (
+                          <Badge variant="secondary">
+                            {model.deployment === "LOCAL" ? t("deployment.local") : t("deployment.cloud")}
+                          </Badge>
+                        ) : null}
                       </div>
                       {model.link && (
                         <a
