@@ -54,6 +54,7 @@ export const ModelFormDialog = ({ open, onOpenChange, model, onSaved, initialCat
       setModality(model.modality || "");
       setLink(model.link || "");
       setNotes(model.notes || "");
+      setDeployment(model.deployment || "none");
       if (initialCatalogEntry !== undefined) {
         const data = initialCatalogEntry;
         setCatalogEntryId(data?.id || null);
