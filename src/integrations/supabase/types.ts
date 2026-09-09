@@ -452,6 +452,7 @@ export type Database = {
           link: string | null
           name: string
           notes: string | null
+          usage_scope: string | null
           vendor: string | null
         }
         Insert: {
@@ -461,6 +462,7 @@ export type Database = {
           link?: string | null
           name: string
           notes?: string | null
+          usage_scope?: string | null
           vendor?: string | null
         }
         Update: {
@@ -470,6 +472,7 @@ export type Database = {
           link?: string | null
           name?: string
           notes?: string | null
+          usage_scope?: string | null
           vendor?: string | null
         }
         Relationships: []

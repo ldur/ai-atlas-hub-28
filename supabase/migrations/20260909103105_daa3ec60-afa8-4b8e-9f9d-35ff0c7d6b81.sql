@@ -1,0 +1,1 @@
+ALTER TABLE public.tools ADD COLUMN IF NOT EXISTS usage_scope text;
