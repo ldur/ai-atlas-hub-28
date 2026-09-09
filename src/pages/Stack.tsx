@@ -17,11 +17,10 @@ interface StackSectionProps {
   getLinkLabel?: (id: string) => string | null;
   onClickItem?: (id: string) => void;
   statusLabels: Record<string, { label: string; icon: React.ComponentType<{ className?: string }>; color: string }>;
-  seeDetailsText: string;
   noItemsText: string;
 }
 
-const StackSection = ({ evaluations, getName, getExtra, getLink, getLinkLabel, onClickItem, statusLabels, seeDetailsText, noItemsText }: StackSectionProps) => {
+const StackSection = ({ evaluations, getName, getExtra, getLink, getLinkLabel, onClickItem, statusLabels, noItemsText }: StackSectionProps) => {
   if (evaluations.length === 0) {
     return <p className="text-muted-foreground text-center py-12">{noItemsText}</p>;
   }
@@ -71,9 +70,6 @@ const StackSection = ({ evaluations, getName, getExtra, getLink, getLinkLabel, o
                       )}
                       {ev.rationale && <p className="text-sm text-muted-foreground">{ev.rationale}</p>}
                       {ev.version && <span className="text-xs text-muted-foreground">{ev.version}</span>}
-                      {onClickItem && (
-                        <p className="text-xs text-primary font-medium pt-1">{seeDetailsText}</p>
-                      )}
                     </CardContent>
                   </Card>
                 );
@@ -170,7 +166,6 @@ const Stack = () => {
             getLinkLabel={getToolVendor}
             onClickItem={(id) => navigate(`/katalog/${id}`)}
             statusLabels={statusLabels}
-            seeDetailsText={t("stack.see_details")}
             noItemsText={t("stack.no_items")}
           />
         </TabsContent>
@@ -184,7 +179,6 @@ const Stack = () => {
             getLinkLabel={getModelProvider}
             onClickItem={(id) => navigate(`/katalog/modell/${id}`)}
             statusLabels={statusLabels}
-            seeDetailsText={t("stack.see_details")}
             noItemsText={t("stack.no_items")}
           />
         </TabsContent>
