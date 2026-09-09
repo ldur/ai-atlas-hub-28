@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Loader2, Sparkles, Target, MessageSquare, CheckCircle2, XCircle, Shield } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface ToolFormDialogProps {
   open: boolean;
@@ -32,6 +33,7 @@ export const ToolFormDialog = ({ open, onOpenChange, tool, onSaved, initialCatal
   const [vendor, setVendor] = useState("");
   const [link, setLink] = useState("");
   const [notes, setNotes] = useState("");
+  const [usageScope, setUsageScope] = useState("none");
   const [saving, setSaving] = useState(false);
   const [generating, setGenerating] = useState(false);
 
@@ -52,6 +54,7 @@ export const ToolFormDialog = ({ open, onOpenChange, tool, onSaved, initialCatal
       setVendor(tool.vendor || "");
       setLink(tool.link || "");
       setNotes(tool.notes || "");
+      setUsageScope(tool.usage_scope || "none");
       // Use pre-loaded catalog entry if available, otherwise fetch
       if (initialCatalogEntry !== undefined) {
         const data = initialCatalogEntry;
@@ -77,7 +80,7 @@ export const ToolFormDialog = ({ open, onOpenChange, tool, onSaved, initialCatal
         });
       }
     } else {
-      setName(""); setCategory(""); setVendor(""); setLink(""); setNotes("");
+      setName(""); setCategory(""); setVendor(""); setLink(""); setNotes(""); setUsageScope("none");
       setCatalogEntryId(null);
       setCatalog({ best_for: "", example_prompts: "", do_this: "", avoid_this: "", security_guidance: "" });
     }
@@ -127,6 +130,7 @@ export const ToolFormDialog = ({ open, onOpenChange, tool, onSaved, initialCatal
         vendor: vendor.trim() || null,
         link: link.trim() || null,
         notes: notes.trim() || null,
+        usage_scope: usageScope === "none" ? null : usageScope,
       };
 
       let toolId = tool?.id;
@@ -190,6 +194,18 @@ export const ToolFormDialog = ({ open, onOpenChange, tool, onSaved, initialCatal
           <div className="space-y-1.5">
             <Label className="text-xs">Lenke</Label>
             <Input value={link} onChange={(e) => setLink(e.target.value)} placeholder="https://..." />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs">Bruksområde</Label>
+            <Select value={usageScope} onValueChange={setUsageScope}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent className="bg-popover z-50">
+                <SelectItem value="none">Ikke satt</SelectItem>
+                <SelectItem value="INTERNAL">Intern</SelectItem>
+                <SelectItem value="CUSTOMER">Kunde</SelectItem>
+                <SelectItem value="BOTH">Begge</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <div className="space-y-1.5">
             <Label className="text-xs">Notater</Label>
