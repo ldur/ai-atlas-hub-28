@@ -32,6 +32,7 @@ export const ModelFormDialog = ({ open, onOpenChange, model, onSaved, initialCat
   const [provider, setProvider] = useState("");
   const [modality, setModality] = useState("");
   const [link, setLink] = useState("");
+  const [deployment, setDeployment] = useState("none");
   const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
   const [generating, setGenerating] = useState(false);
