@@ -79,7 +79,7 @@ export const ModelFormDialog = ({ open, onOpenChange, model, onSaved, initialCat
         });
       }
     } else {
-      setName(""); setProvider(""); setModality(""); setLink(""); setNotes("");
+      setName(""); setProvider(""); setModality(""); setLink(""); setNotes(""); setDeployment("none");
       setCatalogEntryId(null);
       setCatalog({ best_for: "", example_prompts: "", do_this: "", avoid_this: "", security_guidance: "" });
     }
