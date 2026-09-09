@@ -4,6 +4,7 @@ import { AppSidebar } from "@/components/AppSidebar";
 import { UserMenu } from "@/components/UserMenu";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { RequestEvaluation } from "@/components/RequestEvaluation";
 import { getNickname } from "@/lib/nickname";
 import { isAdmin } from "@/lib/adminAction";
 
@@ -31,6 +32,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           <header className="h-14 flex items-center justify-between border-b border-border px-4 bg-card shrink-0">
             {loggedIn ? <SidebarTrigger /> : <div />}
             <div className="flex items-center gap-1">
+              <RequestEvaluation />
               <LanguageSwitcher />
               <ThemeToggle />
               <UserMenu />
