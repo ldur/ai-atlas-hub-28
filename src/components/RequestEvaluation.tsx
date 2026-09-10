@@ -79,7 +79,7 @@ export function RequestEvaluation() {
       if (type === "tool") {
         const { data, error } = await supabase
           .from("tools")
-          .insert({ name: name.trim(), vendor: vendor.trim() || null, link: link.trim() || null })
+          .insert({ name: name.trim(), vendor: vendor.trim() || null, link: link.trim() || null, notes: reason.trim() || null })
           .select("id")
           .single();
         if (error) throw error;
@@ -87,7 +87,7 @@ export function RequestEvaluation() {
       } else {
         const { data, error } = await supabase
           .from("models")
-          .insert({ name: name.trim(), provider: vendor.trim() || null, link: link.trim() || null })
+          .insert({ name: name.trim(), provider: vendor.trim() || null, link: link.trim() || null, notes: reason.trim() || null })
           .select("id")
           .single();
         if (error) throw error;
@@ -98,7 +98,7 @@ export function RequestEvaluation() {
         tool_id: toolId,
         model_id: modelId,
         decided_status: "TRIAL",
-        rationale: reason.trim() || null,
+        rationale: null,
         version: REQUEST_VERSION,
       });
       if (evalError) throw evalError;
@@ -144,7 +144,7 @@ export function RequestEvaluation() {
                     </span>
                     <span className="text-xs text-muted-foreground shrink-0">{formatDate(r.decided_at)}</span>
                   </div>
-                  {r.rationale && <p className="text-xs text-muted-foreground line-clamp-2">{r.rationale}</p>}
+                  {r.notes && <p className="text-xs text-muted-foreground line-clamp-2">{r.notes}</p>}
                 </div>
               ))
             )}
