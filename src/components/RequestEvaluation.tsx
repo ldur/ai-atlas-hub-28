@@ -42,18 +42,22 @@ export function RequestEvaluation() {
       supabase.from("tools").select("id,name,notes"),
       supabase.from("models").select("id,name,notes"),
     ]);
-    const rows = (evalRes.data || []).map((e: any) => {
-      const tool = e.tool_id ? toolRes.data?.find((x) => x.id === e.tool_id) : null;
-      const model = e.model_id ? modelRes.data?.find((x) => x.id === e.model_id) : null;
-      return {
-        id: e.id,
-        decided_at: e.decided_at,
-        notes: (tool?.notes ?? model?.notes) || null,
-        tool_id: e.tool_id,
-        model_id: e.model_id,
-        name: (tool?.name ?? model?.name) || t("common.unknown"),
-      };
-    });
+    const rows = (evalRes.data || [])
+      .map((e: any) => {
+        const tool = e.tool_id ? toolRes.data?.find((x) => x.id === e.tool_id) : null;
+        const model = e.model_id ? modelRes.data?.find((x) => x.id === e.model_id) : null;
+        // Skip requests whose tool/model has been deleted
+        if (!tool && !model) return null;
+        return {
+          id: e.id,
+          decided_at: e.decided_at,
+          notes: (tool?.notes ?? model?.notes) || null,
+          tool_id: e.tool_id,
+          model_id: e.model_id,
+          name: (tool?.name ?? model?.name) || t("common.unknown"),
+        };
+      })
+      .filter(Boolean) as RequestRow[];
     setRequests(rows);
   }, [t]);
 
@@ -121,7 +125,7 @@ export function RequestEvaluation() {
 
   return (
     <div className="flex items-center gap-1">
-      <Popover>
+      <Popover onOpenChange={(o) => { if (o) loadRequests(); }}>
         <PopoverTrigger asChild>
           <Button variant="ghost" size="sm" className="gap-1.5">
             <Inbox className="h-4 w-4" />
