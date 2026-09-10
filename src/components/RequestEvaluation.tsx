@@ -125,7 +125,7 @@ export function RequestEvaluation() {
 
   return (
     <div className="flex items-center gap-1">
-      <Popover>
+      <Popover onOpenChange={(o) => { if (o) loadRequests(); }}>
         <PopoverTrigger asChild>
           <Button variant="ghost" size="sm" className="gap-1.5">
             <Inbox className="h-4 w-4" />
