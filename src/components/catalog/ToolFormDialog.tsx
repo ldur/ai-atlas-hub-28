@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { adminAction } from "@/lib/adminAction";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, Sparkles, Target } from "lucide-react";
+import { Loader2, Sparkles, Target, StickyNote } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
@@ -29,6 +29,7 @@ export const ToolFormDialog = ({ open, onOpenChange, tool, onSaved, initialCatal
   const [vendor, setVendor] = useState("");
   const [link, setLink] = useState("");
   const [usageScope, setUsageScope] = useState("none");
+  const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
   const [generating, setGenerating] = useState(false);
 
@@ -43,6 +44,7 @@ export const ToolFormDialog = ({ open, onOpenChange, tool, onSaved, initialCatal
       setVendor(tool.vendor || "");
       setLink(tool.link || "");
       setUsageScope(tool.usage_scope || "none");
+      setNotes(tool.notes || "");
       // Use pre-loaded catalog entry if available, otherwise fetch
       if (initialCatalogEntry !== undefined) {
         const data = initialCatalogEntry;
@@ -60,7 +62,7 @@ export const ToolFormDialog = ({ open, onOpenChange, tool, onSaved, initialCatal
         });
       }
     } else {
-      setName(""); setCategory(""); setVendor(""); setLink(""); setUsageScope("none");
+      setName(""); setCategory(""); setVendor(""); setLink(""); setUsageScope("none"); setNotes("");
       setCatalogEntryId(null);
       setCatalog({ best_for: "" });
     }
@@ -106,6 +108,7 @@ export const ToolFormDialog = ({ open, onOpenChange, tool, onSaved, initialCatal
         vendor: vendor.trim() || null,
         link: link.trim() || null,
         usage_scope: usageScope === "none" ? null : usageScope,
+        notes: notes.trim() || null,
       };
 
       let toolId = tool?.id;
@@ -181,6 +184,11 @@ export const ToolFormDialog = ({ open, onOpenChange, tool, onSaved, initialCatal
                 <SelectItem value="BOTH">Begge</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label className="text-xs flex items-center gap-1.5"><StickyNote className="h-3 w-3" /> Notater</Label>
+            <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} placeholder="Valgfrie notater..." />
           </div>
 
           <Separator />
