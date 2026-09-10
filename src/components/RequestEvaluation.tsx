@@ -19,7 +19,7 @@ const REQUEST_VERSION = "request";
 interface RequestRow {
   id: string;
   decided_at: string;
-  rationale: string | null;
+  notes: string | null;
   tool_id: string | null;
   model_id: string | null;
   name: string;
@@ -39,19 +39,21 @@ export function RequestEvaluation() {
   const loadRequests = useCallback(async () => {
     const [evalRes, toolRes, modelRes] = await Promise.all([
       supabase.from("evaluations").select("*").eq("version", REQUEST_VERSION).order("decided_at", { ascending: false }),
-      supabase.from("tools").select("id,name"),
-      supabase.from("models").select("id,name"),
+      supabase.from("tools").select("id,name,notes"),
+      supabase.from("models").select("id,name,notes"),
     ]);
-    const rows = (evalRes.data || []).map((e: any) => ({
-      id: e.id,
-      decided_at: e.decided_at,
-      rationale: e.rationale,
-      tool_id: e.tool_id,
-      model_id: e.model_id,
-      name:
-        (e.tool_id ? toolRes.data?.find((x) => x.id === e.tool_id)?.name : modelRes.data?.find((x) => x.id === e.model_id)?.name) ||
-        t("common.unknown"),
-    }));
+    const rows = (evalRes.data || []).map((e: any) => {
+      const tool = e.tool_id ? toolRes.data?.find((x) => x.id === e.tool_id) : null;
+      const model = e.model_id ? modelRes.data?.find((x) => x.id === e.model_id) : null;
+      return {
+        id: e.id,
+        decided_at: e.decided_at,
+        notes: (tool?.notes ?? model?.notes) || null,
+        tool_id: e.tool_id,
+        model_id: e.model_id,
+        name: (tool?.name ?? model?.name) || t("common.unknown"),
+      };
+    });
     setRequests(rows);
   }, [t]);
 
@@ -77,7 +79,7 @@ export function RequestEvaluation() {
       if (type === "tool") {
         const { data, error } = await supabase
           .from("tools")
-          .insert({ name: name.trim(), vendor: vendor.trim() || null, link: link.trim() || null })
+          .insert({ name: name.trim(), vendor: vendor.trim() || null, link: link.trim() || null, notes: reason.trim() || null })
           .select("id")
           .single();
         if (error) throw error;
@@ -85,7 +87,7 @@ export function RequestEvaluation() {
       } else {
         const { data, error } = await supabase
           .from("models")
-          .insert({ name: name.trim(), provider: vendor.trim() || null, link: link.trim() || null })
+          .insert({ name: name.trim(), provider: vendor.trim() || null, link: link.trim() || null, notes: reason.trim() || null })
           .select("id")
           .single();
         if (error) throw error;
@@ -96,7 +98,7 @@ export function RequestEvaluation() {
         tool_id: toolId,
         model_id: modelId,
         decided_status: "TRIAL",
-        rationale: reason.trim() || null,
+        rationale: null,
         version: REQUEST_VERSION,
       });
       if (evalError) throw evalError;
@@ -142,7 +144,7 @@ export function RequestEvaluation() {
                     </span>
                     <span className="text-xs text-muted-foreground shrink-0">{formatDate(r.decided_at)}</span>
                   </div>
-                  {r.rationale && <p className="text-xs text-muted-foreground line-clamp-2">{r.rationale}</p>}
+                  {r.notes && <p className="text-xs text-muted-foreground line-clamp-2">{r.notes}</p>}
                 </div>
               ))
             )}
