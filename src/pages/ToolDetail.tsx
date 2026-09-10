@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, Target, CircleCheck, CircleX, FlaskConical } from "lucide-react";
+import { ArrowLeft, Target, CircleCheck, CircleX, FlaskConical, StickyNote } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 
 const ToolDetail = () => {
@@ -64,16 +64,20 @@ const ToolDetail = () => {
         {tool.vendor && <p className="text-muted-foreground">{tool.vendor}</p>}
       </div>
 
-      {catalogEntry && (
-        <div className="space-y-4">
-          {catalogEntry.best_for && (
-            <Card>
-              <CardHeader><CardTitle className="text-base flex items-center gap-1.5"><Target className="h-4 w-4" /> {t("detail.best_for")}</CardTitle></CardHeader>
-              <CardContent className="text-sm text-muted-foreground">{catalogEntry.best_for}</CardContent>
-            </Card>
-          )}
-        </div>
-      )}
+      <div className="space-y-4">
+        {catalogEntry?.best_for && (
+          <Card>
+            <CardHeader><CardTitle className="text-base flex items-center gap-1.5"><Target className="h-4 w-4" /> {t("detail.best_for")}</CardTitle></CardHeader>
+            <CardContent className="text-sm text-muted-foreground">{catalogEntry.best_for}</CardContent>
+          </Card>
+        )}
+        {tool.notes && (
+          <Card>
+            <CardHeader><CardTitle className="text-base flex items-center gap-1.5"><StickyNote className="h-4 w-4" /> {t("detail.notes")}</CardTitle></CardHeader>
+            <CardContent className="text-sm text-muted-foreground whitespace-pre-wrap">{tool.notes}</CardContent>
+          </Card>
+        )}
+      </div>
     </div>
   );
 };
