@@ -171,6 +171,7 @@ const Stack = () => {
     const parts: string[] = [];
     if (tool?.category) parts.push(tool.category);
     if (cat?.best_for) parts.push(cat.best_for);
+    if (tool?.notes) parts.push(tool.notes);
     return parts.length > 0 ? parts.join(" · ") : null;
   };
   const getModelExtra = (id: string) => {
@@ -179,6 +180,7 @@ const Stack = () => {
     const parts: string[] = [];
     if (model?.modality) parts.push(model.modality);
     if (cat?.best_for) parts.push(cat.best_for);
+    if (model?.notes) parts.push(model.notes);
     return parts.length > 0 ? parts.join(" · ") : null;
   };
 

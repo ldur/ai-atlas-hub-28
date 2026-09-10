@@ -315,6 +315,9 @@ const Catalog = () => {
                       {getCatalogEntry(tool.id, "tool")?.best_for && (
                         <p className="text-xs text-muted-foreground line-clamp-2">{getCatalogEntry(tool.id, "tool").best_for}</p>
                       )}
+                      {tool.notes && (
+                        <p className="text-xs text-muted-foreground italic line-clamp-3">{tool.notes}</p>
+                      )}
                     </CardContent>
                   </Card>
                 );
@@ -415,6 +418,9 @@ const Catalog = () => {
                       )}
                       {getCatalogEntry(model.id, "model")?.best_for && (
                         <p className="text-xs text-muted-foreground line-clamp-2">{getCatalogEntry(model.id, "model").best_for}</p>
+                      )}
+                      {model.notes && (
+                        <p className="text-xs text-muted-foreground italic line-clamp-3">{model.notes}</p>
                       )}
                     </CardContent>
                   </Card>
