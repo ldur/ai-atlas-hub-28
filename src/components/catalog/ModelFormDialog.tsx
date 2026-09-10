@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { adminAction } from "@/lib/adminAction";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, Sparkles, Target } from "lucide-react";
+import { Loader2, Sparkles, Target, StickyNote } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
@@ -29,6 +29,7 @@ export const ModelFormDialog = ({ open, onOpenChange, model, onSaved, initialCat
   const [modality, setModality] = useState("");
   const [link, setLink] = useState("");
   const [deployment, setDeployment] = useState("none");
+  const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
   const [generating, setGenerating] = useState(false);
 
@@ -43,6 +44,7 @@ export const ModelFormDialog = ({ open, onOpenChange, model, onSaved, initialCat
       setModality(model.modality || "");
       setLink(model.link || "");
       setDeployment(model.deployment || "none");
+      setNotes(model.notes || "");
       if (initialCatalogEntry !== undefined) {
         const data = initialCatalogEntry;
         setCatalogEntryId(data?.id || null);
@@ -59,7 +61,7 @@ export const ModelFormDialog = ({ open, onOpenChange, model, onSaved, initialCat
         });
       }
     } else {
-      setName(""); setProvider(""); setModality(""); setLink(""); setDeployment("none");
+      setName(""); setProvider(""); setModality(""); setLink(""); setDeployment("none"); setNotes("");
       setCatalogEntryId(null);
       setCatalog({ best_for: "" });
     }
@@ -105,6 +107,7 @@ export const ModelFormDialog = ({ open, onOpenChange, model, onSaved, initialCat
         modality: modality.trim() || null,
         link: link.trim() || null,
         deployment: deployment === "none" ? null : deployment,
+        notes: notes.trim() || null,
       };
 
       let modelId = model?.id;
@@ -178,6 +181,11 @@ export const ModelFormDialog = ({ open, onOpenChange, model, onSaved, initialCat
               </SelectContent>
             </Select>
           </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs flex items-center gap-1.5"><StickyNote className="h-3 w-3" /> Notater</Label>
+            <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} placeholder="Valgfrie notater..." />
+          </div>
+
           <Separator />
 
           <Label className="text-sm font-semibold">Katalogoppføring</Label>
