@@ -57,7 +57,8 @@ export function SurveysTab() {
 
   const fetchSurveys = async () => {
     const { data: surveysData } = await supabase.from("surveys").select("*").order("created_at", { ascending: false });
-    const { data: submissions } = await supabase.from("submissions").select("survey_id");
+    const submissions = await fetchSubmissions();
+
 
     const countMap: Record<string, number> = {};
     (submissions || []).forEach((s: any) => {
