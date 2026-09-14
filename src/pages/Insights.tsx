@@ -94,15 +94,12 @@ const Insights = () => {
 
   useEffect(() => {
     setLoading(true);
-    let query = supabase.from("submissions").select("*");
-    if (selectedSurveyId !== "all") {
-      query = query.eq("survey_id", selectedSurveyId);
-    }
-    query.then(({ data }) => {
-      setSubmissions(data || []);
+    fetchSubmissions(selectedSurveyId).then((data) => {
+      setSubmissions(data);
       setLoading(false);
     });
   }, [selectedSurveyId]);
+
 
   if (loading) return <p className="text-muted-foreground">{t("common.loading")}</p>;
 

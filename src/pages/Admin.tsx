@@ -199,19 +199,20 @@ function SubmissionsTab() {
 
   const fetchAll = () => {
     Promise.all([
-      supabase.from("submissions").select("*").order("created_at", { ascending: false }),
+      fetchSubmissions(),
       supabase.from("tools").select("id, name").order("name"),
       supabase.from("models").select("id, name").order("name"),
       supabase.from("evaluations").select("id, tool_id, model_id, decided_status"),
       supabase.from("surveys").select("id, title, is_active").order("created_at"),
     ]).then(([sRes, tRes, mRes, eRes, survRes]) => {
-      setSubmissions(sRes.data || []);
+      setSubmissions(sRes);
       setTools(tRes.data || []);
       setModels(mRes.data || []);
       setEvaluations(eRes.data || []);
       setSurveys(survRes.data || []);
     });
   };
+
   useEffect(() => { fetchAll(); }, []);
 
   const handleDelete = async (id: string) => {
