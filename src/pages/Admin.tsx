@@ -413,15 +413,16 @@ function EvaluationsTab() {
       supabase.from("models").select("*").order("name"),
       supabase.from("evaluations").select("*").order("decided_at", { ascending: false }),
       supabase.from("catalog_entries").select("id, tool_id, model_id"),
-      supabase.from("submissions").select("tools_used, models_used, use_cases, must_keep_tool"),
+      fetchSubmissions(),
     ]).then(([t, m, e, c, s]) => {
       setTools(t.data || []);
       setModels(m.data || []);
       setEvaluations(e.data || []);
       setCatalogEntries(c.data || []);
-      setSubmissions(s.data || []);
+      setSubmissions(s);
     });
   };
+
   useEffect(() => { fetchAll(); }, []);
 
   return (
