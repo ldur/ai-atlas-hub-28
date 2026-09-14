@@ -14,6 +14,8 @@ import { adminAction } from "@/lib/adminAction";
 import { useToast } from "@/hooks/use-toast";
 import { useI18n } from "@/lib/i18n";
 import { Plus, Pencil, Trash2, ClipboardList, X } from "lucide-react";
+import { fetchSubmissions } from "@/lib/submissions";
+
 
 const ALL_QUESTION_IDS = ["tools", "models", "use_cases", "time_saved", "data_sensitivity", "pain_points", "must_keep"] as const;
 

@@ -21,6 +21,8 @@ import {
 import { SubmissionAnalytics } from "@/components/admin/SubmissionAnalytics";
 import { EvaluationDashboard } from "@/components/admin/EvaluationDashboard";
 import { SurveysTab } from "@/components/admin/SurveysTab";
+import { fetchSubmissions } from "@/lib/submissions";
+
 
 function BulkGenerateSection() {
   const [running, setRunning] = useState(false);

@@ -5,6 +5,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend, CartesianGrid } from "recharts";
 import { useI18n } from "@/lib/i18n";
 import { BarChart3, Brain, Briefcase, Clock, ShieldCheck } from "lucide-react";
+import { fetchSubmissions } from "@/lib/submissions";
+
 
 const COLORS = [
   "hsl(230, 65%, 55%)", "hsl(250, 55%, 60%)", "hsl(162, 63%, 45%)",
