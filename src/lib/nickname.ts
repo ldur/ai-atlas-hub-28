@@ -35,15 +35,29 @@ export function setAliasId(id: string): void {
 }
 
 const ADMIN_KEY = "ai-tool-atlas-admin";
+const ADMIN_EXP_KEY = "ai-tool-atlas-admin-exp";
 
+/** Returns the current admin session token, or null if missing/expired. */
 export function getAdminToken(): string | null {
-  return localStorage.getItem(ADMIN_KEY);
+  const token = localStorage.getItem(ADMIN_KEY);
+  if (!token) return null;
+  const exp = Number(localStorage.getItem(ADMIN_EXP_KEY) || 0);
+  if (!exp || Date.now() >= exp) {
+    clearAdminToken();
+    return null;
+  }
+  return token;
 }
 
-export function setAdminToken(token: string): void {
+export function setAdminToken(token: string, expiresAt?: number): void {
   localStorage.setItem(ADMIN_KEY, token);
+  localStorage.setItem(
+    ADMIN_EXP_KEY,
+    String(expiresAt ?? Date.now() + 8 * 60 * 60 * 1000),
+  );
 }
 
 export function clearAdminToken(): void {
   localStorage.removeItem(ADMIN_KEY);
+  localStorage.removeItem(ADMIN_EXP_KEY);
 }
