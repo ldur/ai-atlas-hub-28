@@ -9,8 +9,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
-import { adminAction, verifyAdmin } from "@/lib/adminAction";
-import { getAdminToken, setAdminToken } from "@/lib/nickname";
+import { adminAction, verifyAdmin, adminLogin } from "@/lib/adminAction";
+import { getAdminToken } from "@/lib/nickname";
 import { useToast } from "@/hooks/use-toast";
 import { useI18n } from "@/lib/i18n";
 import {
