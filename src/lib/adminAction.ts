@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-import { getAdminToken } from "@/lib/nickname";
+import { getAdminToken, setAdminToken, clearAdminToken } from "@/lib/nickname";
 
 interface AdminActionParams {
   action: "insert" | "update" | "delete";
@@ -19,7 +19,14 @@ export async function adminAction({ action, table, payload, id }: AdminActionPar
     headers: { "x-admin-token": adminToken },
   });
 
-  if (error) throw error;
+  if (error) {
+    // Session expired or invalid → force re-login
+    if ((error as any)?.context?.status === 401) {
+      clearAdminToken();
+      throw new Error("Admin-økten er utløpt. Logg inn på nytt.");
+    }
+    throw error;
+  }
   if (data?.error) throw new Error(data.error);
   return data;
 }
@@ -28,6 +35,7 @@ export function isAdmin(): boolean {
   return !!getAdminToken();
 }
 
+/** Validates the stored session token against the server. */
 export async function verifyAdmin(token?: string | null): Promise<boolean> {
   const adminToken = token ?? getAdminToken();
   if (!adminToken) return false;
@@ -40,5 +48,28 @@ export async function verifyAdmin(token?: string | null): Promise<boolean> {
     return data?.valid === true;
   } catch {
     return false;
+  }
+}
+
+/** Exchanges the admin code for a short-lived session token. */
+export async function adminLogin(
+  code: string,
+): Promise<{ ok: boolean; error?: string }> {
+  try {
+    const { data, error } = await supabase.functions.invoke("verify-admin", {
+      body: { code },
+    });
+    if (data?.valid === true && data?.token) {
+      setAdminToken(data.token, data.expiresAt);
+      return { ok: true };
+    }
+    const message =
+      data?.error ||
+      (error as any)?.context?.status === 429
+        ? "For mange mislykkede forsøk. Prøv igjen senere."
+        : undefined;
+    return { ok: false, error: message };
+  } catch {
+    return { ok: false };
   }
 }
