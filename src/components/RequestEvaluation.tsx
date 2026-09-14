@@ -77,35 +77,17 @@ export function RequestEvaluation() {
     if (!name.trim()) return;
     setSaving(true);
     try {
-      let toolId: string | null = null;
-      let modelId: string | null = null;
-
-      if (type === "tool") {
-        const { data, error } = await supabase
-          .from("tools")
-          .insert({ name: name.trim(), vendor: vendor.trim() || null, link: link.trim() || null, notes: reason.trim() || null })
-          .select("id")
-          .single();
-        if (error) throw error;
-        toolId = data.id;
-      } else {
-        const { data, error } = await supabase
-          .from("models")
-          .insert({ name: name.trim(), provider: vendor.trim() || null, link: link.trim() || null, notes: reason.trim() || null })
-          .select("id")
-          .single();
-        if (error) throw error;
-        modelId = data.id;
-      }
-
-      const { error: evalError } = await supabase.from("evaluations").insert({
-        tool_id: toolId,
-        model_id: modelId,
-        decided_status: "TRIAL",
-        rationale: null,
-        version: REQUEST_VERSION,
+      const { data, error } = await supabase.functions.invoke("submit-request", {
+        body: {
+          type,
+          name: name.trim(),
+          vendor: vendor.trim() || null,
+          link: link.trim() || null,
+          reason: reason.trim() || null,
+        },
       });
-      if (evalError) throw evalError;
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
 
       toast.success(t("request.sent"));
       setOpen(false);
@@ -117,6 +99,7 @@ export function RequestEvaluation() {
       setSaving(false);
     }
   };
+
 
   const formatDate = (d: string) =>
     new Date(d).toLocaleDateString(lang === "no" ? "nb-NO" : "en-GB", {
