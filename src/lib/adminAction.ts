@@ -63,11 +63,10 @@ export async function adminLogin(
       setAdminToken(data.token, data.expiresAt);
       return { ok: true };
     }
+    const rateLimited = (error as any)?.context?.status === 429;
     const message =
       data?.error ||
-      (error as any)?.context?.status === 429
-        ? "For mange mislykkede forsøk. Prøv igjen senere."
-        : undefined;
+      (rateLimited ? "For mange mislykkede forsøk. Prøv igjen senere." : undefined);
     return { ok: false, error: message };
   } catch {
     return { ok: false };

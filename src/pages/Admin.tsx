@@ -120,12 +120,12 @@ const Admin = () => {
 
   const handleLogin = async () => {
     setChecking(true);
-    const valid = await verifyAdmin(code);
-    if (valid) {
-      setAdminToken(code);
+    const res = await adminLogin(code);
+    if (res.ok) {
+      setCode("");
       setAuthenticated(true);
     } else {
-      toast({ title: t("admin.wrong_code"), variant: "destructive" });
+      toast({ title: res.error || t("admin.wrong_code"), variant: "destructive" });
     }
     setChecking(false);
   };
