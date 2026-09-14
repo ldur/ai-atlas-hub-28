@@ -21,6 +21,8 @@ import {
 import { SubmissionAnalytics } from "@/components/admin/SubmissionAnalytics";
 import { EvaluationDashboard } from "@/components/admin/EvaluationDashboard";
 import { SurveysTab } from "@/components/admin/SurveysTab";
+import { fetchSubmissions } from "@/lib/submissions";
+
 
 function BulkGenerateSection() {
   const [running, setRunning] = useState(false);
@@ -197,19 +199,20 @@ function SubmissionsTab() {
 
   const fetchAll = () => {
     Promise.all([
-      supabase.from("submissions").select("*").order("created_at", { ascending: false }),
+      fetchSubmissions(),
       supabase.from("tools").select("id, name").order("name"),
       supabase.from("models").select("id, name").order("name"),
       supabase.from("evaluations").select("id, tool_id, model_id, decided_status"),
       supabase.from("surveys").select("id, title, is_active").order("created_at"),
     ]).then(([sRes, tRes, mRes, eRes, survRes]) => {
-      setSubmissions(sRes.data || []);
+      setSubmissions(sRes);
       setTools(tRes.data || []);
       setModels(mRes.data || []);
       setEvaluations(eRes.data || []);
       setSurveys(survRes.data || []);
     });
   };
+
   useEffect(() => { fetchAll(); }, []);
 
   const handleDelete = async (id: string) => {
@@ -410,15 +413,16 @@ function EvaluationsTab() {
       supabase.from("models").select("*").order("name"),
       supabase.from("evaluations").select("*").order("decided_at", { ascending: false }),
       supabase.from("catalog_entries").select("id, tool_id, model_id"),
-      supabase.from("submissions").select("tools_used, models_used, use_cases, must_keep_tool"),
+      fetchSubmissions(),
     ]).then(([t, m, e, c, s]) => {
       setTools(t.data || []);
       setModels(m.data || []);
       setEvaluations(e.data || []);
       setCatalogEntries(c.data || []);
-      setSubmissions(s.data || []);
+      setSubmissions(s);
     });
   };
+
   useEffect(() => { fetchAll(); }, []);
 
   return (

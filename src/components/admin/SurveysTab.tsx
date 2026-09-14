@@ -14,6 +14,8 @@ import { adminAction } from "@/lib/adminAction";
 import { useToast } from "@/hooks/use-toast";
 import { useI18n } from "@/lib/i18n";
 import { Plus, Pencil, Trash2, ClipboardList, X } from "lucide-react";
+import { fetchSubmissions } from "@/lib/submissions";
+
 
 const ALL_QUESTION_IDS = ["tools", "models", "use_cases", "time_saved", "data_sensitivity", "pain_points", "must_keep"] as const;
 
@@ -57,7 +59,8 @@ export function SurveysTab() {
 
   const fetchSurveys = async () => {
     const { data: surveysData } = await supabase.from("surveys").select("*").order("created_at", { ascending: false });
-    const { data: submissions } = await supabase.from("submissions").select("survey_id");
+    const submissions = await fetchSubmissions();
+
 
     const countMap: Record<string, number> = {};
     (submissions || []).forEach((s: any) => {
